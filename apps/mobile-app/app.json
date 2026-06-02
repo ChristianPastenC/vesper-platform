@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name":               "SovereignCore",
+    "slug":               "sovereign-core-mobile",
+    "version":            "1.0.0",
+    "orientation":        "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns":["**/*"],
+    "splash": { "resizeMode":"contain", "backgroundColor":"#0f0f0f" },
+    "ios":     { "supportsTablet":true, "bundleIdentifier":"mx.edu.sovereign.core" },
+    "android": { "adaptiveIcon":{"backgroundColor":"#0f0f0f"}, "package":"mx.edu.sovereign.core" }
+  }
+}

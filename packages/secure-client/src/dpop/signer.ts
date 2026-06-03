@@ -48,7 +48,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
   const len = bytes.length;
 
   for (let i = 0; i < len; i += 3) {
-    const b0 = bytes[i]     as number;
+    const b0 = bytes[i] as number;
     const b1 = bytes[i + 1] as number ?? 0;
     const b2 = bytes[i + 2] as number ?? 0;
 
@@ -66,7 +66,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
  * returns the result. Used for JWT header and payload segments.
  */
 function base64UrlEncodeJson(obj: object): string {
-  const json  = JSON.stringify(obj);
+  const json = JSON.stringify(obj);
   const bytes = new TextEncoder().encode(json);
   return base64UrlEncode(bytes);
 }
@@ -104,7 +104,7 @@ function normalizeHtu(url: string): string {
   // Fallback: manual parser for environments without the URL global.
   // Strips '?' query and '#' fragment from the raw string.
   const withoutFragment = url.split('#')[0] ?? url;
-  const withoutQuery    = withoutFragment.split('?')[0] ?? withoutFragment;
+  const withoutQuery = withoutFragment.split('?')[0] ?? withoutFragment;
   return withoutQuery;
 }
 
@@ -175,7 +175,7 @@ export class DPoPSigner {
     keyPair: DPoPKeyPair
   ) {
     this.cryptoProvider = cryptoProvider;
-    this.keyPair        = keyPair;
+    this.keyPair = keyPair;
   }
 
   // ---------------------------------------------------------------------------
@@ -284,9 +284,9 @@ export class DPoPSigner {
     header: DPoPProofHeader,
     payload: DPoPProofPayload
   ): Promise<string> {
-    const encodedHeader  = base64UrlEncodeJson(header);
+    const encodedHeader = base64UrlEncodeJson(header);
     const encodedPayload = base64UrlEncodeJson(payload);
-    const signingInput   = `${encodedHeader}.${encodedPayload}`;
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
 
     const signingBytes = new TextEncoder().encode(signingInput);
     const signingParams = buildSigningParams(this.keyPair.algorithm);
@@ -319,7 +319,7 @@ export class DPoPSigner {
    */
   private async computeAth(accessToken: string): Promise<string> {
     const tokenBytes = new TextEncoder().encode(accessToken);
-    const hashBytes  = await this.cryptoProvider.sha256(tokenBytes);
+    const hashBytes = await this.cryptoProvider.sha256(tokenBytes);
     return base64UrlEncode(hashBytes);
   }
 }

@@ -1,3 +1,4 @@
+import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapterResponse } from '../contracts.js';
 import { SovereignHttpError } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -43,8 +44,8 @@ export class GraphQLRequestError extends Error {
 
   constructor(errors: GraphQLErrorShape[], partialData?: unknown) {
     super(errors.map(e => e.message).join(' | '));
-    this.name       = 'GraphQLRequestError';
-    this.errors     = errors;
+    this.name = 'GraphQLRequestError';
+    this.errors = errors;
     this.partialData = partialData;
     Object.setPrototypeOf(this, GraphQLRequestError.prototype);
   }
@@ -303,4 +304,147 @@ export async function graphqlWithTrapping<T>(
   }
 
   return envelope.data;
+}
+
+// ---------------------------------------------------------------------------
+// GraphQLAdapter — ISovereignNetworkAdapter implementation
+// ---------------------------------------------------------------------------
+
+/** Construction options for GraphQLAdapter. */
+export interface GraphQLAdapterOptions {
+  /**
+   * The GraphQL endpoint URL (e.g. 'https://api.example.com/graphql').
+   * All requests from this adapter instance are sent to this URL.
+   */
+  url: string;
+
+  /**
+   * Custom fetch implementation for Node.js < 18, Angular Universal, etc.
+   * @default globalThis.fetch
+   */
+  fetchImpl?: typeof fetch;
+}
+
+/**
+ * GraphQLAdapter
+ *
+ * Concrete implementation of ISovereignNetworkAdapter that sends GraphQL
+ * operations as HTTP POST requests to a fixed endpoint.
+ *
+ * Body contract:
+ *   The `body` field of SovereignAdapterRequest MUST be a JSON string
+ *   serialising the GraphQL request descriptor:
+ *     JSON.stringify({ query, variables?, operationName? })
+ *
+ *   This maps naturally to the withDPoP() + graphqlWithTrapping() usage pattern
+ *   where the executor serialises the operation before passing it to the adapter.
+ *
+ * Error contract (satisfies ISovereignNetworkAdapter):
+ *  - HTTP 4xx/5xx    → throws SovereignHttpError(status)  [frozen by matrix]
+ *  - Transport fail  → throws TypeError                   [frozen by matrix]
+ *  - GQL errors[]    → throws GraphQLRequestError          [NOT frozen]
+ *
+ * @example With withDPoP() and SovereignClientCore
+ * ```ts
+ * import { GraphQLAdapter, withDPoP } from '@sovereign/secure-client';
+ *
+ * const adapter = new GraphQLAdapter({ url: 'https://api.example.com/graphql' });
+ *
+ * const MUTATION = `mutation Transfer($amount: Int!, $to: ID!) {
+ *   transfer(amount: $amount, to: $to) { id status }
+ * }`;
+ *
+ * const executor = withDPoP(
+ *   signer, 'POST', 'https://api.example.com/graphql',
+ *   () => ({ accessToken: token }),
+ *   async (proof) => {
+ *     const { data } = await adapter.request<{ transfer: TransferResult }>({
+ *       method: 'POST',
+ *       url:    'https://api.example.com/graphql',
+ *       headers: { 'Authorization': `DPoP ${token}`, 'DPoP': proof },
+ *       body:   JSON.stringify({ query: MUTATION, variables: { amount: 100, to: 'acc-1' } }),
+ *     });
+ *     return data.transfer;
+ *   },
+ * );
+ * await core.execute('transfer-1', executor, { type: 'transfer' });
+ * ```
+ *
+ * @example Angular DI
+ * ```ts
+ * providers: [{
+ *   provide: SOVEREIGN_ADAPTER,
+ *   useFactory: () => new GraphQLAdapter({ url: env.graphqlEndpoint }),
+ * }]
+ * ```
+ */
+export class GraphQLAdapter implements ISovereignNetworkAdapter {
+  private readonly url: string;
+  private readonly fetchImpl: typeof fetch | undefined;
+
+  constructor(options: GraphQLAdapterOptions) {
+    this.url = options.url;
+    this.fetchImpl = options.fetchImpl;
+  }
+
+  public async request<T = unknown>(
+    config: SovereignAdapterRequest
+  ): Promise<SovereignAdapterResponse<T>> {
+    const fetchFn = this.fetchImpl ?? globalThis.fetch;
+
+    if (typeof fetchFn !== 'function') {
+      throw new TypeError(
+        '[SovereignCore] GraphQLAdapter: no fetch implementation available. ' +
+        'Pass a fetchImpl option for environments without a global fetch.'
+      );
+    }
+
+    // Resolve the body — must be a JSON string containing the GQL operation.
+    const bodyStr = config.body instanceof Uint8Array
+      ? new TextDecoder().decode(config.body)
+      : (config.body ?? '{}');
+
+    const response = await fetchFn(this.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...config.headers,
+      },
+      body: bodyStr,
+      signal: config.signal ?? null,
+    });
+
+    // HTTP-level errors: throw SovereignHttpError → matrix evaluates freeze rules.
+    if (!response.ok) {
+      throw new SovereignHttpError(
+        response.status,
+        `HTTP ${response.status} ${response.statusText}`
+      );
+    }
+
+    const envelope = await response.json() as { data?: T; errors?: GraphQLErrorShape[] };
+
+    // GraphQL-level errors: NOT frozen by the matrix (application-level).
+    if (Array.isArray(envelope.errors) && envelope.errors.length > 0) {
+      throw new GraphQLRequestError(envelope.errors, envelope.data);
+    }
+
+    if (envelope.data === undefined || envelope.data === null) {
+      throw new GraphQLRequestError(
+        [{ message: 'GraphQL response contained no data and no errors.' }]
+      );
+    }
+
+    // Normalise response headers to Record<string, string>.
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, key) => { headers[key] = value; });
+
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      data: envelope.data,
+    };
+  }
 }

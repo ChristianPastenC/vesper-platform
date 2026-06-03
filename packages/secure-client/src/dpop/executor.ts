@@ -196,7 +196,7 @@ export function withDPoP<T>(
     // (required by exactOptionalPropertyTypes strict-mode enforcement).
     const proofOptions: DPoPProofOptions = { method, url };
     if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
-    if (context.nonce !== undefined)       proofOptions.nonce       = context.nonce;
+    if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
 
     // Generate a fresh proof on every invocation (never reuse across requests).
     const dpopProof = await signer.generateProof(proofOptions);

@@ -1,3 +1,4 @@
+import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapterResponse } from '../contracts.js';
 import { SovereignHttpError } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -166,4 +167,100 @@ export async function axiosWithTrapping<T>(
   }
 
   return response;
+}
+
+// ---------------------------------------------------------------------------
+// AxiosAdapter — ISovereignNetworkAdapter implementation
+// ---------------------------------------------------------------------------
+
+/** Construction options for AxiosAdapter. */
+export interface AxiosAdapterOptions {
+  /**
+   * Axios (or Axios-compatible) instance to delegate requests to.
+   * Use `axios.create({ baseURL, headers })` to pre-configure defaults.
+   */
+  axiosInstance: AxiosInstance;
+}
+
+/**
+ * AxiosAdapter
+ *
+ * Concrete implementation of ISovereignNetworkAdapter backed by an Axios
+ * (or Axios-compatible) instance. Suitable for Angular HttpClient-free apps,
+ * React / React Native projects already using Axios, and NestJS micro-services.
+ *
+ * Error contract (satisfies ISovereignNetworkAdapter):
+ *  - Non-2xx responses   → throws SovereignHttpError(status)
+ *    (also handles the validateStatus override case via axiosWithTrapping)
+ *  - Transport failure   → AxiosError with isAxiosError: true, !response
+ *    (SovereignClientCore Stage 1 matrix intercepts this automatically)
+ *
+ * @example With withDPoP() and SovereignClientCore
+ * ```ts
+ * import axios from 'axios';
+ * import { AxiosAdapter, withDPoP } from '@sovereign/secure-client';
+ *
+ * const adapter = new AxiosAdapter({
+ *   axiosInstance: axios.create({ baseURL: 'https://api.example.com' }),
+ * });
+ *
+ * const executor = withDPoP(
+ *   signer, 'POST', 'https://api.example.com/transfer',
+ *   () => ({ accessToken: token }),
+ *   async (proof) => {
+ *     const { data } = await adapter.request<TransferResult>({
+ *       method: 'POST',
+ *       url: '/transfer',
+ *       headers: { 'Authorization': `DPoP ${token}`, 'DPoP': proof },
+ *       body: JSON.stringify(payload),
+ *     });
+ *     return data;
+ *   },
+ * );
+ * await core.execute('transfer-1', executor, { type: 'transfer' });
+ * ```
+ *
+ * @example Angular DI
+ * ```ts
+ * providers: [{
+ *   provide: SOVEREIGN_ADAPTER,
+ *   useFactory: (http: HttpClient) => new AxiosAdapter({ axiosInstance: axios }),
+ * }]
+ * ```
+ *
+ * @example React Native with redaxios
+ * ```ts
+ * import redaxios from 'redaxios';
+ * const adapter = new AxiosAdapter({ axiosInstance: redaxios });
+ * ```
+ */
+export class AxiosAdapter implements ISovereignNetworkAdapter {
+  private readonly axiosInstance: AxiosInstance;
+
+  constructor(options: AxiosAdapterOptions) {
+    this.axiosInstance = options.axiosInstance;
+  }
+
+  public async request<T = unknown>(
+    config: SovereignAdapterRequest
+  ): Promise<SovereignAdapterResponse<T>> {
+    // axiosWithTrapping handles non-2xx → SovereignHttpError (including
+    // the validateStatus override edge case) and forwards AxiosError for
+    // transport failures so SovereignClientCore Stage 1 can intercept.
+    const response = await axiosWithTrapping<T>(this.axiosInstance, {
+      method: config.method,
+      url: config.url,
+      // Spread optional fields only when defined (exactOptionalPropertyTypes).
+      ...(config.headers !== undefined && { headers: config.headers }),
+      ...(config.body !== undefined && { data: config.body }),
+      ...(config.timeoutMs !== undefined && { timeout: config.timeoutMs }),
+    });
+
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: response.data,
+    };
+  }
 }

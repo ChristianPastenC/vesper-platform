@@ -4,26 +4,41 @@
  * Platform-agnostic adapters that bridge your HTTP transport layer with
  * the SovereignClientCore Error Trapping Matrix.
  *
- * Import from this subpath for tree-shaking in bundle-size sensitive apps:
+ * Two usage patterns are supported:
  *
- *   import { fetchWithTrapping }    from '@sovereign/secure-client/adapters';
- *   import { axiosWithTrapping }    from '@sovereign/secure-client/adapters';
- *   import { graphqlWithTrapping }  from '@sovereign/secure-client/adapters';
+ *   Functional (stateless utilities):
+ *     import { fetchWithTrapping, axiosWithTrapping, graphqlWithTrapping }
+ *       from '@sovereign/secure-client/adapters';
  *
- * Or import everything from the main entry point:
- *
- *   import { fetchWithTrapping, axiosWithTrapping, graphqlWithTrapping }
- *     from '@sovereign/secure-client';
+ *   Object-oriented (ISovereignNetworkAdapter implementations, DI-compatible):
+ *     import { FetchAdapter, AxiosAdapter, GraphQLAdapter }
+ *       from '@sovereign/secure-client/adapters';
  */
 
+// ---------------------------------------------------------------------------
 // fetch adapter
-export type { FetchWithTrappingOptions }                  from './fetch.js';
-export { fetchWithTrapping }                              from './fetch.js';
+// ---------------------------------------------------------------------------
+export type { FetchWithTrappingOptions, FetchAdapterOptions } from './fetch.js';
+export { fetchWithTrapping, FetchAdapter } from './fetch.js';
 
+// ---------------------------------------------------------------------------
 // Axios adapter (no hard axios dependency — uses duck-typed interfaces)
-export type { AxiosInstance, AxiosCompatRequestConfig, AxiosCompatResponse } from './axios.js';
-export { axiosWithTrapping }                              from './axios.js';
+// ---------------------------------------------------------------------------
+export type {
+  AxiosInstance,
+  AxiosCompatRequestConfig,
+  AxiosCompatResponse,
+  AxiosAdapterOptions,
+} from './axios.js';
+export { axiosWithTrapping, AxiosAdapter } from './axios.js';
 
+// ---------------------------------------------------------------------------
 // GraphQL adapter (framework-agnostic, no Apollo/urql dependency)
-export type { GraphQLRequest, GraphQLRequestOptions, GraphQLErrorShape } from './graphql.js';
-export { GraphQLRequestError, graphqlWithTrapping }       from './graphql.js';
+// ---------------------------------------------------------------------------
+export type {
+  GraphQLRequest,
+  GraphQLRequestOptions,
+  GraphQLErrorShape,
+  GraphQLAdapterOptions,
+} from './graphql.js';
+export { GraphQLRequestError, graphqlWithTrapping, GraphQLAdapter } from './graphql.js';

@@ -77,7 +77,7 @@ export async function generateDPoPKeyPair(
   config: DPoPKeyConfig = {}
 ): Promise<DPoPKeyPair> {
   const algorithm = config.algorithm ?? 'ES256';
-  const params     = buildKeyGenParams(algorithm);
+  const params = buildKeyGenParams(algorithm);
 
   const { publicKey, privateKey } = await cryptoProvider.subtle.generateKey(
     params,
@@ -86,7 +86,7 @@ export async function generateDPoPKeyPair(
   ) as CryptoKeyPair;
 
   // Export the public key JWK and immediately strip any private fields.
-  const rawJwk      = await cryptoProvider.subtle.exportKey('jwk', publicKey);
+  const rawJwk = await cryptoProvider.subtle.exportKey('jwk', publicKey);
   const publicKeyJwk = stripPrivateFields(rawJwk);
 
   return { publicKeyJwk, privateKey, algorithm };

@@ -1,23 +1,7 @@
-/**
- * Platform-agnostic cryptographic primitive provider.
- *
- * Consumers must supply a concrete implementation suited to their runtime
- * environment (e.g. Web Crypto API for browsers, expo-crypto for React Native,
- * Node.js crypto module for server-side usage).
- */
-export interface ISovereignCryptoProvider {
-  /**
-   * Returns a cryptographically secure random byte sequence of the requested length.
-   * Must NOT use Math.random() or any other non-CSPRNG source.
-   */
-  getRandomBytes(byteLength: number): Uint8Array;
-
-  /**
-   * Computes a SHA-256 digest over the supplied binary data.
-   * The returned Uint8Array MUST be 32 bytes long.
-   */
-  sha256(data: Uint8Array): Promise<Uint8Array>;
-}
+// ISovereignCryptoProvider is defined in contracts.ts (zero-dependency layer)
+// and re-exported here for backward compatibility.
+export type { ISovereignCryptoProvider } from './contracts.js';
+import type { ISovereignCryptoProvider } from './contracts.js';
 
 /**
  * Per-request configuration overrides passed to SovereignClientCore.execute().

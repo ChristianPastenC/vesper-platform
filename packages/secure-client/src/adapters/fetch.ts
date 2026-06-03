@@ -1,3 +1,4 @@
+import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapterResponse } from '../contracts.js';
 import { SovereignHttpError } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -128,4 +129,106 @@ export async function fetchWithTrapping(
   }
 
   return response;
+}
+
+// ---------------------------------------------------------------------------
+// FetchAdapter — ISovereignNetworkAdapter implementation
+// ---------------------------------------------------------------------------
+
+/** Construction options for FetchAdapter. */
+export interface FetchAdapterOptions {
+  /**
+   * Custom fetch implementation (node-fetch, cross-fetch, isomorphic-fetch).
+   * Omit to use globalThis.fetch.
+   */
+  fetchImpl?: typeof fetch;
+}
+
+/**
+ * FetchAdapter
+ *
+ * Concrete implementation of ISovereignNetworkAdapter backed by the Fetch API.
+ * Suitable for use in all platforms that provide a global `fetch` or accept
+ * a polyfill via `fetchImpl`.
+ *
+ * Error contract (satisfies ISovereignNetworkAdapter):
+ *  - Non-2xx responses   → throws SovereignHttpError(status)
+ *  - Transport failure   → throws TypeError('Network request failed') from fetch()
+ *
+ * @example Direct usage
+ * ```ts
+ * const adapter = new FetchAdapter();
+ * const { data } = await adapter.request<User>({ method: 'GET', url: '/api/me' });
+ * ```
+ *
+ * @example With withDPoP() and SovereignClientCore
+ * ```ts
+ * const adapter = new FetchAdapter();
+ * const executor = withDPoP(
+ *   signer, 'POST', 'https://api.example.com/transfer',
+ *   () => ({ accessToken: token }),
+ *   async (proof) => {
+ *     const { data } = await adapter.request<TransferResult>({
+ *       method: 'POST',
+ *       url: 'https://api.example.com/transfer',
+ *       headers: { 'Authorization': `DPoP ${token}`, 'DPoP': proof,
+ *                  'Content-Type': 'application/json' },
+ *       body: JSON.stringify(payload),
+ *     });
+ *     return data;
+ *   },
+ * );
+ * await core.execute('transfer-1', executor, { type: 'transfer' });
+ * ```
+ *
+ * @example Angular DI
+ * ```ts
+ * providers: [{ provide: SOVEREIGN_ADAPTER, useFactory: () => new FetchAdapter() }]
+ * ```
+ *
+ * @example Node.js 14 (node-fetch)
+ * ```ts
+ * import nodeFetch from 'node-fetch';
+ * const adapter = new FetchAdapter({ fetchImpl: nodeFetch as unknown as typeof fetch });
+ * ```
+ */
+export class FetchAdapter implements ISovereignNetworkAdapter {
+  private readonly fetchImpl: typeof fetch | undefined;
+
+  constructor(options: FetchAdapterOptions = {}) {
+    this.fetchImpl = options.fetchImpl;
+  }
+
+  public async request<T = unknown>(
+    config: SovereignAdapterRequest
+  ): Promise<SovereignAdapterResponse<T>> {
+    // fetchWithTrapping handles non-2xx → SovereignHttpError and
+    // transport failure → TypeError automatically.
+    const resolvedBody: BodyInit | null = config.body instanceof Uint8Array
+      ? (config.body as unknown as BodyInit)
+      : (config.body ?? null);
+
+    const response = await fetchWithTrapping(config.url, {
+      method: config.method,
+      // Spread optional fields only when defined (exactOptionalPropertyTypes).
+      ...(config.headers !== undefined && { headers: config.headers as HeadersInit }),
+      ...(resolvedBody !== null && { body: resolvedBody }),
+      ...(config.signal !== undefined
+        && config.signal !== null && { signal: config.signal }),
+      ...(this.fetchImpl !== undefined && { fetchImpl: this.fetchImpl }),
+    });
+
+    // Normalise Headers object to a plain Record<string, string>.
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, key) => { headers[key] = value; });
+
+    const data = await response.json() as T;
+
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      data,
+    };
+  }
 }

@@ -1,4 +1,6 @@
-import type { ISovereignCryptoProvider } from '../types.js';
+// ISovereignCryptoProvider and IDPoPCryptoProvider are defined in contracts.ts
+// (zero-dependency layer) and re-exported here for the DPoP subpath consumers.
+export type { ISovereignCryptoProvider, IDPoPCryptoProvider } from '../contracts.js';
 
 // ---------------------------------------------------------------------------
 // Algorithm identifiers
@@ -120,25 +122,4 @@ export interface DPoPProofHeader {
   jwk: JsonWebKey;
 }
 
-// ---------------------------------------------------------------------------
-// Crypto provider extension
-// ---------------------------------------------------------------------------
-
-/**
- * Extended cryptographic provider interface required by the DPoP subsystem.
- *
- * Extends ISovereignCryptoProvider with a SubtleCrypto-conformant API surface
- * for key generation and asymmetric signing operations.
- *
- * Concrete implementations per platform:
- *  - Browser:       { subtle: window.crypto.subtle, ... }
- *  - React Native:  { subtle: (await import('expo-crypto')).subtle, ... }
- *  - Node.js 15+:   { subtle: (await import('node:crypto')).subtle, ... }
- */
-export interface IDPoPCryptoProvider extends ISovereignCryptoProvider {
-  /**
-   * A SubtleCrypto-conformant interface used for key generation and signing.
-   * The library uses only: generateKey(), exportKey(), sign().
-   */
-  subtle: SubtleCrypto;
-}
+// IDPoPCryptoProvider re-exported above from contracts.ts.

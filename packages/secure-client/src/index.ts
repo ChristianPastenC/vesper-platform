@@ -11,9 +11,13 @@ export type {
   ISovereignCryptoProvider,
   SovereignRequestConfig,
   SovereignClientCoreConfig,
+  ErrorTrappingConfig,
   LedgerBlock,
   NetworkStatusResolver,
 } from './types.js';
+
+// Typed HTTP error — throw from your executor to feed the Error Trapping Matrix
+export { SovereignHttpError } from './types.js';
 
 // In-memory cryptographic ledger
 export { SovereignMemoryQueue } from './ledger.js';

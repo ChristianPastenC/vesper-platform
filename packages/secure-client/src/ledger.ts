@@ -252,6 +252,8 @@ export class SovereignMemoryQueue {
     if (this.fifoOrder.length === 0) return genesisVector();
 
     const tailId = this.fifoOrder[this.fifoOrder.length - 1];
+    if (tailId === undefined) return genesisVector();
+
     const tailBlock = this.registry.get(tailId);
     return tailBlock ? new Uint8Array(tailBlock.hash) : genesisVector();
   }

@@ -43,10 +43,23 @@ export type {
 export { SovereignHttpError } from './types.js';
 
 // ---------------------------------------------------------------------------
+// Binary encoding helpers — produce zeroizable Uint8Array buffers for use
+// with SovereignAdapterRequest.body and SovereignAdapterRequest.encodedHeaders
+// ---------------------------------------------------------------------------
+export {
+  encodeJsonBody,
+  encodeTextBody,
+  encodeHeaders,
+  decodeHeaders,
+  decodeBody,
+} from './binary.js';
+
+// ---------------------------------------------------------------------------
 // Ledger & interceptor
 // ---------------------------------------------------------------------------
 export { SovereignMemoryQueue } from './ledger/index.js';
 export { SovereignClientCore } from './core/index.js';
+
 
 // ---------------------------------------------------------------------------
 // DPoP — asymmetric proof-of-possession signing client

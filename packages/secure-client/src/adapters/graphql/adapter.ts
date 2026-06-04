@@ -2,6 +2,7 @@ import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapte
 import { SovereignHttpError } from '../../types.js';
 import { GraphQLRequestError } from './error.js';
 import type { GraphQLAdapterOptions, GraphQLErrorShape } from './types.js';
+import { decodeBody, decodeHeaders } from '../../binary.js';
 
 /**
  * GraphQLAdapter
@@ -10,9 +11,17 @@ import type { GraphQLAdapterOptions, GraphQLErrorShape } from './types.js';
  * operations as HTTP POST requests to a fixed endpoint.
  *
  * Body contract:
- *   The `body` field of SovereignAdapterRequest MUST be a JSON string
- *   serialising the GraphQL request descriptor:
- *     JSON.stringify({ query, variables?, operationName? })
+ *   The `body` field of SovereignAdapterRequest MUST be a `Uint8Array`
+ *   containing the UTF-8-encoded JSON of the GraphQL request descriptor:
+ *     encodeJsonBody({ query, variables?, operationName? })
+ *
+ * Binary-isolation contract:
+ *   • `body` arrives as `Uint8Array | null` — decoded to a string only
+ *     immediately before calling fetch(), never stored as a JS string in
+ *     any long-lived variable.
+ *   • `encodedHeaders` arrives as `Uint8Array` — decoded to a plain object only
+ *     immediately before dispatch. The legacy `headers` Record is supported for
+ *     backward compatibility but is not zeroizable.
  */
 export class GraphQLAdapter implements ISovereignNetworkAdapter {
   private readonly url: string;
@@ -35,16 +44,26 @@ export class GraphQLAdapter implements ISovereignNetworkAdapter {
       );
     }
 
-    const bodyStr = config.body instanceof Uint8Array
-      ? new TextDecoder().decode(config.body)
-      : (config.body ?? '{}');
+    // Decode body only at dispatch time. The decoded string is used once
+    // inside fetch() and then released — never stored in a class field or
+    // long-lived variable.
+    const bodyStr: string =
+      config.body !== undefined && config.body !== null
+        ? decodeBody(config.body)
+        : '{}';
+
+    // Decode headers only at dispatch time and merge with GraphQL defaults.
+    const callerHeaders: Record<string, string> =
+      config.encodedHeaders !== undefined && config.encodedHeaders.length > 0
+        ? decodeHeaders(config.encodedHeaders)
+        : (config.headers ?? {});
 
     const response = await fetchFn(this.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        ...config.headers,
+        ...callerHeaders,
       },
       body: bodyStr,
       signal: config.signal ?? null,
@@ -69,13 +88,13 @@ export class GraphQLAdapter implements ISovereignNetworkAdapter {
       );
     }
 
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => { headers[key] = value; });
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => { responseHeaders[key] = value; });
 
     return {
       status: response.status,
       statusText: response.statusText,
-      headers,
+      headers: responseHeaders,
       data: envelope.data,
     };
   }

@@ -1,44 +1,16 @@
 /**
- * @sovereign/secure-client/adapters — transport adapter utilities
+ * @sovereign/secure-client/adapters
  *
- * Platform-agnostic adapters that bridge your HTTP transport layer with
- * the SovereignClientCore Error Trapping Matrix.
- *
- * Two usage patterns are supported:
- *
- *   Functional (stateless utilities):
- *     import { fetchWithTrapping, axiosWithTrapping, graphqlWithTrapping }
- *       from '@sovereign/secure-client/adapters';
- *
- *   Object-oriented (ISovereignNetworkAdapter implementations, DI-compatible):
- *     import { FetchAdapter, AxiosAdapter, GraphQLAdapter }
- *       from '@sovereign/secure-client/adapters';
+ * This subpath export exposes the concrete network adapters and their functional
+ * equivalents, allowing consumers to choose the transport mechanism that best
+ * fits their application architecture.
  */
 
-// ---------------------------------------------------------------------------
-// fetch adapter
-// ---------------------------------------------------------------------------
-export type { FetchWithTrappingOptions, FetchAdapterOptions } from './fetch.js';
-export { fetchWithTrapping, FetchAdapter } from './fetch.js';
+// Export standard fetch adapter
+export * from './fetch/index.js';
 
-// ---------------------------------------------------------------------------
-// Axios adapter (no hard axios dependency — uses duck-typed interfaces)
-// ---------------------------------------------------------------------------
-export type {
-  AxiosInstance,
-  AxiosCompatRequestConfig,
-  AxiosCompatResponse,
-  AxiosAdapterOptions,
-} from './axios.js';
-export { axiosWithTrapping, AxiosAdapter } from './axios.js';
+// Export Axios adapter
+export * from './axios/index.js';
 
-// ---------------------------------------------------------------------------
-// GraphQL adapter (framework-agnostic, no Apollo/urql dependency)
-// ---------------------------------------------------------------------------
-export type {
-  GraphQLRequest,
-  GraphQLRequestOptions,
-  GraphQLErrorShape,
-  GraphQLAdapterOptions,
-} from './graphql.js';
-export { GraphQLRequestError, graphqlWithTrapping, GraphQLAdapter } from './graphql.js';
+// Export GraphQL adapter
+export * from './graphql/index.js';

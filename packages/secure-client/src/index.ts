@@ -26,7 +26,7 @@ export type {
   SovereignAdapterResponse,
   ISovereignNetworkAdapter,
   ISovereignNetworkAdapterFactory,
-} from './contracts.js';
+} from './contracts/index.js';
 
 // ---------------------------------------------------------------------------
 // Core contracts & types
@@ -45,8 +45,8 @@ export { SovereignHttpError } from './types.js';
 // ---------------------------------------------------------------------------
 // Ledger & interceptor
 // ---------------------------------------------------------------------------
-export { SovereignMemoryQueue } from './ledger.js';
-export { SovereignClientCore } from './core.js';
+export { SovereignMemoryQueue } from './ledger/index.js';
+export { SovereignClientCore } from './core/index.js';
 
 // ---------------------------------------------------------------------------
 // DPoP — asymmetric proof-of-possession signing client
@@ -72,8 +72,8 @@ export { withDPoP } from './dpop/executor.js';
 // ---------------------------------------------------------------------------
 
 // fetch — auto-throws SovereignHttpError for non-2xx responses
-export type { FetchWithTrappingOptions, FetchAdapterOptions } from './adapters/fetch.js';
-export { fetchWithTrapping, FetchAdapter } from './adapters/fetch.js';
+export type { FetchWithTrappingOptions, FetchAdapterOptions } from './adapters/fetch/index.js';
+export { fetchWithTrapping, FetchAdapter } from './adapters/fetch/index.js';
 
 // Axios — handles validateStatus overrides; no hard axios peer dependency
 export type {
@@ -81,8 +81,8 @@ export type {
   AxiosCompatRequestConfig,
   AxiosCompatResponse,
   AxiosAdapterOptions,
-} from './adapters/axios.js';
-export { axiosWithTrapping, AxiosAdapter } from './adapters/axios.js';
+} from './adapters/axios/index.js';
+export { axiosWithTrapping, AxiosAdapter } from './adapters/axios/index.js';
 
 // GraphQL — framework-agnostic POST client; no Apollo/urql peer dependency
 export type {
@@ -90,5 +90,5 @@ export type {
   GraphQLRequestOptions,
   GraphQLErrorShape,
   GraphQLAdapterOptions,
-} from './adapters/graphql.js';
-export { GraphQLRequestError, graphqlWithTrapping, GraphQLAdapter } from './adapters/graphql.js';
+} from './adapters/graphql/index.js';
+export { GraphQLRequestError, graphqlWithTrapping, GraphQLAdapter } from './adapters/graphql/index.js';

@@ -1,7 +1,7 @@
 // ISovereignCryptoProvider is defined in contracts.ts (zero-dependency layer)
 // and re-exported here for backward compatibility.
-export type { ISovereignCryptoProvider } from './contracts.js';
-import type { ISovereignCryptoProvider } from './contracts.js';
+export type { ISovereignCryptoProvider } from './contracts/index.js';
+import type { ISovereignCryptoProvider } from './contracts/index.js';
 
 /**
  * Per-request configuration overrides passed to SovereignClientCore.execute().

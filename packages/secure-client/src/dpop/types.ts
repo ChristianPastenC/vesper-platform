@@ -1,6 +1,6 @@
 // ISovereignCryptoProvider and IDPoPCryptoProvider are defined in contracts.ts
 // (zero-dependency layer) and re-exported here for the DPoP subpath consumers.
-export type { ISovereignCryptoProvider, IDPoPCryptoProvider } from '../contracts.js';
+export type { ISovereignCryptoProvider, IDPoPCryptoProvider } from '../contracts/index.js';
 
 // ---------------------------------------------------------------------------
 // Algorithm identifiers

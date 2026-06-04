@@ -5,7 +5,7 @@ import type { ISovereignCryptoProvider } from './contracts/index.js';
 import type { ISovereignNetworkAdapter } from './contracts/index.js';
 import type { DPoPSigner } from './dpop/signer.js';
 import type { DPoPContextResolver } from './dpop/index.js';
-
+import type { DPoPAlgorithm } from './dpop/types.js';
 
 
 /**
@@ -142,6 +142,15 @@ export interface SovereignClientCoreConfig {
    * mode (e.g., pausing auto-logout timers, showing connection banners).
    */
   observers?: SessionLifecycleObservers;
+
+  /**
+   * Global DPoP configuration. When provided, the core automatically generates
+   * keys in RAM via `bootstrap()` and signs all requests transparently.
+   */
+  dpop?: {
+    algorithm?: DPoPAlgorithm;
+    contextResolver: DPoPContextResolver;
+  };
 }
 
 /**

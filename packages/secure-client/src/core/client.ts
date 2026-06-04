@@ -11,32 +11,14 @@ import { SovereignMemoryQueue } from '../ledger/index.js';
 import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js';
 import { shouldFreezeSession } from './error-matrix.js';
 import { serializeAdapterRequest, deserializeAdapterRequest, appendHeaderToBinary } from '../binary.js';
+import { DPoPSigner } from '../dpop/signer.js';
+import type { DPoPContextResolver } from '../dpop/index.js';
+import type { DPoPAlgorithm } from '../dpop/types.js';
+import type { IDPoPCryptoProvider } from '../contracts/index.js';
 
 /**
  * SovereignClientCore
- *
  * The global-singleton orchestrator of the SovereignCore framework.
- *
- * Singleton Contract:
- * Only one instance exists per JS runtime. Call SovereignClientCore.getInstance(config).
- *
- * ── Memory-Safety Architecture ───────────────────────────────────────────────
- *
- * STRUCTURED PATH — executeRequest() [STRICT ZEROIZATION ENFORCED]
- * ────────────────────────────────────────────────────────────────
- * Accepts a SovereignAdapterRequest whose body and headers are already
- * encoded as Uint8Array buffers. Closures are strictly prohibited.
- *
- * When the request must be queued (offline or 503/504):
- *   1. serializeAdapterRequest() packs the full request into one Uint8Array.
- *   2. That buffer is stored in LedgerBlock.serializedRequest.
- *   3. The `pendingRequests` map stores ONLY (resolve, reject, dpop) — zero payload.
- *   4. On TTL expiry / purge: zeroizeBlock() overwrites the buffer with 0x00.
- *      The pending Promise is then rejected — no sensitive bytes remain.
- *   5. On queue drain: deserializeAdapterRequest() reconstructs the request
- *      transiently; DPoP proofs are regenerated freshly; the networkAdapter
- *      executes it; the buffer is then dequeued and zeroized immediately.
- * ─────────────────────────────────────────────────────────────────────────────
  */
 export class SovereignClientCore {
   private static instance: SovereignClientCore;
@@ -61,6 +43,9 @@ export class SovereignClientCore {
 
   private readonly observers: SessionLifecycleObservers | undefined;
   private _isFrozen = false;
+  
+  private readonly dpopConfig?: SovereignClientCoreConfig['dpop'];
+  private dpopSigner?: DPoPSigner;
 
   private constructor(config: SovereignClientCoreConfig) {
     this.cryptoProvider = config.cryptoProvider;
@@ -70,6 +55,7 @@ export class SovereignClientCore {
     this.trapping       = resolveTrappingConfig(config.errorTrapping);
     this.networkAdapter = config.networkAdapter;
     this.observers      = config.observers;
+    this.dpopConfig     = config.dpop;
 
     // Start the active memory watchdog to detect tampering in real-time.
     this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
@@ -87,6 +73,20 @@ export class SovereignClientCore {
       SovereignClientCore.instance = new SovereignClientCore(config);
     }
     return SovereignClientCore.instance;
+  }
+
+  /**
+   * Initializes async subsystems (e.g., volatile DPoP keys).
+   * @returns The generated JWK public key if DPoP is enabled, otherwise null.
+   */
+  public async bootstrap(): Promise<JsonWebKey | null> {
+    if (this.dpopConfig && !this.dpopSigner) {
+      this.dpopSigner = await DPoPSigner.create(this.cryptoProvider as unknown as IDPoPCryptoProvider, {
+        ...(this.dpopConfig.algorithm && { algorithm: this.dpopConfig.algorithm }),
+      });
+      return this.dpopSigner.getPublicKeyJwk();
+    }
+    return null;
   }
 
   /**
@@ -136,14 +136,24 @@ export class SovereignClientCore {
     if (online && !this.isProcessingQueue) {
       try {
         let dispatchRequest = request;
+        let activeDpop = dpop;
+
+        if (!activeDpop && this.dpopSigner && this.dpopConfig) {
+          activeDpop = {
+            signer: this.dpopSigner,
+            method: request.method,
+            url: request.url,
+            contextResolver: this.dpopConfig.contextResolver,
+          };
+        }
         
-        if (dpop) {
-          const context = await dpop.contextResolver();
-          const proofOptions: any = { method: dpop.method, url: dpop.url };
+        if (activeDpop) {
+          const context = await activeDpop.contextResolver();
+          const proofOptions: any = { method: activeDpop.method, url: activeDpop.url };
           if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
           if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
           
-          const proof = await dpop.signer.generateProof(proofOptions);
+          const proof = await activeDpop.signer.generateProof(proofOptions);
           dispatchRequest = {
             ...request,
             encodedHeaders: appendHeaderToBinary(request.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
@@ -159,14 +169,33 @@ export class SovereignClientCore {
         return response.data;
       } catch (error) {
         if (shouldFreezeSession(error, this.trapping)) {
-          return this.enqueueStructuredRequest<T>(requestId, request, dpop, config, error);
+          let freezeDpop = dpop;
+          if (!freezeDpop && this.dpopSigner && this.dpopConfig) {
+            freezeDpop = {
+              signer: this.dpopSigner,
+              method: request.method,
+              url: request.url,
+              contextResolver: this.dpopConfig.contextResolver,
+            };
+          }
+          return this.enqueueStructuredRequest<T>(requestId, request, freezeDpop, config, error);
         }
         SovereignClientCore.zeroRequestBuffers(request);
         throw error;
       }
     }
 
-    return this.enqueueStructuredRequest<T>(requestId, request, dpop, config, new Error('Offline or processing queue'));
+    let queueDpop = dpop;
+    if (!queueDpop && this.dpopSigner && this.dpopConfig) {
+      queueDpop = {
+        signer: this.dpopSigner,
+        method: request.method,
+        url: request.url,
+        contextResolver: this.dpopConfig.contextResolver,
+      };
+    }
+
+    return this.enqueueStructuredRequest<T>(requestId, request, queueDpop, config, new Error('Offline or processing queue'));
   }
 
   // ── Queue processing ────────────────────────────────────────────────────────

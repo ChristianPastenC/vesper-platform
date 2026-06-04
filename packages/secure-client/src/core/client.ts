@@ -65,6 +65,15 @@ export class SovereignClientCore {
     this.memoryQueue    = SovereignMemoryQueue.getInstance();
     this.trapping       = resolveTrappingConfig(config.errorTrapping);
     this.networkAdapter = config.networkAdapter;
+
+    // Start the active memory watchdog to detect tampering in real-time.
+    this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
+      console.error(
+        '[SovereignCore] CRITICAL: Active memory tampering detected by RAM watchdog. ' +
+        'Invoking emergency purge.'
+      );
+      this.purgeAll();
+    });
   }
 
   public static getInstance(config: SovereignClientCoreConfig): SovereignClientCore {

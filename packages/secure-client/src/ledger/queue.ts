@@ -19,6 +19,10 @@ export class SovereignMemoryQueue {
 
   private readonly registry = new Map<string, LedgerBlock>();
   private fifoOrder: string[] = [];
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private watchdogTimer?: any;
+  private isWatchdogRunning = false;
 
   private constructor() { }
 
@@ -181,6 +185,60 @@ export class SovereignMemoryQueue {
       );
 
       runningPrevHash = new Uint8Array(block.currentHash);
+    }
+  }
+
+  /**
+   * Starts a background watchdog loop that actively re-verifies ledger integrity.
+   * If memory tampering is detected (e.g. a payload bit is flipped), the onTamper
+   * callback is immediately fired to trigger a synchronous purge.
+   */
+  public startWatchdog(
+    cryptoProvider: ISovereignCryptoProvider,
+    onTamper: () => void,
+    intervalMs: number = 1000
+  ): void {
+    if (this.isWatchdogRunning) return;
+    this.isWatchdogRunning = true;
+
+    const tick = async () => {
+      if (!this.isWatchdogRunning) return;
+
+      if (this.size > 0) {
+        try {
+          const intact = await this.verifyLedgerIntegrity(cryptoProvider);
+          if (!intact) {
+            this.stopWatchdog();
+            onTamper();
+            return;
+          }
+        } catch {
+          this.stopWatchdog();
+          onTamper();
+          return;
+        }
+      }
+
+      this.watchdogTimer = setTimeout(tick, intervalMs);
+      if (typeof this.watchdogTimer.unref === 'function') {
+        this.watchdogTimer.unref();
+      }
+    };
+
+    this.watchdogTimer = setTimeout(tick, intervalMs);
+    if (typeof this.watchdogTimer.unref === 'function') {
+      this.watchdogTimer.unref();
+    }
+  }
+
+  /**
+   * Stops the active memory watchdog.
+   */
+  public stopWatchdog(): void {
+    this.isWatchdogRunning = false;
+    if (this.watchdogTimer) {
+      clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = undefined;
     }
   }
 }

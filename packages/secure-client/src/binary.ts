@@ -96,6 +96,25 @@ export function encodeHeaders(headers: Record<string, string>): Uint8Array {
 }
 
 /**
+ * Appends a single header efficiently to an existing encoded headers buffer.
+ * Useful for injecting dynamic headers (like DPoP proofs) at execution time
+ * without decoding the entire block.
+ */
+export function appendHeaderToBinary(
+  encodedHeaders: Uint8Array,
+  key: string,
+  value: string
+): Uint8Array {
+  const toAppend = TEXT_ENCODER.encode(`${key}: ${value}\n`);
+  const result = new Uint8Array(encodedHeaders.length + toAppend.length);
+  if (encodedHeaders.length > 0) {
+    result.set(encodedHeaders, 0);
+  }
+  result.set(toAppend, encodedHeaders.length);
+  return result;
+}
+
+/**
  * Deserializes a `Uint8Array` produced by `encodeHeaders()` back to a
  * `Record<string, string>`.
  *

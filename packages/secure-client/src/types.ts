@@ -3,6 +3,9 @@
 export type { ISovereignCryptoProvider } from './contracts/index.js';
 import type { ISovereignCryptoProvider } from './contracts/index.js';
 import type { ISovereignNetworkAdapter } from './contracts/index.js';
+import type { DPoPSigner } from './dpop/signer.js';
+import type { DPoPContextResolver } from './dpop/index.js';
+
 
 
 /**
@@ -211,5 +214,21 @@ export interface QueuedRequestRecord<T = unknown> {
   /** Resolves the pending Promise when the queued request succeeds on replay. */
   resolve: (value: T) => void;
   /** Rejects the pending Promise on TTL expiry, purge, or replay failure. */
-  reject: (reason: unknown) => void;
+  reject:  (reason: unknown) => void;
+  /** 
+   * Context to regenerate a fresh DPoP proof when draining the queue,
+   * without capturing transactional data in a closure.
+   */
+  dpop?: PendingDPoPContext;
+}
+
+/**
+ * Static context required to generate a DPoP proof.
+ * Does NOT contain sensitive payloads.
+ */
+export interface PendingDPoPContext {
+  signer: DPoPSigner;
+  contextResolver: DPoPContextResolver;
+  method: string;
+  url: string;
 }

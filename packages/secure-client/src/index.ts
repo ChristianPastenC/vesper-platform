@@ -51,6 +51,7 @@ export {
   encodeJsonBody,
   encodeTextBody,
   encodeHeaders,
+  appendHeaderToBinary,
   decodeHeaders,
   decodeBody,
   serializeAdapterRequest,

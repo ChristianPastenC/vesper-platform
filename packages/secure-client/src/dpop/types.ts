@@ -123,3 +123,29 @@ export interface DPoPProofHeader {
 }
 
 // IDPoPCryptoProvider re-exported above from contracts.ts.
+
+// ---------------------------------------------------------------------------
+// Dynamic context types
+// ---------------------------------------------------------------------------
+
+/**
+ * Dynamic token context resolved on every executor invocation.
+ */
+export interface DPoPTokenContext {
+  /**
+   * Current bearer / DPoP-bound access token string.
+   */
+  accessToken?: string;
+
+  /**
+   * Server-supplied nonce for replay prevention (RFC 9449 §8).
+   */
+  nonce?: string;
+}
+
+/**
+ * Zero-argument resolver function that returns the current DPoP token context.
+ */
+export type DPoPContextResolver =
+  | (() => DPoPTokenContext)
+  | (() => Promise<DPoPTokenContext>);

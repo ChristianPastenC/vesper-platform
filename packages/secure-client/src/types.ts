@@ -1,7 +1,9 @@
-// ISovereignCryptoProvider is defined in contracts.ts (zero-dependency layer)
-// and re-exported here for backward compatibility.
+// ISovereignCryptoProvider and ISovereignNetworkAdapter are defined in contracts.ts
+// (zero-dependency layer) and re-exported here for backward compatibility.
 export type { ISovereignCryptoProvider } from './contracts/index.js';
 import type { ISovereignCryptoProvider } from './contracts/index.js';
+import type { ISovereignNetworkAdapter } from './contracts/index.js';
+
 
 /**
  * Per-request configuration overrides passed to SovereignClientCore.execute().
@@ -118,7 +120,20 @@ export interface SovereignClientCoreConfig {
    * sequestration (safe defaults for most production deployments).
    */
   errorTrapping?: ErrorTrappingConfig;
+
+  /**
+   * Transport adapter used by `executeRequest()` to dispatch queued HTTP calls.
+   *
+   * Required when using the structured `executeRequest()` path.
+   * When provided, the core serializes the entire `SovereignAdapterRequest`
+   * (including body and headers) into the `LedgerBlock.serializedRequest`
+   * `Uint8Array`, replacing the closure-based `executors` map.  On TTL expiry
+   * or session purge, `zeroizeBlock()` overwrites every sensitive byte via
+   * `.fill(0)` — no plain-text data lingers in any JS closure or heap object.
+   */
+  networkAdapter?: ISovereignNetworkAdapter;
 }
+
 
 /**
  * A single cryptographic block inside the in-memory transaction ledger.
@@ -177,3 +192,24 @@ export interface LedgerBlock {
  * Must resolve quickly; heavy I/O inside this function will stall the execute() path.
  */
 export type NetworkStatusResolver = () => Promise<boolean>;
+
+/**
+ * Internal record stored in the `pendingRequests` map for each call enqueued
+ * via `executeRequest()`.
+ *
+ * ── Security Invariant ────────────────────────────────────────────────────────
+ * This record stores ONLY the Promise resolve/reject callbacks.
+ * It does NOT capture the request body, headers, URL, or any transactional
+ * payload — those live exclusively inside the `LedgerBlock.serializedRequest`
+ * Uint8Array, which is byte-level zeroized (`.fill(0)`) on TTL expiry or purge.
+ *
+ * This is the structural replacement for the legacy `executors` Map whose
+ * closure-based entries captured sensitive data as plain JS strings in the heap.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+export interface QueuedRequestRecord<T = unknown> {
+  /** Resolves the pending Promise when the queued request succeeds on replay. */
+  resolve: (value: T) => void;
+  /** Rejects the pending Promise on TTL expiry, purge, or replay failure. */
+  reject: (reason: unknown) => void;
+}

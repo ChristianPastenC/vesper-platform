@@ -37,6 +37,7 @@ export type {
   ErrorTrappingConfig,
   LedgerBlock,
   NetworkStatusResolver,
+  QueuedRequestRecord,
 } from './types.js';
 
 // Typed HTTP error — throw from your executor to feed the Error Trapping Matrix
@@ -52,6 +53,8 @@ export {
   encodeHeaders,
   decodeHeaders,
   decodeBody,
+  serializeAdapterRequest,
+  deserializeAdapterRequest,
 } from './binary.js';
 
 // ---------------------------------------------------------------------------

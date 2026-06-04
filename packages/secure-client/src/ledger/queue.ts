@@ -204,8 +204,9 @@ export class SovereignMemoryQueue {
 
   /**
    * Starts a background watchdog loop that actively re-verifies ledger integrity.
-   * If memory tampering is detected (e.g. a payload bit is flipped), the onTamper
-   * callback is immediately fired to trigger a synchronous purge.
+   * If memory tampering is detected (e.g. a payload bit is flipped), the ledger
+   * is frozen instantly (canceling all expiry timers without zeroizing) and the
+   * onTamper callback is immediately fired.
    */
   public startWatchdog(
     cryptoProvider: ISovereignCryptoProvider,
@@ -222,12 +223,12 @@ export class SovereignMemoryQueue {
         try {
           const intact = await this.verifyLedgerIntegrity(cryptoProvider);
           if (!intact) {
-            this.stopWatchdog();
+            this.suspendAndFreezeLedger();
             onTamper();
             return;
           }
         } catch {
-          this.stopWatchdog();
+          this.suspendAndFreezeLedger();
           onTamper();
           return;
         }
@@ -242,6 +243,24 @@ export class SovereignMemoryQueue {
     this.watchdogTimer = setTimeout(tick, intervalMs);
     if (typeof this.watchdogTimer.unref === 'function') {
       this.watchdogTimer.unref();
+    }
+  }
+
+  /**
+   * Permanently suspends and freezes the ledger in an immutable state.
+   * Cancels all pending TTL expiry timers to prevent automatic zeroization
+   * or further memory modification, leaving the tampered/corrupted blocks
+   * completely intact in RAM for forensic analysis.
+   */
+  public suspendAndFreezeLedger(): void {
+    this.isIntegrityCompromised = true;
+    this.stopWatchdog();
+
+    // Clear all pending expiry timers without zeroizing or deleting block data
+    for (const [, item] of this.registry) {
+      if (item.expiryTimer) {
+        clearTimeout(item.expiryTimer);
+      }
     }
   }
 

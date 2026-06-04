@@ -12,8 +12,6 @@ import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js'
 import { shouldFreezeSession } from './error-matrix.js';
 import { serializeAdapterRequest, deserializeAdapterRequest, appendHeaderToBinary } from '../binary.js';
 import { DPoPSigner } from '../dpop/signer.js';
-import type { DPoPContextResolver } from '../dpop/index.js';
-import type { DPoPAlgorithm } from '../dpop/types.js';
 import type { IDPoPCryptoProvider } from '../contracts/index.js';
 
 /**
@@ -46,6 +44,7 @@ export class SovereignClientCore {
   
   private readonly dpopConfig?: SovereignClientCoreConfig['dpop'];
   private dpopSigner?: DPoPSigner;
+  private dpopBootstrapPromise?: Promise<JsonWebKey | null>;
 
   private constructor(config: SovereignClientCoreConfig) {
     this.cryptoProvider = config.cryptoProvider;
@@ -63,9 +62,17 @@ export class SovereignClientCore {
         '[SovereignCore] CRITICAL: Active memory tampering detected by RAM watchdog. ' +
         'Locking execution queue for forensic inspection.'
       );
-      this.memoryQueue.isIntegrityCompromised = true;
+      this.memoryQueue.suspendAndFreezeLedger();
       this.observers?.onIntegrityBreach?.();
     });
+
+    // Auto-bootstrap ephemeral DPoP keys in the background if configuration is present
+    if (this.dpopConfig) {
+      this.dpopBootstrapPromise = this.bootstrap().catch(err => {
+        console.error('[SovereignCore] Failed to auto-bootstrap DPoP keys during startup:', err);
+        return null;
+      });
+    }
   }
 
   public static getInstance(config: SovereignClientCoreConfig): SovereignClientCore {
@@ -124,11 +131,19 @@ export class SovereignClientCore {
     dpop?: PendingDPoPContext,
     config?: SovereignRequestConfig,
   ): Promise<T> {
+    if (this.isIntegrityCompromised) {
+      throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+    }
+
     if (!this.networkAdapter) {
       throw new Error(
         '[SovereignCore] executeRequest() requires a networkAdapter in the config. ' +
         'Pass networkAdapter: new FetchAdapter() (or equivalent) to getInstance().'
       );
+    }
+
+    if (this.dpopBootstrapPromise) {
+      await this.dpopBootstrapPromise;
     }
 
     const online = await this.isOnline();
@@ -203,6 +218,14 @@ export class SovereignClientCore {
   public async processSynchronizedQueue(
     handshakeValidator: () => Promise<boolean>
   ): Promise<void> {
+    if (this.isIntegrityCompromised) {
+      throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+    }
+
+    if (this.dpopBootstrapPromise) {
+      await this.dpopBootstrapPromise;
+    }
+
     if (this.isProcessingQueue) return;
     this.isProcessingQueue = true;
 
@@ -217,7 +240,7 @@ export class SovereignClientCore {
         this.cryptoProvider
       );
       if (!isLedgerIntact || this.memoryQueue.isIntegrityCompromised) {
-        this.memoryQueue.isIntegrityCompromised = true;
+        this.memoryQueue.suspendAndFreezeLedger();
         this.observers?.onIntegrityBreach?.();
         throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
       }

@@ -76,10 +76,10 @@ export class SovereignClientCore {
 
   private constructor(config: SovereignClientCoreConfig) {
     this.cryptoProvider = config.cryptoProvider;
-    this.isOnline       = config.networkResolver;
-    this.defaultTTL     = config.defaultTTL ?? 60_000;
-    this.memoryQueue    = SovereignMemoryQueue.getInstance();
-    this.trapping       = resolveTrappingConfig(config.errorTrapping);
+    this.isOnline = config.networkResolver;
+    this.defaultTTL = config.defaultTTL ?? 60_000;
+    this.memoryQueue = SovereignMemoryQueue.getInstance();
+    this.trapping = resolveTrappingConfig(config.errorTrapping);
     this.networkAdapter = config.networkAdapter;
   }
 
@@ -126,11 +126,22 @@ export class SovereignClientCore {
     if (online && !this.isProcessingQueue) {
       try {
         const response = await this.networkAdapter.request<T>(request);
+        // ── Consume and zero ────────────────────────────────────────────────
+        // Data has been transmitted. Zero the caller's Uint8Array buffers so
+        // that no copy of the sensitive payload persists in the heap beyond
+        // the point of successful dispatch.
+        SovereignClientCore.zeroRequestBuffers(request);
         return response.data;
       } catch (error) {
         if (shouldFreezeSession(error, this.trapping)) {
+          // Serialization into the LedgerBlock will happen inside
+          // enqueueStructuredRequest(), which zeroes the originals immediately
+          // after copying — no double-live copies.
           return this.enqueueStructuredRequest<T>(requestId, request, config);
         }
+        // Non-freeze error: zero before propagating, the request won't be
+        // retried so there is no reason to keep the buffers populated.
+        SovereignClientCore.zeroRequestBuffers(request);
         throw error;
       }
     }
@@ -255,9 +266,16 @@ export class SovereignClientCore {
   /**
    * Enqueues a structured request into the binary LedgerBlock.
    *
-   * The full SovereignAdapterRequest is serialized to Uint8Array and stored
-   * exclusively in LedgerBlock.serializedRequest. The `pendingRequests` map
-   * receives only the Promise resolve/reject handles — no payload.
+   * ── Consume-and-zero contract ─────────────────────────────────────────────
+   * `serializeAdapterRequest()` copies every byte of `request.body` and
+   * `request.encodedHeaders` into `binaryRequest`. Immediately after that
+   * copy, `zeroRequestBuffers()` overwrites the ORIGINAL caller-owned buffers
+   * with 0x00.
+   *
+   * Result: at any point in time there is exactly ONE live binary copy of the
+   * sensitive payload — `binaryRequest` inside the `LedgerBlock`. When the
+   * TTL fires or `purgeAll()` runs, `zeroizeBlock()` destroys that copy too.
+   * ─────────────────────────────────────────────────────────────────────────
    */
   private enqueueStructuredRequest<T>(
     id: string,
@@ -267,9 +285,13 @@ export class SovereignClientCore {
     return new Promise<T>((resolve, reject) => {
       const ttl = config?.ttl ?? this.defaultTTL;
 
-      // Serialize the complete request — including body and headers — into one
-      // binary buffer. This is the only location where sensitive data is stored.
+      // 1. Copy the full request into one binary buffer (LedgerBlock payload).
       const binaryRequest = serializeAdapterRequest(request);
+
+      // 2. Immediately zero the caller's source buffers.
+      //    The data now lives ONLY in `binaryRequest`.
+      //    `request` is not stored anywhere beyond this point.
+      SovereignClientCore.zeroRequestBuffers(request);
 
       const onExpiry = (expiredId: string): void => {
         // LedgerBlock is already being zeroized by the queue's expiry handler.
@@ -286,9 +308,8 @@ export class SovereignClientCore {
       this.memoryQueue
         .enqueue(this.cryptoProvider, id, binaryRequest, ttl, onExpiry)
         .then(() => {
-          // Store ONLY the promise handles — no closure over `request`.
-          // The `request` object (and its body/header Uint8Arrays) may be
-          // released by the caller immediately after this call returns.
+          // Store ONLY the promise handles — no reference to `request` or any
+          // payload data is captured here.
           this.pendingRequests.set(id, { resolve: resolve as (v: unknown) => void, reject });
         })
         .catch(reject);
@@ -356,5 +377,33 @@ export class SovereignClientCore {
 
     // 3. Drop all legacy closure references (NOT byte-level zeroized).
     this.executors.clear();
+  }
+
+  /**
+   * Zeroes the binary payload buffers of a SovereignAdapterRequest in-place.
+   *
+   * Called in three scenarios (consume-and-zero contract):
+   *   1. Fast-path success — immediately after networkAdapter.request() resolves.
+   *   2. Fast-path non-freeze error — before re-throwing; request won't be retried.
+   *   3. Enqueue path — immediately after serializeAdapterRequest() copies the data
+   *      into the LedgerBlock buffer; the LedgerBlock then becomes the sole owner.
+   *
+   * After this call:
+   *   • request.body          → all bytes 0x00 (if it was a non-empty Uint8Array)
+   *   • request.encodedHeaders → all bytes 0x00 (if it was a non-empty Uint8Array)
+   *
+   * The method is intentionally static: it requires no instance state and can
+   * therefore be called without a `this` reference in edge cases.
+   *
+   * Mutation warning: this modifies the Uint8Array objects owned by the caller.
+   * Do NOT reuse a SovereignAdapterRequest after passing it to executeRequest().
+   */
+  private static zeroRequestBuffers(request: SovereignAdapterRequest): void {
+    if (request.body !== undefined && request.body !== null && request.body.length > 0) {
+      request.body.fill(0);
+    }
+    if (request.encodedHeaders !== undefined && request.encodedHeaders.length > 0) {
+      request.encodedHeaders.fill(0);
+    }
   }
 }

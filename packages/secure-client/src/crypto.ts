@@ -8,7 +8,7 @@ import type { ISovereignCryptoProvider } from './types.js';
  * Concatenates an ordered set of Uint8Array segments into a single flat buffer.
  * Used to assemble the pre-image that is fed into SHA-256 for block hashing.
  *
- * Layout: id || serializedRequest || timestamp || ttl || previousHash
+ * Layout: serializedRequest || previousHash || timestamp
  */
 function concatSegments(segments: Uint8Array[]): Uint8Array {
   const totalLength = segments.reduce((sum, s) => sum + s.length, 0);
@@ -30,7 +30,7 @@ function concatSegments(segments: Uint8Array[]): Uint8Array {
  *
  * The pre-image is a deterministic concatenation of all block fields that must
  * remain immutable after enqueue:
- *   SHA256( id || serializedRequest || timestamp(utf8) || ttl(utf8) || previousHash )
+ *   SHA256( serializedRequest || previousHash || timestamp(utf8) )
  *
  * Including previousHash in the pre-image is what creates the chain linkage:
  * any mutation to a block's contents or to the ordering of blocks will
@@ -38,20 +38,16 @@ function concatSegments(segments: Uint8Array[]): Uint8Array {
  */
 export async function computeBlockHash(
   cryptoProvider: ISovereignCryptoProvider,
-  id: string,
   serializedRequest: Uint8Array,
-  timestamp: number,
-  ttl: number,
-  previousHash: Uint8Array
+  previousHash: Uint8Array,
+  timestamp: number
 ): Promise<Uint8Array> {
   const encoder = new TextEncoder();
 
   const preImage = concatSegments([
-    encoder.encode(id),
     serializedRequest,
-    encoder.encode(timestamp.toString()),
-    encoder.encode(ttl.toString()),
     previousHash,
+    encoder.encode(timestamp.toString())
   ]);
 
   return new Uint8Array(await cryptoProvider.sha256(preImage));

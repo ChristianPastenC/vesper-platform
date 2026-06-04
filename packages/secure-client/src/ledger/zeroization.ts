@@ -14,6 +14,6 @@ import type { LedgerBlock } from '../types.js';
 export function zeroizeBlock(block: LedgerBlock): void {
   block.serializedRequest.fill(0);
   block.previousHash.fill(0);
-  block.hash.fill(0);
+  block.currentHash.fill(0);
   block.isZeroized = true;
 }

@@ -54,11 +54,9 @@ export class SovereignMemoryQueue {
     const timestamp = Date.now();
     const hash = await computeBlockHash(
       cryptoProvider,
-      id,
       binaryPayload,
-      timestamp,
-      ttl,
-      previousHash
+      previousHash,
+      timestamp
     );
 
     this.registry.set(id, {
@@ -68,7 +66,7 @@ export class SovereignMemoryQueue {
       ttl,
       expiryTimer,
       previousHash,
-      hash,
+      currentHash: hash,
       isZeroized: false,
     });
 
@@ -140,18 +138,16 @@ export class SovereignMemoryQueue {
       if (!block.isZeroized) {
         const recomputedHash = await computeBlockHash(
           cryptoProvider,
-          block.id,
           block.serializedRequest,
-          block.timestamp,
-          block.ttl,
-          block.previousHash
+          block.previousHash,
+          block.timestamp
         );
-        if (!constantTimeEqual(block.hash, recomputedHash)) {
+        if (!constantTimeEqual(block.currentHash, recomputedHash)) {
           return false;
         }
       }
 
-      expectedPrevHash = new Uint8Array(block.hash);
+      expectedPrevHash = new Uint8Array(block.currentHash);
     }
 
     return true;
@@ -164,7 +160,7 @@ export class SovereignMemoryQueue {
     if (tailId === undefined) return genesisVector();
 
     const tailBlock = this.registry.get(tailId);
-    return tailBlock ? new Uint8Array(tailBlock.hash) : genesisVector();
+    return tailBlock ? new Uint8Array(tailBlock.currentHash) : genesisVector();
   }
 
   private async rechainLedger(
@@ -177,16 +173,14 @@ export class SovereignMemoryQueue {
       if (!block) continue;
 
       block.previousHash = new Uint8Array(runningPrevHash);
-      block.hash = await computeBlockHash(
+      block.currentHash = await computeBlockHash(
         cryptoProvider,
-        block.id,
         block.serializedRequest,
-        block.timestamp,
-        block.ttl,
-        block.previousHash
+        block.previousHash,
+        block.timestamp
       );
 
-      runningPrevHash = new Uint8Array(block.hash);
+      runningPrevHash = new Uint8Array(block.currentHash);
     }
   }
 }

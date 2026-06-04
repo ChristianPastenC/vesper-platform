@@ -178,9 +178,9 @@ export interface LedgerBlock {
 
   /**
    * SHA-256 hash of this block's content:
-   *   SHA256(id || serializedRequest || timestamp || ttl || previousHash)
+   *   SHA256(serializedRequest || previousHash || timestamp)
    */
-  hash: Uint8Array;
+  currentHash: Uint8Array;
 
   /**
    * True once activeZeroization() has been called on this block.

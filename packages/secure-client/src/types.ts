@@ -135,7 +135,39 @@ export interface SovereignClientCoreConfig {
    * `.fill(0)` — no plain-text data lingers in any JS closure or heap object.
    */
   networkAdapter?: ISovereignNetworkAdapter;
+
+  /**
+   * Optional callbacks to monitor the lifecycle of the SovereignClientCore session.
+   * Enables the host application to react when the library enters offline-sequestration
+   * mode (e.g., pausing auto-logout timers, showing connection banners).
+   */
+  observers?: SessionLifecycleObservers;
 }
+
+/**
+ * Callbacks for monitoring the lifecycle of the SovereignClientCore session.
+ */
+export interface SessionLifecycleObservers {
+  /**
+   * Fired exactly once when the first request fails due to network or a trapped HTTP
+   * error (e.g. 503/504), transitioning the core into frozen state. Host apps should
+   * pause automatic session-expiration timers and background polling here.
+   */
+  onSessionFreeze?: (reason: unknown) => void;
+
+  /**
+   * Fired when the queue has been successfully drained and the session returns to
+   * normal online operation. Host apps can resume background timers here.
+   */
+  onSessionResume?: () => void;
+
+  /**
+   * Fired when the session is forcefully purged (e.g., active memory tampering,
+   * handshake failure). Host apps should usually force-logout the user when this occurs.
+   */
+  onSessionPurge?: (reason: Error) => void;
+}
+
 
 
 /**

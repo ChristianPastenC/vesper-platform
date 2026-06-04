@@ -4,6 +4,7 @@ import type {
   SovereignRequestConfig,
   QueuedRequestRecord,
   PendingDPoPContext,
+  SessionLifecycleObservers,
 } from '../types.js';
 import type { ISovereignCryptoProvider, ISovereignNetworkAdapter, SovereignAdapterRequest } from '../contracts/index.js';
 import { SovereignMemoryQueue } from '../ledger/index.js';
@@ -58,6 +59,9 @@ export class SovereignClientCore {
    */
   private readonly pendingRequests = new Map<string, QueuedRequestRecord<unknown>>();
 
+  private readonly observers: SessionLifecycleObservers | undefined;
+  private _isFrozen = false;
+
   private constructor(config: SovereignClientCoreConfig) {
     this.cryptoProvider = config.cryptoProvider;
     this.isOnline       = config.networkResolver;
@@ -65,6 +69,7 @@ export class SovereignClientCore {
     this.memoryQueue    = SovereignMemoryQueue.getInstance();
     this.trapping       = resolveTrappingConfig(config.errorTrapping);
     this.networkAdapter = config.networkAdapter;
+    this.observers      = config.observers;
 
     // Start the active memory watchdog to detect tampering in real-time.
     this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
@@ -81,6 +86,14 @@ export class SovereignClientCore {
       SovereignClientCore.instance = new SovereignClientCore(config);
     }
     return SovereignClientCore.instance;
+  }
+
+  /**
+   * True if the core is currently in offline-sequestration mode (holding
+   * pending requests due to a network or 503/504 error).
+   */
+  public get isFrozen(): boolean {
+    return this._isFrozen;
   }
 
   // ── Execution ──────────────────────────────────────────────────────────────
@@ -137,14 +150,14 @@ export class SovereignClientCore {
         return response.data;
       } catch (error) {
         if (shouldFreezeSession(error, this.trapping)) {
-          return this.enqueueStructuredRequest<T>(requestId, request, dpop, config);
+          return this.enqueueStructuredRequest<T>(requestId, request, dpop, config, error);
         }
         SovereignClientCore.zeroRequestBuffers(request);
         throw error;
       }
     }
 
-    return this.enqueueStructuredRequest<T>(requestId, request, dpop, config);
+    return this.enqueueStructuredRequest<T>(requestId, request, dpop, config, new Error('Offline or processing queue'));
   }
 
   // ── Queue processing ────────────────────────────────────────────────────────
@@ -227,6 +240,11 @@ export class SovereignClientCore {
           this.pendingRequests.delete(id);
         }
       }
+
+      if (this._isFrozen && this.memoryQueue.size === 0) {
+        this._isFrozen = false;
+        this.observers?.onSessionResume?.();
+      }
     } finally {
       this.isProcessingQueue = false;
     }
@@ -239,6 +257,7 @@ export class SovereignClientCore {
     request: SovereignAdapterRequest,
     dpop?: PendingDPoPContext,
     config?: SovereignRequestConfig,
+    freezeReason?: unknown,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const ttl = config?.ttl ?? this.defaultTTL;
@@ -246,6 +265,11 @@ export class SovereignClientCore {
       const binaryRequest = serializeAdapterRequest(request);
 
       SovereignClientCore.zeroRequestBuffers(request);
+
+      if (!this._isFrozen) {
+        this._isFrozen = true;
+        this.observers?.onSessionFreeze?.(freezeReason);
+      }
 
       const onExpiry = (expiredId: string): void => {
         const pending = this.pendingRequests.get(expiredId);
@@ -283,6 +307,9 @@ export class SovereignClientCore {
       record.reject(purgeError);
     }
     this.pendingRequests.clear();
+
+    this._isFrozen = false;
+    this.observers?.onSessionPurge?.(purgeError);
   }
 
   /**

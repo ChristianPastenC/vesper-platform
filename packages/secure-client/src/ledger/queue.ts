@@ -20,6 +20,8 @@ export class SovereignMemoryQueue {
   private readonly registry = new Map<string, LedgerBlock>();
   private fifoOrder: string[] = [];
   
+  public isIntegrityCompromised = false;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private watchdogTimer?: any;
   private isWatchdogRunning = false;
@@ -44,6 +46,10 @@ export class SovereignMemoryQueue {
     ttl: number,
     onExpire: (id: string) => void
   ): Promise<void> {
+    if (this.isIntegrityCompromised) {
+      throw new Error('[SovereignCore] Ledger integrity compromised. Enqueue blocked.');
+    }
+
     if (this.registry.has(id)) {
       await this.activeZeroization(cryptoProvider, id);
     }
@@ -89,6 +95,10 @@ export class SovereignMemoryQueue {
     cryptoProvider: ISovereignCryptoProvider,
     id: string
   ): Promise<void> {
+    if (this.isIntegrityCompromised) {
+      throw new Error('[SovereignCore] Ledger integrity compromised. Dequeue blocked.');
+    }
+
     const item = this.registry.get(id);
     if (!item) return;
 
@@ -105,6 +115,10 @@ export class SovereignMemoryQueue {
     cryptoProvider: ISovereignCryptoProvider,
     id: string
   ): Promise<void> {
+    if (this.isIntegrityCompromised) {
+      throw new Error('[SovereignCore] Ledger integrity compromised. Operation blocked.');
+    }
+
     const item = this.registry.get(id);
     if (!item) return;
 

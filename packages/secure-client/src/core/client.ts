@@ -75,9 +75,10 @@ export class SovereignClientCore {
     this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
       console.error(
         '[SovereignCore] CRITICAL: Active memory tampering detected by RAM watchdog. ' +
-        'Invoking emergency purge.'
+        'Locking execution queue for forensic inspection.'
       );
-      this.purgeAll();
+      this.memoryQueue.isIntegrityCompromised = true;
+      this.observers?.onIntegrityBreach?.();
     });
   }
 
@@ -94,6 +95,14 @@ export class SovereignClientCore {
    */
   public get isFrozen(): boolean {
     return this._isFrozen;
+  }
+
+  /**
+   * True if the core has detected cryptographic tampering in RAM.
+   * Execution is permanently locked until purgeAll() is called.
+   */
+  public get isIntegrityCompromised(): boolean {
+    return this.memoryQueue.isIntegrityCompromised;
   }
 
   // ── Execution ──────────────────────────────────────────────────────────────
@@ -178,9 +187,10 @@ export class SovereignClientCore {
       const isLedgerIntact = await this.memoryQueue.verifyLedgerIntegrity(
         this.cryptoProvider
       );
-      if (!isLedgerIntact) {
-        this.purgeAll();
-        throw new Error('[SovereignCore] Ledger integrity compromised. RAM purged.');
+      if (!isLedgerIntact || this.memoryQueue.isIntegrityCompromised) {
+        this.memoryQueue.isIntegrityCompromised = true;
+        this.observers?.onIntegrityBreach?.();
+        throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
       }
 
       const executionOrder = this.memoryQueue.getExecutionOrder();
@@ -294,10 +304,12 @@ export class SovereignClientCore {
   /**
    * Purges all in-flight state unconditionally.
    * LedgerBlock buffers are byte-level zeroized by `.fill(0)`.
+   * Also resets the integrity compromise lock.
    */
-  private purgeAll(): void {
+  public purgeAll(): void {
     // 1. Zeroize all LedgerBlock binary buffers.
     this.memoryQueue.clearAll();
+    this.memoryQueue.isIntegrityCompromised = false;
 
     // 2. Reject all pending Promises.
     const purgeError = new Error(

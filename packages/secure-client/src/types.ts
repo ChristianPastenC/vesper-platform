@@ -162,10 +162,19 @@ export interface SessionLifecycleObservers {
   onSessionResume?: () => void;
 
   /**
-   * Fired when the session is forcefully purged (e.g., active memory tampering,
-   * handshake failure). Host apps should usually force-logout the user when this occurs.
+   * Fired when the session is forcefully purged (e.g., handshake failure, manual trigger).
+   * Host apps should usually force-logout the user when this occurs.
    */
   onSessionPurge?: (reason: Error) => void;
+
+  /**
+   * Fired immediately when the active RAM watchdog or pre-flight verification
+   * detects a cryptographic integrity breach (e.g., bit-flipping attack).
+   * The system is placed into a permanent lock-down state where no further
+   * queuing or replay can occur, but buffers are NOT zeroized, permitting
+   * forensic RAM dumps. The host MUST manually call `core.purgeAll()` after.
+   */
+  onIntegrityBreach?: () => void;
 }
 
 

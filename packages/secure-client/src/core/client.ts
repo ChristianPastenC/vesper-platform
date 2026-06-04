@@ -1,16 +1,18 @@
-import type {
-  NetworkStatusResolver,
-  SovereignClientCoreConfig,
-  SovereignRequestConfig,
-  QueuedRequestRecord,
-  PendingDPoPContext,
-  SessionLifecycleObservers,
+import {
+  IntegrityBreachError,
+  type NetworkStatusResolver,
+  type SovereignClientCoreConfig,
+  type SovereignRequestConfig,
+  type QueuedRequestRecord,
+  type PendingDPoPContext,
+  type SessionLifecycleObservers,
+  type DPoPAlgorithm,
 } from '../types.js';
 import type { ISovereignCryptoProvider, ISovereignNetworkAdapter, SovereignAdapterRequest } from '../contracts/index.js';
 import { SovereignMemoryQueue } from '../ledger/index.js';
 import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js';
 import { shouldFreezeSession } from './error-matrix.js';
-import { serializeAdapterRequest, deserializeAdapterRequest, appendHeaderToBinary } from '../binary.js';
+import { serializeAdapterRequest, deserializeAdapterRequest, appendHeaderToBinary, decodeHeaders } from '../binary.js';
 import { DPoPSigner } from '../dpop/signer.js';
 import type { IDPoPCryptoProvider } from '../contracts/index.js';
 
@@ -43,6 +45,9 @@ export class SovereignClientCore {
   private _isFrozen = false;
   
   private readonly dpopConfig?: SovereignClientCoreConfig['dpop'];
+  private readonly enableAutoDPoP: boolean;
+  private readonly dpopAlgorithm: DPoPAlgorithm | undefined;
+
   private dpopSigner?: DPoPSigner;
   private dpopBootstrapPromise?: Promise<JsonWebKey | null>;
 
@@ -55,6 +60,8 @@ export class SovereignClientCore {
     this.networkAdapter = config.networkAdapter;
     this.observers      = config.observers;
     this.dpopConfig     = config.dpop;
+    this.enableAutoDPoP = config.enableAutoDPoP ?? false;
+    this.dpopAlgorithm  = config.dpopAlgorithm;
 
     // Start the active memory watchdog to detect tampering in real-time.
     this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
@@ -66,10 +73,10 @@ export class SovereignClientCore {
       this.observers?.onIntegrityBreach?.();
     });
 
-    // Auto-bootstrap ephemeral DPoP keys in the background if configuration is present
-    if (this.dpopConfig) {
-      this.dpopBootstrapPromise = this.bootstrap().catch(err => {
-        console.error('[SovereignCore] Failed to auto-bootstrap DPoP keys during startup:', err);
+    // Auto-bootstrap ephemeral DPoP keys in the background if configuration or auto-DPoP is present
+    if (this.dpopConfig || this.enableAutoDPoP) {
+      this.dpopBootstrapPromise = this.bootstrapAutoDPoP().catch(err => {
+        console.error('[SovereignCore] Failed to auto-bootstrap DPoP keys:', err);
         return null;
       });
     }
@@ -87,10 +94,25 @@ export class SovereignClientCore {
    * @returns The generated JWK public key if DPoP is enabled, otherwise null.
    */
   public async bootstrap(): Promise<JsonWebKey | null> {
-    if (this.dpopConfig && !this.dpopSigner) {
+    return this.bootstrapAutoDPoP();
+  }
+
+  private async bootstrapAutoDPoP(): Promise<JsonWebKey | null> {
+    if (!this.dpopSigner && (this.dpopConfig || this.enableAutoDPoP)) {
+      const alg = this.dpopAlgorithm ?? this.dpopConfig?.algorithm;
       this.dpopSigner = await DPoPSigner.create(this.cryptoProvider as unknown as IDPoPCryptoProvider, {
-        ...(this.dpopConfig.algorithm && { algorithm: this.dpopConfig.algorithm }),
+        ...(alg && { algorithm: alg }),
       });
+    }
+    return this.dpopSigner ? this.dpopSigner.getPublicKeyJwk() : null;
+  }
+
+  /**
+   * Returns the generated auto-DPoP public key in JWK format.
+   * Useful for registering the key with the IdP during the initial handshake.
+   */
+  public getDPoPPublicKey(): JsonWebKey | null {
+    if (this.dpopSigner) {
       return this.dpopSigner.getPublicKeyJwk();
     }
     return null;
@@ -109,7 +131,7 @@ export class SovereignClientCore {
    * Execution is permanently locked until purgeAll() is called.
    */
   public get isIntegrityCompromised(): boolean {
-    return this.memoryQueue.isIntegrityCompromised;
+    return this.memoryQueue.isIntegrityCompromised || this.memoryQueue.getLocked();
   }
 
   // ── Execution ──────────────────────────────────────────────────────────────
@@ -132,7 +154,9 @@ export class SovereignClientCore {
     config?: SovereignRequestConfig,
   ): Promise<T> {
     if (this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+      throw new IntegrityBreachError(
+        '[SovereignCore] Execution blocked. Memory is frozen for forensic inspection due to tampering.'
+      );
     }
 
     if (!this.networkAdapter) {
@@ -151,16 +175,7 @@ export class SovereignClientCore {
     if (online && !this.isProcessingQueue) {
       try {
         let dispatchRequest = request;
-        let activeDpop = dpop;
-
-        if (!activeDpop && this.dpopSigner && this.dpopConfig) {
-          activeDpop = {
-            signer: this.dpopSigner,
-            method: request.method,
-            url: request.url,
-            contextResolver: this.dpopConfig.contextResolver,
-          };
-        }
+        const activeDpop = await this.resolveDPoPContextIfNeeded(request, dpop, config);
         
         if (activeDpop) {
           const context = await activeDpop.contextResolver();
@@ -169,10 +184,20 @@ export class SovereignClientCore {
           if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
           
           const proof = await activeDpop.signer.generateProof(proofOptions);
-          dispatchRequest = {
-            ...request,
-            encodedHeaders: appendHeaderToBinary(request.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
-          };
+          if (request.encodedHeaders !== undefined) {
+            dispatchRequest = {
+              ...request,
+              encodedHeaders: appendHeaderToBinary(request.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
+            };
+          } else {
+            dispatchRequest = {
+              ...request,
+              headers: {
+                ...(request.headers || {}),
+                DPoP: proof
+              }
+            };
+          }
         }
 
         const response = await this.networkAdapter.request<T>(dispatchRequest);
@@ -184,15 +209,7 @@ export class SovereignClientCore {
         return response.data;
       } catch (error) {
         if (shouldFreezeSession(error, this.trapping)) {
-          let freezeDpop = dpop;
-          if (!freezeDpop && this.dpopSigner && this.dpopConfig) {
-            freezeDpop = {
-              signer: this.dpopSigner,
-              method: request.method,
-              url: request.url,
-              contextResolver: this.dpopConfig.contextResolver,
-            };
-          }
+          const freezeDpop = await this.resolveDPoPContextIfNeeded(request, dpop, config);
           return this.enqueueStructuredRequest<T>(requestId, request, freezeDpop, config, error);
         }
         SovereignClientCore.zeroRequestBuffers(request);
@@ -200,16 +217,7 @@ export class SovereignClientCore {
       }
     }
 
-    let queueDpop = dpop;
-    if (!queueDpop && this.dpopSigner && this.dpopConfig) {
-      queueDpop = {
-        signer: this.dpopSigner,
-        method: request.method,
-        url: request.url,
-        contextResolver: this.dpopConfig.contextResolver,
-      };
-    }
-
+    const queueDpop = await this.resolveDPoPContextIfNeeded(request, dpop, config);
     return this.enqueueStructuredRequest<T>(requestId, request, queueDpop, config, new Error('Offline or processing queue'));
   }
 
@@ -219,7 +227,7 @@ export class SovereignClientCore {
     handshakeValidator: () => Promise<boolean>
   ): Promise<void> {
     if (this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Execution blocked.');
     }
 
     if (this.dpopBootstrapPromise) {
@@ -242,7 +250,7 @@ export class SovereignClientCore {
       if (!isLedgerIntact || this.memoryQueue.isIntegrityCompromised) {
         this.memoryQueue.suspendAndFreezeLedger();
         this.observers?.onIntegrityBreach?.();
-        throw new Error('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+        throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Execution blocked.');
       }
 
       const executionOrder = this.memoryQueue.getExecutionOrder();
@@ -267,13 +275,43 @@ export class SovereignClientCore {
             }
 
             let dispatchRequest = deserialized;
-            if (pending.dpop) {
-              const context = await pending.dpop.contextResolver();
-              const proofOptions: any = { method: pending.dpop.method, url: pending.dpop.url };
+            let activeDpop = pending.dpop;
+
+            if (!activeDpop && this.enableAutoDPoP && this.dpopSigner) {
+              let authHeaderValue: string | undefined;
+              let requiresDPoP = false;
+
+              if (deserialized.encodedHeaders && deserialized.encodedHeaders.length > 0) {
+                const decoded = decodeHeaders(deserialized.encodedHeaders);
+                authHeaderValue = decoded['Authorization'] || decoded['authorization'];
+                if (decoded['DPoP'] !== undefined || decoded['dpop'] !== undefined) {
+                  requiresDPoP = true;
+                }
+              }
+
+              let accessToken: string | undefined;
+              if (authHeaderValue && authHeaderValue.toLowerCase().startsWith('dpop ')) {
+                accessToken = authHeaderValue.slice(5).trim();
+                requiresDPoP = true;
+              }
+
+              if (requiresDPoP) {
+                activeDpop = {
+                  signer: this.dpopSigner,
+                  method: deserialized.method,
+                  url: deserialized.url,
+                  contextResolver: () => (accessToken !== undefined ? { accessToken } : {})
+                };
+              }
+            }
+
+            if (activeDpop) {
+              const context = await activeDpop.contextResolver();
+              const proofOptions: any = { method: activeDpop.method, url: activeDpop.url };
               if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
               if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
               
-              const proof = await pending.dpop.signer.generateProof(proofOptions);
+              const proof = await activeDpop.signer.generateProof(proofOptions);
               dispatchRequest = {
                 ...deserialized,
                 encodedHeaders: appendHeaderToBinary(deserialized.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
@@ -313,6 +351,56 @@ export class SovereignClientCore {
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
+
+  private async resolveDPoPContextIfNeeded(
+    request: SovereignAdapterRequest,
+    dpop?: PendingDPoPContext,
+    config?: SovereignRequestConfig
+  ): Promise<PendingDPoPContext | undefined> {
+    if (dpop) return dpop;
+
+    let authHeaderValue: string | undefined;
+    let requiresDPoP = config?.requireDPoP === true;
+
+    if (request.encodedHeaders && request.encodedHeaders.length > 0) {
+      const decoded = decodeHeaders(request.encodedHeaders);
+      authHeaderValue = decoded['Authorization'] || decoded['authorization'];
+      if (decoded['DPoP'] !== undefined || decoded['dpop'] !== undefined) {
+        requiresDPoP = true;
+      }
+    } else if (request.headers) {
+      authHeaderValue = request.headers['Authorization'] || request.headers['authorization'];
+      if (request.headers['DPoP'] !== undefined || request.headers['dpop'] !== undefined) {
+        requiresDPoP = true;
+      }
+    }
+
+    let accessToken: string | undefined;
+    if (authHeaderValue && authHeaderValue.toLowerCase().startsWith('dpop ')) {
+      accessToken = authHeaderValue.slice(5).trim();
+      requiresDPoP = true;
+    }
+
+    if (requiresDPoP && this.dpopSigner) {
+      return {
+        signer: this.dpopSigner,
+        method: request.method,
+        url: request.url,
+        contextResolver: () => (accessToken !== undefined ? { accessToken } : {})
+      };
+    }
+
+    if (this.dpopSigner && this.dpopConfig) {
+      return {
+        signer: this.dpopSigner,
+        method: request.method,
+        url: request.url,
+        contextResolver: this.dpopConfig.contextResolver,
+      };
+    }
+
+    return undefined;
+  }
 
   private enqueueStructuredRequest<T>(
     id: string,

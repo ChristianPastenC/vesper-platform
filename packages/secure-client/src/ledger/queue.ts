@@ -1,4 +1,4 @@
-import type { LedgerBlock } from '../types.js';
+import { IntegrityBreachError, type LedgerBlock } from '../types.js';
 import type { ISovereignCryptoProvider } from '../contracts/index.js';
 import { computeBlockHash, constantTimeEqual, genesisVector } from '../crypto.js';
 import { zeroizeBlock } from './zeroization.js';
@@ -21,6 +21,7 @@ export class SovereignMemoryQueue {
   private fifoOrder: string[] = [];
   
   public isIntegrityCompromised = false;
+  private isLocked = false;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private watchdogTimer?: any;
@@ -46,6 +47,9 @@ export class SovereignMemoryQueue {
     ttl: number,
     onExpire: (id: string) => void
   ): Promise<void> {
+    if (this.isLocked) {
+      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Enqueue blocked (locked).');
+    }
     if (this.isIntegrityCompromised) {
       throw new Error('[SovereignCore] Ledger integrity compromised. Enqueue blocked.');
     }
@@ -95,6 +99,9 @@ export class SovereignMemoryQueue {
     cryptoProvider: ISovereignCryptoProvider,
     id: string
   ): Promise<void> {
+    if (this.isLocked) {
+      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Dequeue blocked (locked).');
+    }
     if (this.isIntegrityCompromised) {
       throw new Error('[SovereignCore] Ledger integrity compromised. Dequeue blocked.');
     }
@@ -115,6 +122,9 @@ export class SovereignMemoryQueue {
     cryptoProvider: ISovereignCryptoProvider,
     id: string
   ): Promise<void> {
+    if (this.isLocked) {
+      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Operation blocked (locked).');
+    }
     if (this.isIntegrityCompromised) {
       throw new Error('[SovereignCore] Ledger integrity compromised. Operation blocked.');
     }
@@ -138,6 +148,7 @@ export class SovereignMemoryQueue {
     }
     this.registry.clear();
     this.fifoOrder = [];
+    this.isLocked = false;
   }
 
   public async verifyLedgerIntegrity(
@@ -253,6 +264,7 @@ export class SovereignMemoryQueue {
    * completely intact in RAM for forensic analysis.
    */
   public suspendAndFreezeLedger(): void {
+    this.isLocked = true;
     this.isIntegrityCompromised = true;
     this.stopWatchdog();
 
@@ -262,6 +274,13 @@ export class SovereignMemoryQueue {
         clearTimeout(item.expiryTimer);
       }
     }
+  }
+
+  /**
+   * Returns whether the queue is currently locked due to integrity breach.
+   */
+  public getLocked(): boolean {
+    return this.isLocked;
   }
 
   /**

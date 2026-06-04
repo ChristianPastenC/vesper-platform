@@ -41,7 +41,7 @@ export type {
 } from './types.js';
 
 // Typed HTTP error — throw from your executor to feed the Error Trapping Matrix
-export { SovereignHttpError } from './types.js';
+export { SovereignHttpError, IntegrityBreachError } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Binary encoding helpers — produce zeroizable Uint8Array buffers for use

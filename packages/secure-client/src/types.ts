@@ -6,6 +6,7 @@ import type { ISovereignNetworkAdapter } from './contracts/index.js';
 import type { DPoPSigner } from './dpop/signer.js';
 import type { DPoPContextResolver } from './dpop/index.js';
 import type { DPoPAlgorithm } from './dpop/types.js';
+export type { DPoPAlgorithm };
 
 
 /**
@@ -20,6 +21,12 @@ export interface SovereignRequestConfig {
    * Falls back to the defaultTTL set on SovereignClientCore when omitted.
    */
   ttl?: number;
+
+  /**
+   * Force the request to be signed with a DPoP proof, even if the Authorization
+   * header does not start with "DPoP ".
+   */
+  requireDPoP?: boolean;
 }
 
 /**
@@ -42,6 +49,20 @@ export class SovereignHttpError extends Error {
     this.status = status;
     // Maintain proper prototype chain in ES5 transpilation targets.
     Object.setPrototypeOf(this, SovereignHttpError.prototype);
+  }
+}
+
+/**
+ * Thrown when the RAM watchdog or integrity check detects memory tampering.
+ * When this occurs, execution is permanently locked and the queue is frozen
+ * in an immutable state for forensic inspection.
+ */
+export class IntegrityBreachError extends Error {
+  constructor(message = '[SovereignCore] Ledger integrity compromised. Queue is frozen.') {
+    super(message);
+    this.name = 'IntegrityBreachError';
+    // Maintain proper prototype chain in ES5 transpilation targets.
+    Object.setPrototypeOf(this, IntegrityBreachError.prototype);
   }
 }
 
@@ -151,6 +172,12 @@ export interface SovereignClientCoreConfig {
     algorithm?: DPoPAlgorithm;
     contextResolver: DPoPContextResolver;
   };
+
+  /** Automatically generate and manage temporary asymmetric DPoP keys. */
+  enableAutoDPoP?: boolean;
+
+  /** Asymmetric signature algorithm to use for the automatically generated DPoP keys. */
+  dpopAlgorithm?: DPoPAlgorithm;
 }
 
 /**

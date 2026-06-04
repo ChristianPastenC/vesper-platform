@@ -5,29 +5,20 @@ import { zeroizeBlock } from './zeroization.js';
 
 /**
  * SovereignMemoryQueue
- *
- * A global-singleton, in-memory FIFO transaction ledger whose entries are
- * cryptographically chained using SHA-256 — analogous to a miniature
- * append-only blockchain operating entirely inside volatile RAM.
- *
- * Singleton Contract:
- * Only one instance exists per JS runtime. All calls to
- * SovereignMemoryQueue.getInstance() return the SAME object.
+ * In-memory ledger chaining transactions via SHA-256 hashes (similar to a block chain).
+ * Enables real-time detection of RAM modification/bit-flipping attacks.
  */
 export class SovereignMemoryQueue {
   private static instance: SovereignMemoryQueue;
-
   private readonly registry = new Map<string, LedgerBlock>();
   private fifoOrder: string[] = [];
-  
   public isIntegrityCompromised = false;
   private isLocked = false;
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private watchdogTimer?: any;
   private isWatchdogRunning = false;
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): SovereignMemoryQueue {
     if (!SovereignMemoryQueue.instance) {
@@ -40,6 +31,10 @@ export class SovereignMemoryQueue {
     return this.registry.size;
   }
 
+  /**
+   * Chains and pushes a request payload to the volatile ledger.
+   * Sets up a timeout trigger for active zeroization upon TTL expiry.
+   */
   public async enqueue(
     cryptoProvider: ISovereignCryptoProvider,
     id: string,
@@ -47,31 +42,21 @@ export class SovereignMemoryQueue {
     ttl: number,
     onExpire: (id: string) => void
   ): Promise<void> {
-    if (this.isLocked) {
-      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Enqueue blocked (locked).');
-    }
-    if (this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger integrity compromised. Enqueue blocked.');
-    }
+    if (this.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
+    if (this.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
     if (this.registry.has(id)) {
       await this.activeZeroization(cryptoProvider, id);
     }
 
     const previousHash = this.resolvePreviousHash();
-
     const expiryTimer = setTimeout(async () => {
       onExpire(id);
       await this.activeZeroization(cryptoProvider, id);
     }, ttl);
 
     const timestamp = Date.now();
-    const hash = await computeBlockHash(
-      cryptoProvider,
-      binaryPayload,
-      previousHash,
-      timestamp
-    );
+    const hash = await computeBlockHash(cryptoProvider, binaryPayload, previousHash, timestamp);
 
     this.registry.set(id, {
       id,
@@ -83,7 +68,6 @@ export class SovereignMemoryQueue {
       currentHash: hash,
       isZeroized: false,
     });
-
     this.fifoOrder.push(id);
   }
 
@@ -95,49 +79,38 @@ export class SovereignMemoryQueue {
     return this.registry.get(id);
   }
 
-  public async dequeue(
-    cryptoProvider: ISovereignCryptoProvider,
-    id: string
-  ): Promise<void> {
-    if (this.isLocked) {
-      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Dequeue blocked (locked).');
-    }
-    if (this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger integrity compromised. Dequeue blocked.');
-    }
+  /**
+   * Safely removes request from ledger, zeroing out its payload buffers,
+   * then updates the hash chain.
+   */
+  public async dequeue(cryptoProvider: ISovereignCryptoProvider, id: string): Promise<void> {
+    if (this.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
+    if (this.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
     const item = this.registry.get(id);
     if (!item) return;
 
     clearTimeout(item.expiryTimer);
     zeroizeBlock(item);
-
     this.registry.delete(id);
     this.fifoOrder = this.fifoOrder.filter(orderId => orderId !== id);
-
     await this.rechainLedger(cryptoProvider);
   }
 
-  public async activeZeroization(
-    cryptoProvider: ISovereignCryptoProvider,
-    id: string
-  ): Promise<void> {
-    if (this.isLocked) {
-      throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Operation blocked (locked).');
-    }
-    if (this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger integrity compromised. Operation blocked.');
-    }
+  /**
+   * Performs proactive payload zeroization upon timeout expiry, rechaining subsequent blocks.
+   */
+  public async activeZeroization(cryptoProvider: ISovereignCryptoProvider, id: string): Promise<void> {
+    if (this.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
+    if (this.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
     const item = this.registry.get(id);
     if (!item) return;
 
     clearTimeout(item.expiryTimer);
     zeroizeBlock(item);
-
     this.registry.delete(id);
     this.fifoOrder = this.fifoOrder.filter(orderId => orderId !== id);
-
     await this.rechainLedger(cryptoProvider);
   }
 
@@ -151,18 +124,17 @@ export class SovereignMemoryQueue {
     this.isLocked = false;
   }
 
-  public async verifyLedgerIntegrity(
-    cryptoProvider: ISovereignCryptoProvider
-  ): Promise<boolean> {
+  /**
+   * Verifies the cryptographic chain hash links to detect memory corruption or injection.
+   */
+  public async verifyLedgerIntegrity(cryptoProvider: ISovereignCryptoProvider): Promise<boolean> {
     let expectedPrevHash = genesisVector();
 
     for (const id of this.fifoOrder) {
       const block = this.registry.get(id);
       if (!block) return false;
 
-      if (!constantTimeEqual(block.previousHash, expectedPrevHash)) {
-        return false;
-      }
+      if (!constantTimeEqual(block.previousHash, expectedPrevHash)) return false;
 
       if (!block.isZeroized) {
         const recomputedHash = await computeBlockHash(
@@ -171,32 +143,23 @@ export class SovereignMemoryQueue {
           block.previousHash,
           block.timestamp
         );
-        if (!constantTimeEqual(block.currentHash, recomputedHash)) {
-          return false;
-        }
+        if (!constantTimeEqual(block.currentHash, recomputedHash)) return false;
       }
-
       expectedPrevHash = new Uint8Array(block.currentHash);
     }
-
     return true;
   }
 
   private resolvePreviousHash(): Uint8Array {
     if (this.fifoOrder.length === 0) return genesisVector();
-
     const tailId = this.fifoOrder[this.fifoOrder.length - 1];
     if (tailId === undefined) return genesisVector();
-
     const tailBlock = this.registry.get(tailId);
     return tailBlock ? new Uint8Array(tailBlock.currentHash) : genesisVector();
   }
 
-  private async rechainLedger(
-    cryptoProvider: ISovereignCryptoProvider
-  ): Promise<void> {
+  private async rechainLedger(cryptoProvider: ISovereignCryptoProvider): Promise<void> {
     let runningPrevHash = genesisVector();
-
     for (const id of this.fifoOrder) {
       const block = this.registry.get(id);
       if (!block) continue;
@@ -208,16 +171,13 @@ export class SovereignMemoryQueue {
         block.previousHash,
         block.timestamp
       );
-
       runningPrevHash = new Uint8Array(block.currentHash);
     }
   }
 
   /**
-   * Starts a background watchdog loop that actively re-verifies ledger integrity.
-   * If memory tampering is detected (e.g. a payload bit is flipped), the ledger
-   * is frozen instantly (canceling all expiry timers without zeroizing) and the
-   * onTamper callback is immediately fired.
+   * Starts background integrity monitoring. If validation fails, suspends the queue
+   * to preserve evidence for forensics.
    */
   public startWatchdog(
     cryptoProvider: ISovereignCryptoProvider,
@@ -229,7 +189,6 @@ export class SovereignMemoryQueue {
 
     const tick = async () => {
       if (!this.isWatchdogRunning) return;
-
       if (this.size > 0) {
         try {
           const intact = await this.verifyLedgerIntegrity(cryptoProvider);
@@ -244,7 +203,6 @@ export class SovereignMemoryQueue {
           return;
         }
       }
-
       this.watchdogTimer = setTimeout(tick, intervalMs);
       if (typeof this.watchdogTimer.unref === 'function') {
         this.watchdogTimer.unref();
@@ -258,34 +216,21 @@ export class SovereignMemoryQueue {
   }
 
   /**
-   * Permanently suspends and freezes the ledger in an immutable state.
-   * Cancels all pending TTL expiry timers to prevent automatic zeroization
-   * or further memory modification, leaving the tampered/corrupted blocks
-   * completely intact in RAM for forensic analysis.
+   * Locks the queue and freezes timers to prevent auto-zeroization during audit.
    */
   public suspendAndFreezeLedger(): void {
     this.isLocked = true;
     this.isIntegrityCompromised = true;
     this.stopWatchdog();
-
-    // Clear all pending expiry timers without zeroizing or deleting block data
     for (const [, item] of this.registry) {
-      if (item.expiryTimer) {
-        clearTimeout(item.expiryTimer);
-      }
+      if (item.expiryTimer) clearTimeout(item.expiryTimer);
     }
   }
 
-  /**
-   * Returns whether the queue is currently locked due to integrity breach.
-   */
   public getLocked(): boolean {
     return this.isLocked;
   }
 
-  /**
-   * Stops the active memory watchdog.
-   */
   public stopWatchdog(): void {
     this.isWatchdogRunning = false;
     if (this.watchdogTimer) {

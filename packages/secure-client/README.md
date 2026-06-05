@@ -62,14 +62,14 @@ src/
 
 The in-memory ledger chains each block to its predecessor, ensuring that any payload tampering or block reordering invalidates the chain. The mathematical formulation of the block hashing is:
 
-$$H_n = \text{SHA256}(P_n \mathbin{\Vert} H_{n-1} \mathbin{\Vert} \text{Timestamp\_local}_{(\text{utf8})})$$
+$$H_n = \text{SHA256}(P_n \mathbin{\Vert} H_{n-1} \mathbin{\Vert} \text{Timestamp\\_local}_{(\text{utf8})})$$
 
 ### Variable Definitions:
 
 - **$H_n$**: The resulting SHA-256 hash of the current block $n$ (represented as a 32-byte `Uint8Array`).
 - **$P_n$**: The binary payload of the current request (`serializedRequest` encoded as a `Uint8Array`), containing the serialized HTTP method, URL, headers, and body.
 - **$H_{n-1}$**: The SHA-256 hash of the preceding block in the ledger. For the genesis block ($n = 0$), this is a 32-byte zero-filled array (`genesisVector`).
-- **$\text{Timestamp\_local}_{(\text{utf8})}$**: The UTF-8 encoded string representation of the local timestamp in milliseconds (`timestamp.toString()`) at which the request was enqueued.
+- **$\text{Timestamp\\_local}_{(\text{utf8})}$**: The UTF-8 encoded string representation of the local timestamp in milliseconds (`timestamp.toString()`) at which the request was enqueued.
 - **$\mathbin{\Vert}$**: The binary concatenation operator (`concatSegments`), merging the buffers sequentially before calculating the SHA-256 digest.
 
 ---

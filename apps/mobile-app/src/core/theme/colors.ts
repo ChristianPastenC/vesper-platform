@@ -9,21 +9,21 @@ export interface ThemeColors {
 }
 
 export const LIGHT_COLORS: ThemeColors = {
-  primary: '#6200EE',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
-  text: '#121212',
-  error: '#B00020',
-  success: '#4CAF50',
-  border: '#E0E0E0',
+  primary: '#0F172A',
+  background: '#F8FAFC',
+  surface: '#FFFFFF',
+  text: '#0F172A',
+  error: '#EF4444',
+  success: '#10B981',
+  border: '#E2E8F0',
 };
 
 export const DARK_COLORS: ThemeColors = {
-  primary: '#BB86FC',
-  background: '#121212',
-  surface: '#1E1E1E',
-  text: '#FFFFFF',
-  error: '#CF6679',
-  success: '#81C784',
-  border: '#333333',
+  primary: '#F8FAFC',
+  background: '#09090B',
+  surface: '#18181B',
+  text: '#F4F4F5',
+  error: '#F87171',
+  success: '#34D399',
+  border: '#27272A',
 };

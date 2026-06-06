@@ -41,7 +41,13 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {status === 'loading' ? (
         <ActivityIndicator
-          color={variant === 'secondary' ? theme.colors.primary : '#FFFFFF'}
+          color={
+            variant === 'secondary'
+              ? theme.colors.text
+              : theme.colors.primary === '#F8FAFC'
+              ? '#09090B'
+              : '#FFFFFF'
+          }
         />
       ) : (
         <View style={styles.contentContainer}>

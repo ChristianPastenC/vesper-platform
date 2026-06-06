@@ -33,23 +33,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <View style={styles.card}>
-      <TouchableOpacity onPress={onPress} testID="product-card-press">
+      <TouchableOpacity onPress={onPress} testID="product-card-press" activeOpacity={0.7}>
+        <View style={styles.imagePlaceholder}>
+          <Ionicons
+            name="cube-outline"
+            size={32}
+            color={theme.colors.text + '33'}
+          />
+        </View>
         <View style={styles.header}>
-          <Text variant="bold" style={styles.name}>
+          <Text style={styles.name} numberOfLines={2}>
             {product.name}
           </Text>
-          <Text variant="subtitle" style={styles.price}>
-            ${product.price.toFixed(2)}
-          </Text>
+          <View style={styles.priceTag}>
+            <Text style={styles.price}>
+              ${product.price.toFixed(2)}
+            </Text>
+          </View>
         </View>
-        <Text variant="caption" style={styles.barcode}>
-          Barcode: {product.barcode}
-        </Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.barcodeTag}>
+            <Text style={styles.barcodeText}>
+              Barcode: {product.barcode}
+            </Text>
+          </View>
+        </View>
       </TouchableOpacity>
       <View style={styles.actions}>
         <Button
           title={t('catalog.addToOnline')}
-          leftIcon={<Ionicons name="home-outline" size={16} color="#FFFFFF" />}
+          leftIcon={
+            <Ionicons
+              name="home-outline"
+              size={14}
+              color={theme.colors.primary === '#F8FAFC' ? '#09090B' : '#FFFFFF'}
+            />
+          }
           onPress={() => onAddToOnline(product)}
           style={styles.actionBtn}
         />
@@ -60,8 +79,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           leftIcon={
             <Ionicons
               name="barcode-outline"
-              size={16}
-              color={theme.colors.primary}
+              size={14}
+              color={theme.colors.text}
             />
           }
           onPress={() => onAddToInStore(product)}

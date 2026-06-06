@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { ThemeColors } from '../../../core/theme/colors';
+import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
 
 export const stylesFactory = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -7,21 +8,28 @@ export const stylesFactory = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
+      paddingVertical: verticalScale(16),
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
     },
     info: {
       flex: 1,
+      paddingRight: scale(12),
     },
     name: {
-      fontSize: 16,
+      fontSize: scaleFont(15),
+      fontWeight: '600',
+      color: colors.text,
+      lineHeight: scaleFont(20),
     },
     details: {
-      marginTop: 4,
+      marginTop: verticalScale(4),
+      fontSize: scaleFont(12),
+      color: colors.text + '99',
     },
     total: {
-      fontSize: 16,
-      color: colors.primary,
+      fontSize: scaleFont(15),
+      fontWeight: '700',
+      color: colors.text,
     },
   });

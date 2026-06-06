@@ -74,7 +74,7 @@ export const ScannerScreen: React.FC = () => {
             <Ionicons
               name="cart-outline"
               size={18}
-              color={theme.colors.primary}
+              color={theme.colors.text}
             />
           }
           onPress={handleCheckoutPress}

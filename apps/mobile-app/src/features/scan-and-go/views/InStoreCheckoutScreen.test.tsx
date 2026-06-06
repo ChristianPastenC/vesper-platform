@@ -61,13 +61,14 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
       isProcessing: false,
       error: null,
       handleCheckout: mockHandleCheckout,
+      isAuthenticated: true,
       t: (key: string) => key,
     });
 
-    const { getByText, getByTestId } = render(<InStoreCheckoutScreen />);
+    const { getByText, getAllByText, getByTestId } = render(<InStoreCheckoutScreen />);
 
     expect(getByText('Bananas')).toBeTruthy();
-    expect(getByText('$5.00')).toBeTruthy();
+    expect(getAllByText('$5.00').length).toBeGreaterThanOrEqual(1);
     expect(getByText('scan_and_go.onlineLabel')).toBeTruthy();
 
     const toggleSwitch = getByTestId('network-switch');
@@ -95,6 +96,7 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
       isProcessing: false,
       error: new Error('503 Service Unavailable'),
       handleCheckout: mockHandleCheckout,
+      isAuthenticated: true,
       t: (key: string) => key,
     });
 

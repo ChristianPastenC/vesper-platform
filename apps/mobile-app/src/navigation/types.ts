@@ -9,6 +9,14 @@ export type TabParamList = {
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
+  ProductDetails: {
+    product: {
+      id: string;
+      name: string;
+      price: number;
+      barcode: string;
+    };
+  };
   OnlineCheckoutModal: undefined;
   InStoreCheckoutModal: undefined;
   PaymentSuccessScreen: {

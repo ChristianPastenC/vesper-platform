@@ -42,6 +42,7 @@ describe('ProductCard Component', () => {
         product={mockProduct}
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
       />
     );
 
@@ -57,6 +58,7 @@ describe('ProductCard Component', () => {
         product={mockProduct}
         onAddToOnline={mockOnline}
         onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
       />
     );
 
@@ -71,10 +73,26 @@ describe('ProductCard Component', () => {
         product={mockProduct}
         onAddToOnline={jest.fn()}
         onAddToInStore={mockInStore}
+        onPress={jest.fn()}
       />
     );
 
     fireEvent.press(getByText('catalog.addToInStore'));
     expect(mockInStore).toHaveBeenCalledWith(mockProduct);
+  });
+
+  it('triggers onPress callback when card is tapped', () => {
+    const mockPress = jest.fn();
+    const { getByTestId } = render(
+      <ProductCard
+        product={mockProduct}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={mockPress}
+      />
+    );
+
+    fireEvent.press(getByTestId('product-card-press'));
+    expect(mockPress).toHaveBeenCalled();
   });
 });

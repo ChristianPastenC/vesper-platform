@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
@@ -18,12 +18,14 @@ export interface ProductCardProps {
   product: Product;
   onAddToOnline: (product: Product) => void;
   onAddToInStore: (product: Product) => void;
+  onPress: () => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToOnline,
   onAddToInStore,
+  onPress,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -31,17 +33,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text variant="bold" style={styles.name}>
-          {product.name}
+      <TouchableOpacity onPress={onPress} testID="product-card-press">
+        <View style={styles.header}>
+          <Text variant="bold" style={styles.name}>
+            {product.name}
+          </Text>
+          <Text variant="subtitle" style={styles.price}>
+            ${product.price.toFixed(2)}
+          </Text>
+        </View>
+        <Text variant="caption" style={styles.barcode}>
+          Barcode: {product.barcode}
         </Text>
-        <Text variant="subtitle" style={styles.price}>
-          ${product.price.toFixed(2)}
-        </Text>
-      </View>
-      <Text variant="caption" style={styles.barcode}>
-        Barcode: {product.barcode}
-      </Text>
+      </TouchableOpacity>
       <View style={styles.actions}>
         <Button
           title={t('catalog.addToOnline')}

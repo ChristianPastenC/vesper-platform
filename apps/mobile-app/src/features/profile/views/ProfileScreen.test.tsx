@@ -118,7 +118,7 @@ describe('ProfileScreen View', () => {
 
     expect(getByText('Session Active')).toBeTruthy();
     expect(getByText('Welcome, John Doe! You are successfully authenticated. Enjoy retail experiences.')).toBeTruthy();
-    fireEvent.press(getByText('Sign Out'));
+    fireEvent.press(getByText('auth.logoutButton'));
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 });

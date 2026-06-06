@@ -1,8 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { CatalogScreen } from './CatalogScreen';
 import { useCatalog } from '../hooks/useCatalog';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useNavigation } from '@react-navigation/native';
 
 jest.mock('../hooks/useCatalog', () => ({
   useCatalog: jest.fn(),
@@ -26,12 +27,13 @@ jest.mock('react-i18next', () => ({
 
 describe('CatalogScreen View', () => {
   const mockSetOptions = jest.fn();
+  const mockNavigate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useNavigation as jest.Mock).mockReturnValue({
       setOptions: mockSetOptions,
-      navigate: jest.fn(),
+      navigate: mockNavigate,
     });
 
     (useTheme as jest.Mock).mockReturnValue({
@@ -61,5 +63,15 @@ describe('CatalogScreen View', () => {
     const { getByText } = render(<CatalogScreen />);
     expect(getByText('Product 1')).toBeTruthy();
     expect(getByText('Product 2')).toBeTruthy();
+  });
+
+  it('navigates to ProductDetails when product card is tapped', () => {
+    const { getAllByTestId } = render(<CatalogScreen />);
+    const cardPressables = getAllByTestId('product-card-press');
+    
+    fireEvent.press(cardPressables[0]);
+    expect(mockNavigate).toHaveBeenCalledWith('ProductDetails', {
+      product: { id: '1', name: 'Product 1', price: 10.0, barcode: '11111' },
+    });
   });
 });

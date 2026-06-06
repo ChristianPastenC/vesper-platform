@@ -52,6 +52,7 @@ export const CatalogScreen: React.FC = () => {
       product={item}
       onAddToOnline={handleAddToOnline}
       onAddToInStore={handleAddToInStore}
+      onPress={() => navigation.navigate('ProductDetails', { product: item })}
     />
   );
 

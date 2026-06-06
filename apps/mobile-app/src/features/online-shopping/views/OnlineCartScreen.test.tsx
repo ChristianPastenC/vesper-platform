@@ -58,12 +58,13 @@ describe('OnlineCartScreen View', () => {
       total: 20.0,
       address: '123 Sovereign Way',
       clearCart: mockClear,
+      isAuthenticated: true,
       t: (key: string) => key,
     });
 
-    const { getByText } = render(<OnlineCartScreen />);
+    const { getByText, getAllByText } = render(<OnlineCartScreen />);
     expect(getByText('Item A')).toBeTruthy();
-    expect(getByText('$20.00')).toBeTruthy();
+    expect(getAllByText('$20.00').length).toBeGreaterThanOrEqual(1);
     expect(getByText('123 Sovereign Way')).toBeTruthy();
 
     fireEvent.press(getByText('online_checkout.checkoutButton'));

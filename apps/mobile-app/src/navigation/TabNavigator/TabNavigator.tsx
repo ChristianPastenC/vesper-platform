@@ -6,6 +6,7 @@ import { CatalogScreen } from '../../features/catalog/views/CatalogScreen';
 import { OnlineCartScreen } from '../../features/online-shopping/views/OnlineCartScreen';
 import { ScannerScreen } from '../../features/scan-and-go/views/ScannerScreen';
 import { ProfileScreen } from '../../features/profile/views/ProfileScreen';
+import { HomeScreen } from '../../features/home/views/HomeScreen';
 import { useTabNavigator } from './useTabNavigator';
 import { stylesFactory } from './TabNavigator.styles';
 
@@ -29,6 +30,13 @@ export const TabNavigator: React.FC = () => {
         },
       })}
     >
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+        }}
+      />
       <Tab.Screen
         name="CatalogTab"
         component={CatalogScreen}

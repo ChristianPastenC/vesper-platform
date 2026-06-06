@@ -21,6 +21,9 @@ jest.mock('../../features/scan-and-go/views/ScannerScreen', () => ({
 jest.mock('../../features/profile/views/ProfileScreen', () => ({
   ProfileScreen: () => null,
 }));
+jest.mock('../../features/home/views/HomeScreen', () => ({
+  HomeScreen: () => null,
+}));
 
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
@@ -60,6 +63,7 @@ describe('TabNavigator Component', () => {
   it('renders tab titles correctly', () => {
     const { getByText } = render(<TabNavigator />);
 
+    expect(getByText('Home')).toBeTruthy();
     expect(getByText('catalog.title')).toBeTruthy();
     expect(getByText('online_checkout.cartTitle')).toBeTruthy();
     expect(getByText('scan_and_go.title')).toBeTruthy();

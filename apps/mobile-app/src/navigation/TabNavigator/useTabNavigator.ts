@@ -9,10 +9,14 @@ export const useTabNavigator = () => {
   const getTabBarIconName = (
     routeName: keyof TabParamList
   ):
+    | 'home-outline'
     | 'grid-outline'
     | 'cart-outline'
     | 'barcode-outline'
     | 'person-outline' => {
+    if (routeName === 'HomeTab') {
+      return 'home-outline';
+    }
     if (routeName === 'CatalogTab') {
       return 'grid-outline';
     }

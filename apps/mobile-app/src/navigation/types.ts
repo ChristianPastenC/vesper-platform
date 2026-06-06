@@ -1,4 +1,5 @@
 export type TabParamList = {
+  HomeTab: undefined;
   CatalogTab: undefined;
   OnlineCartTab: undefined;
   ScanAndGoTab: undefined;

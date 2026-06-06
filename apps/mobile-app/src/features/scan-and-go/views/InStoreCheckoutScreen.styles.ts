@@ -18,6 +18,9 @@ export const stylesFactory = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
     },
+    networkIcon: {
+      marginRight: 12,
+    },
     networkInfo: {
       flex: 1,
     },
@@ -27,6 +30,8 @@ export const stylesFactory = (colors: ThemeColors) =>
       color: colors.text + '99',
     },
     errorBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: colors.error + '15',
       borderColor: colors.error,
       borderWidth: 1,
@@ -35,11 +40,14 @@ export const stylesFactory = (colors: ThemeColors) =>
       marginHorizontal: 16,
       marginBottom: 16,
     },
+    errorIcon: {
+      marginRight: 8,
+    },
     errorText: {
       color: colors.error,
       fontSize: 13,
       fontWeight: '600',
-      textAlign: 'center',
+      flex: 1,
     },
     emptyContainer: {
       flex: 1,

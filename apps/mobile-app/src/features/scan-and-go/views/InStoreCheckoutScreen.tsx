@@ -2,6 +2,7 @@ import React from 'react';
 import { View, FlatList, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useInStoreCheckout } from '../hooks/useInStoreCheckout';
 import { InStoreRow } from '../components/InStoreRow';
@@ -42,6 +43,12 @@ export const InStoreCheckoutScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.networkToggleCard}>
+        <Ionicons
+          name={isOnline ? 'wifi' : 'wifi-outline'}
+          size={24}
+          color={isOnline ? theme.colors.success : theme.colors.error}
+          style={styles.networkIcon}
+        />
         <View style={styles.networkInfo}>
           <Text variant="bold">{t('scan_and_go.networkStatus')}</Text>
           <Text style={styles.networkStatusLabel}>
@@ -61,6 +68,12 @@ export const InStoreCheckoutScreen: React.FC = () => {
 
       {error && (
         <View style={styles.errorBanner} testID="error-banner">
+          <Ionicons
+            name="alert-circle-outline"
+            size={20}
+            color={theme.colors.error}
+            style={styles.errorIcon}
+          />
           <Text style={styles.errorText}>{t('scan_and_go.error503')}</Text>
         </View>
       )}

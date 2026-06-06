@@ -9,6 +9,8 @@ jest.mock('../hooks/useInStoreCheckout', () => ({
   useInStoreCheckout: jest.fn(),
 }));
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));

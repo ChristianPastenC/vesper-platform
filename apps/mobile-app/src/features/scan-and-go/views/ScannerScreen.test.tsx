@@ -10,6 +10,8 @@ jest.mock('../hooks/useScanner', () => ({
   useScanner: jest.fn(),
 }));
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));

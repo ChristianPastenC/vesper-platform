@@ -25,6 +25,14 @@ export const stylesFactory = (colors: ThemeColors) =>
     disabled: {
       opacity: 0.5,
     },
+    contentContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconContainer: {
+      marginRight: 8,
+    },
     text: {
       color: '#FFFFFF',
       fontSize: 16,

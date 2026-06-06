@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
@@ -44,6 +45,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <View style={styles.actions}>
         <Button
           title={t('catalog.addToOnline')}
+          leftIcon={<Ionicons name="home-outline" size={16} color="#FFFFFF" />}
           onPress={() => onAddToOnline(product)}
           style={styles.actionBtn}
         />
@@ -51,6 +53,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Button
           title={t('catalog.addToInStore')}
           variant="secondary"
+          leftIcon={
+            <Ionicons
+              name="barcode-outline"
+              size={16}
+              color={theme.colors.primary}
+            />
+          }
           onPress={() => onAddToInStore(product)}
           style={styles.actionBtn}
         />

@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useScanner } from '../hooks/useScanner';
 import { useAppStore } from '../../../store/useAppStore';
@@ -60,12 +61,20 @@ export const ScannerScreen: React.FC = () => {
       <View style={styles.controls}>
         <Button
           title={t('scan_and_go.simulateScan')}
+          leftIcon={<Ionicons name="camera-outline" size={18} color="#FFFFFF" />}
           onPress={simulateScan}
           style={styles.scanBtn}
         />
         <Button
           title={`${t('scan_and_go.checkoutTitle')} (${itemsCount})`}
           variant="secondary"
+          leftIcon={
+            <Ionicons
+              name="cart-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+          }
           onPress={handleCheckoutPress}
           style={styles.checkoutBtn}
         />

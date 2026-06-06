@@ -8,6 +8,8 @@ jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
   useRoute: jest.fn(),

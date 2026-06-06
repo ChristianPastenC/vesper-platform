@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
@@ -31,7 +32,7 @@ export const PaymentSuccessScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.checkmarkCircle}>
-          <Text style={styles.checkmarkIcon}>✓</Text>
+          <Ionicons name="checkmark-circle-outline" size={60} color="#FFFFFF" />
         </View>
         <Text variant="title" style={styles.successTitle}>
           {type === 'online'

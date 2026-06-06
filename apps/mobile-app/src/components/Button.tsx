@@ -8,6 +8,7 @@ export interface ButtonProps extends TouchableOpacityProps {
   title: string;
   status?: 'idle' | 'loading' | 'disabled';
   variant?: 'primary' | 'secondary' | 'danger';
+  leftIcon?: React.ReactNode;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -16,6 +17,7 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   style,
   disabled,
+  leftIcon,
   ...props
 }) => {
   const theme = useTheme();
@@ -42,15 +44,18 @@ export const Button: React.FC<ButtonProps> = ({
           color={variant === 'secondary' ? theme.colors.primary : '#FFFFFF'}
         />
       ) : (
-        <Text
-          variant="bold"
-          style={[
-            styles.text,
-            variant === 'secondary' && styles.textSecondary,
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.contentContainer}>
+          {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
+          <Text
+            variant="bold"
+            style={[
+              styles.text,
+              variant === 'secondary' && styles.textSecondary,
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </TouchableOpacity>
   );

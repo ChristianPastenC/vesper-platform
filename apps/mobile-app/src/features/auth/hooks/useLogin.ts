@@ -8,6 +8,7 @@ export const useLogin = () => {
   const navigation = useNavigation();
   const loginAction = useAppStore((state) => state.login);
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export const useLogin = () => {
 
   const handleLogin = async () => {
     setError(null);
-    if (!email || !password) {
+    if (!name || !email || !password) {
       setError(t('auth.invalidError'));
       return;
     }
@@ -28,7 +29,7 @@ export const useLogin = () => {
 
     try {
       setIsPending(true);
-      await loginAction(email);
+      await loginAction(email, name);
       if (navigation.canGoBack()) {
         navigation.goBack();
       }
@@ -40,6 +41,8 @@ export const useLogin = () => {
   };
 
   return {
+    name,
+    setName,
     email,
     setEmail,
     password,

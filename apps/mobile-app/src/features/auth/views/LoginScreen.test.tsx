@@ -34,6 +34,8 @@ describe('LoginScreen View', () => {
 
   it('renders form inputs correctly', () => {
     (useLogin as jest.Mock).mockReturnValue({
+      name: '',
+      setName: jest.fn(),
       email: '',
       setEmail: mockSetEmail,
       password: '',
@@ -47,12 +49,15 @@ describe('LoginScreen View', () => {
     const { getByTestId, getByText } = render(<LoginScreen />);
 
     expect(getByText('auth.title')).toBeTruthy();
+    expect(getByTestId('name-input')).toBeTruthy();
     expect(getByTestId('email-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
   });
 
   it('triggers input and login submission callbacks', () => {
     (useLogin as jest.Mock).mockReturnValue({
+      name: 'John Doe',
+      setName: jest.fn(),
       email: 'test@example.com',
       setEmail: mockSetEmail,
       password: 'password123',
@@ -72,6 +77,8 @@ describe('LoginScreen View', () => {
 
   it('displays error banner if validation fail error is returned', () => {
     (useLogin as jest.Mock).mockReturnValue({
+      name: '',
+      setName: jest.fn(),
       email: '',
       setEmail: mockSetEmail,
       password: '',

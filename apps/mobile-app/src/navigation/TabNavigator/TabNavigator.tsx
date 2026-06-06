@@ -5,6 +5,7 @@ import { TabParamList } from '../types';
 import { CatalogScreen } from '../../features/catalog/views/CatalogScreen';
 import { OnlineCartScreen } from '../../features/online-shopping/views/OnlineCartScreen';
 import { ScannerScreen } from '../../features/scan-and-go/views/ScannerScreen';
+import { ProfileScreen } from '../../features/profile/views/ProfileScreen';
 import { useTabNavigator } from './useTabNavigator';
 import { stylesFactory } from './TabNavigator.styles';
 
@@ -47,6 +48,13 @@ export const TabNavigator: React.FC = () => {
         component={ScannerScreen}
         options={{
           title: t('scan_and_go.title'),
+        }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{
+          title: 'Account',
         }}
       />
     </Tab.Navigator>

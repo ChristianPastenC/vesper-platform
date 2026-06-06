@@ -21,13 +21,15 @@ export type Language = 'en' | 'es';
 
 interface AppState {
   isAuthenticated: boolean;
+  userName: string | null;
   isOnline: boolean;
   language: Language;
   themeMode: ThemeMode;
   onlineCart: OnlineCartItem[];
   inStoreCart: InStoreCartItem[];
 
-  login: (email: string) => Promise<void>;
+  login: (email: string, name: string) => Promise<void>;
+  signUp: (email: string, name: string) => Promise<void>;
   logout: () => void;
   toggleNetwork: () => void;
   setLanguage: (lang: Language) => void;
@@ -46,18 +48,28 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   isAuthenticated: false,
+  userName: null,
   isOnline: true,
   language: 'en',
   themeMode: 'system',
   onlineCart: [],
   inStoreCart: [],
 
-  login: async (email) => {
+  login: async (email, name) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    set({ isAuthenticated: true });
+    set({ isAuthenticated: true, userName: name || 'User' });
+  },
+  signUp: async (email, name) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    set({ isAuthenticated: true, userName: name || 'User' });
   },
   logout: () =>
-    set({ isAuthenticated: false, onlineCart: [], inStoreCart: [] }),
+    set({
+      isAuthenticated: false,
+      userName: null,
+      onlineCart: [],
+      inStoreCart: [],
+    }),
   toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
   setLanguage: (lang) => {
     i18n.changeLanguage(lang);

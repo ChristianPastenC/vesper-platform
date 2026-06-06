@@ -10,6 +10,8 @@ export const LoginScreen: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const {
+    name,
+    setName,
     email,
     setEmail,
     password,
@@ -35,6 +37,22 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
+
+        <View style={styles.inputGroup}>
+          <Text variant="bold" style={styles.label}>
+            {t('auth.nameLabel')}
+          </Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('auth.namePlaceholder')}
+            placeholderTextColor={theme.colors.text + '50'}
+            autoCapitalize="words"
+            editable={!isPending}
+            testID="name-input"
+          />
+        </View>
 
         <View style={styles.inputGroup}>
           <Text variant="bold" style={styles.label}>

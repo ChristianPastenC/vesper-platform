@@ -2,6 +2,7 @@ export type TabParamList = {
   CatalogTab: undefined;
   OnlineCartTab: undefined;
   ScanAndGoTab: undefined;
+  ProfileTab: undefined;
 };
 
 export type RootStackParamList = {

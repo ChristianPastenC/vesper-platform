@@ -7,6 +7,8 @@ const resources = {
       auth: {
         title: 'Welcome back',
         subtitle: 'Sign in to access your dashboard',
+        nameLabel: 'Full Name',
+        namePlaceholder: 'Enter your name',
         emailLabel: 'Email Address',
         emailPlaceholder: 'Enter your email',
         passwordLabel: 'Password',
@@ -65,6 +67,8 @@ const resources = {
       auth: {
         title: 'Bienvenido de nuevo',
         subtitle: 'Inicia sesión para acceder a tu panel',
+        nameLabel: 'Nombre Completo',
+        namePlaceholder: 'Ingresa tu nombre',
         emailLabel: 'Dirección de Correo',
         emailPlaceholder: 'Ingresa tu correo',
         passwordLabel: 'Contraseña',

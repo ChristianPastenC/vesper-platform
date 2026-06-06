@@ -18,6 +18,9 @@ jest.mock('../../features/online-shopping/views/OnlineCartScreen', () => ({
 jest.mock('../../features/scan-and-go/views/ScannerScreen', () => ({
   ScannerScreen: () => null,
 }));
+jest.mock('../../features/profile/views/ProfileScreen', () => ({
+  ProfileScreen: () => null,
+}));
 
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
@@ -60,5 +63,6 @@ describe('TabNavigator Component', () => {
     expect(getByText('catalog.title')).toBeTruthy();
     expect(getByText('online_checkout.cartTitle')).toBeTruthy();
     expect(getByText('scan_and_go.title')).toBeTruthy();
+    expect(getByText('Account')).toBeTruthy();
   });
 });

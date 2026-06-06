@@ -13,6 +13,15 @@ jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 20,
+    bottom: 20,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
 }));

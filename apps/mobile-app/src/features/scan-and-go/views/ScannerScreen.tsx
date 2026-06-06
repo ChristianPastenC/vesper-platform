@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useScanner } from '../hooks/useScanner';
 import { useAppStore } from '../../../store/useAppStore';
 import { Text } from '../../../components/Text';
@@ -15,7 +16,8 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export const ScannerScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
   const { lastScanned, simulateScan, t } = useScanner();
 

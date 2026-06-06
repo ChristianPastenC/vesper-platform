@@ -20,6 +20,15 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 20,
+    bottom: 20,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 jest.mock('../../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));

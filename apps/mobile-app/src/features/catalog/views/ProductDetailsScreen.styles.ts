@@ -1,111 +1,114 @@
 import { StyleSheet } from 'react-native';
+import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../core/theme/colors';
+import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors) =>
+export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     scrollContainer: {
-      padding: 20,
-      paddingBottom: 40,
+      paddingHorizontal: scale(20),
+      paddingTop: insets ? insets.top + verticalScale(10) : verticalScale(20),
+      paddingBottom: insets ? insets.bottom + verticalScale(20) : verticalScale(20),
     },
     imageContainer: {
-      height: 220,
+      height: verticalScale(220),
       backgroundColor: colors.surface,
-      borderRadius: 16,
+      borderRadius: scale(16),
       borderWidth: 1,
       borderColor: colors.border,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: verticalScale(24),
     },
     imageIcon: {
-      fontSize: 80,
+      fontSize: scale(80),
       color: colors.primary,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: 16,
+      marginBottom: verticalScale(16),
     },
     title: {
-      fontSize: 24,
+      fontSize: scaleFont(24),
       flex: 1,
-      marginRight: 12,
+      marginRight: scale(12),
     },
     price: {
-      fontSize: 24,
+      fontSize: scaleFont(24),
       color: colors.primary,
     },
     barcodeContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 8,
+      paddingVertical: verticalScale(6),
+      paddingHorizontal: scale(12),
+      borderRadius: scale(8),
       borderWidth: 1,
       borderColor: colors.border,
       alignSelf: 'flex-start',
-      marginBottom: 24,
+      marginBottom: verticalScale(24),
     },
     barcodeText: {
-      fontSize: 13,
-      marginLeft: 6,
+      fontSize: scaleFont(13),
+      marginLeft: scale(6),
     },
     section: {
-      marginBottom: 24,
+      marginBottom: verticalScale(24),
     },
     sectionTitle: {
-      fontSize: 18,
-      marginBottom: 8,
+      fontSize: scaleFont(18),
+      marginBottom: verticalScale(8),
     },
     descriptionText: {
-      fontSize: 15,
-      lineHeight: 22,
+      fontSize: scaleFont(15),
+      lineHeight: verticalScale(22),
     },
     specsTable: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 12,
+      borderRadius: scale(12),
       backgroundColor: colors.surface,
       overflow: 'hidden',
     },
     specRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(12),
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
     specRowLast: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(12),
     },
     specLabel: {
-      fontSize: 15,
+      fontSize: scaleFont(15),
       opacity: 0.7,
     },
     specValue: {
-      fontSize: 15,
+      fontSize: scaleFont(15),
     },
     actions: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 8,
+      marginTop: verticalScale(8),
     },
     actionBtn: {
       flex: 1,
-      height: 48,
-      borderRadius: 10,
+      height: verticalScale(48),
+      borderRadius: scale(10),
     },
     spacing: {
-      width: 12,
+      width: scale(12),
     },
   });

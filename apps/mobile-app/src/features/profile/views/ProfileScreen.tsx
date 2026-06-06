@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useProfile } from '../hooks/useProfile';
@@ -9,7 +10,8 @@ import { stylesFactory } from './ProfileScreen.styles';
 
 export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<any>();
 
   const {

@@ -27,6 +27,15 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 20,
+    bottom: 20,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 jest.mock('@react-navigation/bottom-tabs', () => ({
   createBottomTabNavigator: () => ({
     Navigator: ({ children, screenOptions }: any) => {

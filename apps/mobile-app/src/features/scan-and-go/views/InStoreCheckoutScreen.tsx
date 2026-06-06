@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInStoreCheckout } from '../hooks/useInStoreCheckout';
 import { InStoreRow } from '../components/InStoreRow';
 import { Text } from '../../../components/Text';
@@ -18,7 +19,8 @@ type NavigationProp = StackNavigationProp<
 
 export const InStoreCheckoutScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
   const {
     cartItems,

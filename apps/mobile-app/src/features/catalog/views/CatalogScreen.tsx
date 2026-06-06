@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCatalog } from '../hooks/useCatalog';
 import { ProductCard, Product } from '../components/ProductCard';
 import { RootStackParamList } from '../../../navigation/types';
@@ -14,7 +15,8 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export const CatalogScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
   const onlineCart = useAppStore((state) => state.onlineCart);
   const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);

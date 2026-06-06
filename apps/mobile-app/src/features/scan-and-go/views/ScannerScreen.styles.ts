@@ -1,7 +1,9 @@
 import { StyleSheet } from 'react-native';
+import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../core/theme/colors';
+import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors) =>
+export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -17,18 +19,18 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     middleRow: {
       flexDirection: 'row',
-      height: 220,
+      height: scale(220),
     },
     viewfinderFrame: {
-      width: 220,
-      height: 220,
+      width: scale(220),
+      height: scale(220),
       position: 'relative',
       backgroundColor: 'transparent',
     },
     corner: {
       position: 'absolute',
-      width: 24,
-      height: 24,
+      width: scale(24),
+      height: scale(24),
       borderColor: colors.primary,
       borderWidth: 4,
     },
@@ -58,11 +60,11 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     laserLine: {
       position: 'absolute',
-      left: 12,
-      right: 12,
-      top: 110,
+      left: scale(12),
+      right: scale(12),
+      top: scale(110),
       height: 2,
-      backgroundColor: '#FF3B30', // Neon red for laser line
+      backgroundColor: '#FF3B30',
       shadowColor: '#FF3B30',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.8,
@@ -70,14 +72,14 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     overlayTextContainer: {
       position: 'absolute',
-      top: 32,
-      left: 16,
-      right: 16,
+      top: insets ? insets.top + verticalScale(16) : verticalScale(32),
+      left: scale(16),
+      right: scale(16),
       alignItems: 'center',
     },
     scanHint: {
       color: '#FFFFFF',
-      fontSize: 15,
+      fontSize: scaleFont(15),
       textAlign: 'center',
       textShadowColor: 'rgba(0, 0, 0, 0.8)',
       textShadowOffset: { width: 0, height: 1 },
@@ -87,10 +89,10 @@ export const stylesFactory = (colors: ThemeColors) =>
       backgroundColor: colors.surface,
       borderColor: colors.primary,
       borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      marginTop: 20,
+      borderRadius: scale(12),
+      paddingVertical: verticalScale(10),
+      paddingHorizontal: scale(16),
+      marginTop: verticalScale(20),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
@@ -99,17 +101,19 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     toastText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: scaleFont(14),
       textAlign: 'center',
     },
     controls: {
-      padding: 16,
+      paddingHorizontal: scale(16),
+      paddingTop: verticalScale(16),
+      paddingBottom: insets ? insets.bottom + verticalScale(16) : verticalScale(16),
       backgroundColor: colors.surface,
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },
     scanBtn: {
-      marginBottom: 12,
+      marginBottom: verticalScale(12),
     },
     checkoutBtn: {
       borderColor: colors.primary,

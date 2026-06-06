@@ -1,63 +1,67 @@
 import { StyleSheet } from 'react-native';
+import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../core/theme/colors';
+import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors) =>
+export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingTop: insets ? insets.top + verticalScale(10) : verticalScale(20),
+      paddingBottom: insets ? insets.bottom + verticalScale(20) : verticalScale(20),
     },
     headerCard: {
       backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 20,
-      margin: 16,
+      borderRadius: scale(16),
+      padding: scale(20),
+      margin: scale(16),
       borderWidth: 1,
       borderColor: colors.border,
       flexDirection: 'row',
       alignItems: 'center',
     },
     avatarContainer: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: scale(60),
+      height: scale(60),
+      borderRadius: scale(30),
       backgroundColor: colors.primary + '20',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 16,
+      marginRight: scale(16),
     },
     avatarText: {
-      fontSize: 24,
+      fontSize: scaleFont(24),
       color: colors.primary,
     },
     headerInfo: {
       flex: 1,
     },
     welcomeText: {
-      fontSize: 18,
+      fontSize: scaleFont(18),
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: verticalScale(4),
     },
     statusText: {
-      fontSize: 14,
+      fontSize: scaleFont(14),
       color: colors.text + '99',
     },
     section: {
-      marginHorizontal: 16,
-      marginBottom: 24,
+      marginHorizontal: scale(16),
+      marginBottom: verticalScale(24),
     },
     sectionTitle: {
-      fontSize: 13,
+      fontSize: scaleFont(13),
       fontWeight: 'bold',
       color: colors.text + '80',
       textTransform: 'uppercase',
       letterSpacing: 1,
-      marginBottom: 10,
-      marginLeft: 4,
+      marginBottom: verticalScale(10),
+      marginLeft: scale(4),
     },
     optionsList: {
       backgroundColor: colors.surface,
-      borderRadius: 12,
+      borderRadius: scale(12),
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
@@ -66,8 +70,8 @@ export const stylesFactory = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(16),
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
@@ -75,16 +79,16 @@ export const stylesFactory = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(16),
     },
     rowLeft: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     rowText: {
-      fontSize: 16,
-      marginLeft: 12,
+      fontSize: scaleFont(16),
+      marginLeft: scale(12),
       color: colors.text,
     },
     rowRight: {
@@ -92,9 +96,9 @@ export const stylesFactory = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     rowValueText: {
-      fontSize: 14,
+      fontSize: scaleFont(14),
       color: colors.text + '80',
-      marginRight: 8,
+      marginRight: scale(8),
       textTransform: 'capitalize',
     },
   });

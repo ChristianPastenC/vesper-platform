@@ -3,6 +3,7 @@ import { View, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnlineCart } from '../hooks/useOnlineCart';
 import { OnlineRow } from '../components/OnlineRow';
 import { Text } from '../../../components/Text';
@@ -14,7 +15,8 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export const OnlineCartScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
   const { cartItems, total, address, clearCart, isAuthenticated, t } = useOnlineCart();
 

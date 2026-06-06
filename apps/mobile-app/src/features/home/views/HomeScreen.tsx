@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, Text as RNText } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHome } from '../hooks/useHome';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
@@ -11,7 +12,8 @@ import { stylesFactory } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<any>();
   const onlineCart = useAppStore((state) => state.onlineCart);
   const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);

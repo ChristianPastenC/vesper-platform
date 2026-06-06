@@ -1,7 +1,9 @@
 import { StyleSheet } from 'react-native';
+import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../core/theme/colors';
+import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors) =>
+export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -12,41 +14,46 @@ export const stylesFactory = (colors: ThemeColors) =>
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: colors.background,
-      padding: 32,
+      padding: scale(32),
     },
     emptyText: {
-      fontSize: 16,
+      fontSize: scaleFont(16),
       textAlign: 'center',
       color: colors.text + '99',
     },
     listContent: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
+      paddingHorizontal: scale(16),
+      paddingTop: insets ? insets.top + verticalScale(8) : verticalScale(16),
+      paddingBottom: verticalScale(16),
     },
     footer: {
-      padding: 16,
+      paddingHorizontal: scale(16),
+      paddingTop: verticalScale(16),
+      paddingBottom: insets ? insets.bottom + verticalScale(16) : verticalScale(16),
       borderTopWidth: 1,
       borderTopColor: colors.border,
       backgroundColor: colors.surface,
     },
     addressSection: {
-      marginBottom: 16,
+      marginBottom: verticalScale(16),
     },
     addressText: {
-      marginTop: 4,
+      marginTop: verticalScale(4),
       color: colors.text + 'AA',
+      fontSize: scaleFont(14),
     },
     totalSection: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
+      marginBottom: verticalScale(20),
     },
     totalText: {
       color: colors.primary,
+      fontSize: scaleFont(20),
     },
     checkoutBtn: {
-      marginBottom: 12,
+      marginBottom: verticalScale(12),
     },
     clearBtn: {
       borderColor: colors.error,

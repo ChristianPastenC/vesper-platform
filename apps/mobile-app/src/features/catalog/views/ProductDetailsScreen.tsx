@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { Text } from '../../../components/Text';
@@ -22,7 +23,8 @@ const getProductIcon = (name: string): keyof typeof Ionicons.glyphMap => {
 export const ProductDetailsScreen: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const styles = stylesFactory(theme.colors);
+  const insets = useSafeAreaInsets();
+  const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation();
 
   const {

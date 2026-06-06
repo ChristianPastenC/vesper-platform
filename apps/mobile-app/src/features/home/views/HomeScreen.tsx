@@ -1,15 +1,21 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Text as RNText } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useHome } from '../hooks/useHome';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
+import { useAppStore } from '../../../store/useAppStore';
 import { stylesFactory } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
+  const navigation = useNavigation<any>();
+  const onlineCart = useAppStore((state) => state.onlineCart);
+  const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);
+
   const {
     t,
     userName,
@@ -21,6 +27,31 @@ export const HomeScreen: React.FC = () => {
     navigateToScanner,
     navigateToAccount,
   } = useHome();
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('OnlineCart')}
+          style={styles.headerCartButton}
+          testID="header-cart-button"
+        >
+          <Ionicons
+            name="cart-outline"
+            size={26}
+            color={theme.colors.primary}
+          />
+          {cartItemsCount > 0 && (
+            <View style={styles.badgeContainer} testID="header-cart-badge">
+              <RNText style={styles.badgeText}>
+                {cartItemsCount}
+              </RNText>
+            </View>
+          )}
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, cartItemsCount, theme.colors.primary, styles]);
 
   return (
     <ScrollView

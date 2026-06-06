@@ -4,6 +4,7 @@ import { CatalogScreen } from './CatalogScreen';
 import { useCatalog } from '../hooks/useCatalog';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useNavigation } from '@react-navigation/native';
+import { useAppStore } from '../../../store/useAppStore';
 
 jest.mock('../hooks/useCatalog', () => ({
   useCatalog: jest.fn(),
@@ -17,6 +18,10 @@ jest.mock('../../../core/theme/useTheme', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
+}));
+
+jest.mock('../../../store/useAppStore', () => ({
+  useAppStore: jest.fn(),
 }));
 
 jest.mock('react-i18next', () => ({
@@ -35,6 +40,8 @@ describe('CatalogScreen View', () => {
       setOptions: mockSetOptions,
       navigate: mockNavigate,
     });
+
+    (useAppStore as jest.Mock).mockReturnValue([]); // Return empty onlineCart array
 
     (useTheme as jest.Mock).mockReturnValue({
       colors: {

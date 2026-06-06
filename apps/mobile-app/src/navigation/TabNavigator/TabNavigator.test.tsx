@@ -12,9 +12,6 @@ jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('../../features/catalog/views/CatalogScreen', () => ({
   CatalogScreen: () => null,
 }));
-jest.mock('../../features/online-shopping/views/OnlineCartScreen', () => ({
-  OnlineCartScreen: () => null,
-}));
 jest.mock('../../features/scan-and-go/views/ScannerScreen', () => ({
   ScannerScreen: () => null,
 }));
@@ -61,11 +58,11 @@ describe('TabNavigator Component', () => {
   });
 
   it('renders tab titles correctly', () => {
-    const { getByText } = render(<TabNavigator />);
+    const { getByText, queryByText } = render(<TabNavigator />);
 
     expect(getByText('Home')).toBeTruthy();
     expect(getByText('catalog.title')).toBeTruthy();
-    expect(getByText('online_checkout.cartTitle')).toBeTruthy();
+    expect(queryByText('online_checkout.cartTitle')).toBeNull();
     expect(getByText('scan_and_go.title')).toBeTruthy();
     expect(getByText('Account')).toBeTruthy();
   });

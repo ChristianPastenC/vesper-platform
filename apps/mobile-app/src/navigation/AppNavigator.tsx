@@ -4,6 +4,7 @@ import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { LoginScreen } from '../features/auth/views/LoginScreen';
 import { ProductDetailsScreen } from '../features/catalog/views/ProductDetailsScreen';
+import { OnlineCartScreen } from '../features/online-shopping/views/OnlineCartScreen';
 import { OnlineCheckoutModal } from '../features/online-shopping/views/OnlineCheckoutModal';
 import { InStoreCheckoutScreen } from '../features/scan-and-go/views/InStoreCheckoutScreen';
 import { PaymentSuccessScreen } from '../features/payment/views/PaymentSuccessScreen';
@@ -45,6 +46,13 @@ export const AppNavigator: React.FC = () => {
       <Stack.Screen
         name="ProductDetails"
         component={ProductDetailsScreen}
+      />
+      <Stack.Screen
+        name="OnlineCart"
+        component={OnlineCartScreen}
+        options={{
+          title: 'Online Cart',
+        }}
       />
       <Stack.Screen
         name="OnlineCheckoutModal"

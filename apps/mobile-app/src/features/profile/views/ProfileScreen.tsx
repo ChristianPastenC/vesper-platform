@@ -1,163 +1,148 @@
 import React from 'react';
-import { View, TextInput } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useProfile } from '../hooks/useProfile';
 import { Text } from '../../../components/Text';
-import { Button } from '../../../components/Button';
 import { stylesFactory } from './ProfileScreen.styles';
 
 export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
+  const navigation = useNavigation<any>();
+
   const {
     isAuthenticated,
     userName,
-    mode,
-    name,
-    setName,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    error,
-    isPending,
-    toggleMode,
-    handleAuthSubmit,
+    themeMode,
+    toggleThemeMode,
+    language,
+    toggleLanguage,
     handleLogout,
     t,
   } = useProfile();
 
-  if (isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <Text variant="title" style={styles.title}>
-            Session Active
-          </Text>
-          <Text variant="body" style={styles.sessionText}>
-            Welcome, {userName || 'User'}! You are successfully authenticated. Enjoy
-            retail experiences.
-          </Text>
-          <Button
-            title={t('auth.logoutButton') || 'Sign Out'}
-            variant="danger"
-            onPress={handleLogout}
-            style={styles.actionBtn}
-          />
-        </View>
-      </View>
-    );
-  }
+  const getThemeLabel = (mode: string) => {
+    if (mode === 'light') return t('shared_ui.themeLight') || 'Light';
+    if (mode === 'dark') return t('shared_ui.themeDark') || 'Dark';
+    return t('shared_ui.themeSystem') || 'System';
+  };
+
+  const getLanguageLabel = (lang: string) => {
+    return lang === 'en' ? 'English' : 'Español';
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text variant="title" style={styles.title}>
-          {mode === 'login' ? t('auth.title') : 'Create Account'}
-        </Text>
-        <Text variant="caption" style={styles.subtitle}>
-          {mode === 'login'
-            ? t('auth.subtitle')
-            : 'Register to unlock shipping and store checkouts'}
-        </Text>
-
-        {error && (
-          <View style={styles.errorContainer} testID="profile-error-banner">
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        <View style={styles.inputGroup}>
-          <Text variant="bold" style={styles.label}>
-            {t('auth.nameLabel')}
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder={t('auth.namePlaceholder')}
-            placeholderTextColor={theme.colors.text + '50'}
-            autoCapitalize="words"
-            editable={!isPending}
-            testID="profile-name-input"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text variant="bold" style={styles.label}>
-            {t('auth.emailLabel')}
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t('auth.emailPlaceholder')}
-            placeholderTextColor={theme.colors.text + '50'}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!isPending}
-            testID="profile-email-input"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text variant="bold" style={styles.label}>
-            {t('auth.passwordLabel')}
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder={t('auth.passwordPlaceholder')}
-            placeholderTextColor={theme.colors.text + '50'}
-            secureTextEntry
-            autoCapitalize="none"
-            editable={!isPending}
-            testID="profile-password-input"
-          />
-        </View>
-
-        {mode === 'signup' && (
-          <View style={styles.inputGroup}>
-            <Text variant="bold" style={styles.label}>
-              Confirm Password
+    <ScrollView style={styles.container} testID="profile-scroll">
+      {/* Header Greeting Card */}
+      <View style={styles.headerCard} testID="profile-header-card">
+        <View style={styles.avatarContainer} testID="profile-avatar">
+          {isAuthenticated && userName ? (
+            <Text variant="bold" style={styles.avatarText}>
+              {userName.charAt(0).toUpperCase()}
             </Text>
-            <TextInput
-              style={styles.input}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Re-enter password"
-              placeholderTextColor={theme.colors.text + '50'}
-              secureTextEntry
-              autoCapitalize="none"
-              editable={!isPending}
-              testID="profile-confirm-password-input"
-            />
-          </View>
-        )}
-
-        <Button
-          title={mode === 'login' ? t('auth.loginButton') : 'Sign Up'}
-          status={isPending ? 'loading' : 'idle'}
-          onPress={handleAuthSubmit}
-          style={styles.actionBtn}
-          testID="profile-submit-button"
-        />
-
-        <Button
-          title={
-            mode === 'login'
-              ? "Don't have an account? Register"
-              : 'Already have an account? Sign In'
-          }
-          variant="secondary"
-          disabled={isPending}
-          onPress={toggleMode}
-          style={styles.toggleBtn}
-        />
+          ) : (
+            <Ionicons name="person-outline" size={28} color={theme.colors.primary} />
+          )}
+        </View>
+        <View style={styles.headerInfo}>
+          <Text variant="bold" style={styles.welcomeText} testID="profile-greeting">
+            {isAuthenticated
+              ? `${t('auth.title') || 'Welcome'}, ${userName}!`
+              : 'Hello, Guest!'}
+          </Text>
+          <Text style={styles.statusText} testID="profile-status">
+            {isAuthenticated ? 'Session Active' : 'Sign in to unlock checkout features'}
+          </Text>
+        </View>
       </View>
-    </View>
+
+      {/* Account Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Account</Text>
+        <View style={styles.optionsList}>
+          {isAuthenticated ? (
+            <TouchableOpacity
+              style={styles.rowLast}
+              onPress={handleLogout}
+              testID="profile-logout-row"
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="log-out-outline" size={22} color={theme.colors.error} />
+                <Text style={[styles.rowText, { color: theme.colors.error }]}>
+                  Sign Out
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.text + '40'} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.rowLast}
+              onPress={() => navigation.navigate('Login')}
+              testID="profile-login-row"
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="log-in-outline" size={22} color={theme.colors.primary} />
+                <Text style={[styles.rowText, { color: theme.colors.primary }]}>
+                  Sign In / Register
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.text + '40'} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Preferences Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('shared_ui.theme') || 'Preferences'}</Text>
+        <View style={styles.optionsList}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={toggleThemeMode}
+            testID="profile-theme-row"
+          >
+            <View style={styles.rowLeft}>
+              <Ionicons name="color-palette-outline" size={22} color={theme.colors.text} />
+              <Text style={styles.rowText}>{t('shared_ui.theme')}</Text>
+            </View>
+            <View style={styles.rowRight}>
+              <Text style={styles.rowValueText}>{getThemeLabel(themeMode)}</Text>
+              <Ionicons name="sync-outline" size={16} color={theme.colors.text + '40'} />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.rowLast}
+            onPress={toggleLanguage}
+            testID="profile-lang-row"
+          >
+            <View style={styles.rowLeft}>
+              <Ionicons name="globe-outline" size={22} color={theme.colors.text} />
+              <Text style={styles.rowText}>{t('shared_ui.language')}</Text>
+            </View>
+            <View style={styles.rowRight}>
+              <Text style={styles.rowValueText}>{getLanguageLabel(language)}</Text>
+              <Ionicons name="sync-outline" size={16} color={theme.colors.text + '40'} />
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Info Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>App Info</Text>
+        <View style={styles.optionsList}>
+          <View style={styles.rowLast} testID="profile-version-row">
+            <View style={styles.rowLeft}>
+              <Ionicons name="information-circle-outline" size={22} color={theme.colors.text} />
+              <Text style={styles.rowText}>Version</Text>
+            </View>
+            <Text style={styles.rowValueText}>1.0.0</Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 };

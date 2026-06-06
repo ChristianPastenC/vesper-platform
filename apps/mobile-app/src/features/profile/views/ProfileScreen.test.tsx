@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ProfileScreen } from './ProfileScreen';
 import { useProfile } from '../hooks/useProfile';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useNavigation } from '@react-navigation/native';
 
 jest.mock('../hooks/useProfile', () => ({
   useProfile: jest.fn(),
@@ -12,16 +13,23 @@ jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));
 
-describe('ProfileScreen View', () => {
-  const mockSetEmail = jest.fn();
-  const mockSetPassword = jest.fn();
-  const mockSetConfirmPassword = jest.fn();
-  const mockToggleMode = jest.fn();
-  const mockSubmit = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(),
+}));
+
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
+describe('ProfileScreen View Settings Redesign', () => {
+  const mockToggleTheme = jest.fn();
+  const mockToggleLanguage = jest.fn();
   const mockLogout = jest.fn();
+  const mockNavigate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useNavigation as jest.Mock).mockReturnValue({
+      navigate: mockNavigate,
+    });
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',
@@ -35,90 +43,76 @@ describe('ProfileScreen View', () => {
     });
   });
 
-  it('renders form inputs correctly in login mode', () => {
+  it('renders correctly in guest mode', () => {
     (useProfile as jest.Mock).mockReturnValue({
       isAuthenticated: false,
       userName: null,
-      mode: 'login',
-      name: '',
-      setName: jest.fn(),
-      email: '',
-      setEmail: mockSetEmail,
-      password: '',
-      setPassword: mockSetPassword,
-      confirmPassword: '',
-      setConfirmPassword: mockSetConfirmPassword,
-      error: null,
-      isPending: false,
-      toggleMode: mockToggleMode,
-      handleAuthSubmit: mockSubmit,
+      themeMode: 'light',
+      toggleThemeMode: mockToggleTheme,
+      language: 'en',
+      toggleLanguage: mockToggleLanguage,
       handleLogout: mockLogout,
       t: (key: string) => key,
     });
 
-    const { getByTestId, queryByTestId } = render(<ProfileScreen />);
+    const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen />);
 
-    expect(getByTestId('profile-name-input')).toBeTruthy();
-    expect(getByTestId('profile-email-input')).toBeTruthy();
-    expect(getByTestId('profile-password-input')).toBeTruthy();
-    expect(queryByTestId('profile-confirm-password-input')).toBeNull();
+    expect(getByText('Hello, Guest!')).toBeTruthy();
+    expect(getByText('Sign in to unlock checkout features')).toBeTruthy();
+    expect(getByTestId('profile-login-row')).toBeTruthy();
+    expect(queryByTestId('profile-logout-row')).toBeNull();
+
+    fireEvent.press(getByTestId('profile-login-row'));
+    expect(mockNavigate).toHaveBeenCalledWith('Login');
   });
 
-  it('renders confirm password input in signup mode', () => {
-    (useProfile as jest.Mock).mockReturnValue({
-      isAuthenticated: false,
-      userName: null,
-      mode: 'signup',
-      name: '',
-      setName: jest.fn(),
-      email: '',
-      setEmail: mockSetEmail,
-      password: '',
-      setPassword: mockSetPassword,
-      confirmPassword: '',
-      setConfirmPassword: mockSetConfirmPassword,
-      error: null,
-      isPending: false,
-      toggleMode: mockToggleMode,
-      handleAuthSubmit: mockSubmit,
-      handleLogout: mockLogout,
-      t: (key: string) => key,
-    });
-
-    const { getByTestId } = render(<ProfileScreen />);
-
-    expect(getByTestId('profile-name-input')).toBeTruthy();
-    expect(getByTestId('profile-email-input')).toBeTruthy();
-    expect(getByTestId('profile-password-input')).toBeTruthy();
-    expect(getByTestId('profile-confirm-password-input')).toBeTruthy();
-  });
-
-  it('renders session card when authenticated and triggers logout', () => {
+  it('renders correctly in authenticated session and logs out', () => {
     (useProfile as jest.Mock).mockReturnValue({
       isAuthenticated: true,
       userName: 'John Doe',
-      mode: 'login',
-      name: '',
-      setName: jest.fn(),
-      email: '',
-      setEmail: mockSetEmail,
-      password: '',
-      setPassword: mockSetPassword,
-      confirmPassword: '',
-      setConfirmPassword: mockSetConfirmPassword,
-      error: null,
-      isPending: false,
-      toggleMode: mockToggleMode,
-      handleAuthSubmit: mockSubmit,
+      themeMode: 'dark',
+      toggleThemeMode: mockToggleTheme,
+      language: 'en',
+      toggleLanguage: mockToggleLanguage,
       handleLogout: mockLogout,
       t: (key: string) => key,
     });
 
-    const { getByText } = render(<ProfileScreen />);
+    const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen />);
 
+    expect(getByText('auth.title, John Doe!')).toBeTruthy();
     expect(getByText('Session Active')).toBeTruthy();
-    expect(getByText('Welcome, John Doe! You are successfully authenticated. Enjoy retail experiences.')).toBeTruthy();
-    fireEvent.press(getByText('auth.logoutButton'));
+    expect(getByTestId('profile-logout-row')).toBeTruthy();
+    expect(queryByTestId('profile-login-row')).toBeNull();
+
+    fireEvent.press(getByTestId('profile-logout-row'));
     expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles preference settings changes', () => {
+    (useProfile as jest.Mock).mockReturnValue({
+      isAuthenticated: false,
+      userName: null,
+      themeMode: 'system',
+      toggleThemeMode: mockToggleTheme,
+      language: 'es',
+      toggleLanguage: mockToggleLanguage,
+      handleLogout: mockLogout,
+      t: (key: string) => key,
+    });
+
+    const { getByTestId, getByText } = render(<ProfileScreen />);
+
+    // Verify version and values
+    expect(getByText('1.0.0')).toBeTruthy();
+    expect(getByText('Español')).toBeTruthy();
+    expect(getByText('shared_ui.themeSystem')).toBeTruthy();
+
+    // Trigger toggles
+    fireEvent.press(getByTestId('profile-theme-row'));
+    expect(mockToggleTheme).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(getByTestId('profile-lang-row'));
+    expect(mockToggleLanguage).toHaveBeenCalledTimes(1);
   });
 });

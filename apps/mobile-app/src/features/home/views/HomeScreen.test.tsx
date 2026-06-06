@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { HomeScreen } from './HomeScreen';
 import { useHome } from '../hooks/useHome';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useAppStore } from '../../../store/useAppStore';
 
 jest.mock('../hooks/useHome', () => ({
   useHome: jest.fn(),
@@ -10,6 +11,17 @@ jest.mock('../hooks/useHome', () => ({
 
 jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    setOptions: jest.fn(),
+    navigate: jest.fn(),
+  }),
+}));
+
+jest.mock('../../../store/useAppStore', () => ({
+  useAppStore: jest.fn(),
 }));
 
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
@@ -20,6 +32,7 @@ describe('HomeScreen Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useAppStore as jest.Mock).mockReturnValue([]);
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',

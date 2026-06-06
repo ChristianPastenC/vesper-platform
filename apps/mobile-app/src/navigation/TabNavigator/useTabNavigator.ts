@@ -11,7 +11,6 @@ export const useTabNavigator = () => {
   ):
     | 'home-outline'
     | 'grid-outline'
-    | 'cart-outline'
     | 'barcode-outline'
     | 'person-outline' => {
     if (routeName === 'HomeTab') {
@@ -19,9 +18,6 @@ export const useTabNavigator = () => {
     }
     if (routeName === 'CatalogTab') {
       return 'grid-outline';
-    }
-    if (routeName === 'OnlineCartTab') {
-      return 'cart-outline';
     }
     if (routeName === 'ScanAndGoTab') {
       return 'barcode-outline';

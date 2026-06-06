@@ -1,7 +1,6 @@
 export type TabParamList = {
   HomeTab: undefined;
   CatalogTab: undefined;
-  OnlineCartTab: undefined;
   ScanAndGoTab: undefined;
   ProfileTab: undefined;
 };
@@ -17,6 +16,7 @@ export type RootStackParamList = {
       barcode: string;
     };
   };
+  OnlineCart: undefined;
   OnlineCheckoutModal: undefined;
   InStoreCheckoutModal: undefined;
   PaymentSuccessScreen: {

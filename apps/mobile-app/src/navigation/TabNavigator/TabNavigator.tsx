@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { TabParamList } from '../types';
 import { CatalogScreen } from '../../features/catalog/views/CatalogScreen';
-import { OnlineCartScreen } from '../../features/online-shopping/views/OnlineCartScreen';
 import { ScannerScreen } from '../../features/scan-and-go/views/ScannerScreen';
 import { ProfileScreen } from '../../features/profile/views/ProfileScreen';
 import { HomeScreen } from '../../features/home/views/HomeScreen';
@@ -42,13 +41,6 @@ export const TabNavigator: React.FC = () => {
         component={CatalogScreen}
         options={{
           title: t('catalog.title'),
-        }}
-      />
-      <Tab.Screen
-        name="OnlineCartTab"
-        component={OnlineCartScreen}
-        options={{
-          title: t('online_checkout.cartTitle'),
         }}
       />
       <Tab.Screen

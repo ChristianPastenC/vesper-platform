@@ -8,8 +8,14 @@ jest.mock('../hooks/useCatalog', () => ({
   useCatalog: jest.fn(),
 }));
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+
 jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(),
 }));
 
 jest.mock('react-i18next', () => ({
@@ -19,7 +25,15 @@ jest.mock('react-i18next', () => ({
 }));
 
 describe('CatalogScreen View', () => {
+  const mockSetOptions = jest.fn();
+
   beforeEach(() => {
+    jest.clearAllMocks();
+    (useNavigation as jest.Mock).mockReturnValue({
+      setOptions: mockSetOptions,
+      navigate: jest.fn(),
+    });
+
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',
@@ -38,6 +52,8 @@ describe('CatalogScreen View', () => {
       ],
       handleAddToOnline: jest.fn(),
       handleAddToInStore: jest.fn(),
+      isAuthenticated: false,
+      logout: jest.fn(),
     });
   });
 

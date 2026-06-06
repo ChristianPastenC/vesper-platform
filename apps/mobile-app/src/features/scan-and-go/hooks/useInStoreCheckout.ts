@@ -9,6 +9,7 @@ export const useInStoreCheckout = () => {
   const clearInStoreCart = useAppStore((state) => state.clearInStoreCart);
   const isOnline = useAppStore((state) => state.isOnline);
   const toggleNetwork = useAppStore((state) => state.toggleNetwork);
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
 
   const checkoutMutation = useInStoreCheckoutMutation();
 
@@ -34,6 +35,7 @@ export const useInStoreCheckout = () => {
     error: checkoutMutation.error,
     clearCart: clearInStoreCart,
     handleCheckout,
+    isAuthenticated,
     t,
   };
 };

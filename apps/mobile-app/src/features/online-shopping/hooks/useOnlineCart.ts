@@ -7,6 +7,7 @@ export const useOnlineCart = () => {
   const onlineCart = useAppStore((state) => state.onlineCart);
   const getOnlineTotal = useAppStore((state) => state.getOnlineTotal);
   const clearOnlineCart = useAppStore((state) => state.clearOnlineCart);
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
 
   const checkoutMutation = useOnlineCheckoutMutation();
 
@@ -31,6 +32,7 @@ export const useOnlineCart = () => {
     clearCart: clearOnlineCart,
     isProcessing: checkoutMutation.isPending,
     handleCheckout,
+    isAuthenticated,
     t,
   };
 };

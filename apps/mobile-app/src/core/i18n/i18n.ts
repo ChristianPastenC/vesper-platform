@@ -4,6 +4,17 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   en: {
     translation: {
+      auth: {
+        title: 'Welcome back',
+        subtitle: 'Sign in to access your dashboard',
+        emailLabel: 'Email Address',
+        emailPlaceholder: 'Enter your email',
+        passwordLabel: 'Password',
+        passwordPlaceholder: 'Enter your password',
+        loginButton: 'Sign In',
+        loading: 'Authenticating...',
+        invalidError: 'Please enter a valid email and password.',
+      },
       catalog: {
         title: 'Product Catalog',
         addToOnline: 'Ship to Home',
@@ -51,6 +62,17 @@ const resources = {
   },
   es: {
     translation: {
+      auth: {
+        title: 'Bienvenido de nuevo',
+        subtitle: 'Inicia sesión para acceder a tu panel',
+        emailLabel: 'Dirección de Correo',
+        emailPlaceholder: 'Ingresa tu correo',
+        passwordLabel: 'Contraseña',
+        passwordPlaceholder: 'Ingresa tu contraseña',
+        loginButton: 'Iniciar Sesión',
+        loading: 'Autenticando...',
+        invalidError: 'Por favor ingresa un correo y contraseña válidos.',
+      },
       catalog: {
         title: 'Catálogo de Productos',
         addToOnline: 'Envío a Domicilio',

@@ -27,6 +27,8 @@ const MOCK_PRODUCTS: Product[] = [
 export const useCatalog = () => {
   const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
   const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+  const logout = useAppStore((state) => state.logout);
 
   const handleAddToOnline = (product: Product) => {
     addToOnlineCart({
@@ -49,5 +51,7 @@ export const useCatalog = () => {
     products: MOCK_PRODUCTS,
     handleAddToOnline,
     handleAddToInStore,
+    isAuthenticated,
+    logout,
   };
 };

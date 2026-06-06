@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
+import { LoginScreen } from '../features/auth/views/LoginScreen';
 import { OnlineCheckoutModal } from '../features/online-shopping/views/OnlineCheckoutModal';
 import { InStoreCheckoutScreen } from '../features/scan-and-go/views/InStoreCheckoutScreen';
 import { PaymentSuccessScreen } from '../features/payment/views/PaymentSuccessScreen';
@@ -31,6 +32,14 @@ export const AppNavigator: React.FC = () => {
         name="MainTabs"
         component={TabNavigator}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          presentation: 'modal',
+          title: 'Sign In',
+        }}
       />
       <Stack.Screen
         name="OnlineCheckoutModal"

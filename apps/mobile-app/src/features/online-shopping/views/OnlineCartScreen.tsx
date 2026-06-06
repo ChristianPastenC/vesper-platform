@@ -16,10 +16,14 @@ export const OnlineCartScreen: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const navigation = useNavigation<NavigationProp>();
-  const { cartItems, total, address, clearCart, t } = useOnlineCart();
+  const { cartItems, total, address, clearCart, isAuthenticated, t } = useOnlineCart();
 
   const handleCheckoutPress = () => {
-    navigation.navigate('OnlineCheckoutModal');
+    if (isAuthenticated) {
+      navigation.navigate('OnlineCheckoutModal');
+    } else {
+      navigation.navigate('Login');
+    }
   };
 
   if (cartItems.length === 0) {

@@ -5,6 +5,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Login: undefined;
   MainTabs: undefined;
   OnlineCheckoutModal: undefined;
   InStoreCheckoutModal: undefined;

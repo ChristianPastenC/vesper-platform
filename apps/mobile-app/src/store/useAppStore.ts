@@ -20,12 +20,15 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 export type Language = 'en' | 'es';
 
 interface AppState {
+  isAuthenticated: boolean;
   isOnline: boolean;
   language: Language;
   themeMode: ThemeMode;
   onlineCart: OnlineCartItem[];
   inStoreCart: InStoreCartItem[];
 
+  login: (email: string) => Promise<void>;
+  logout: () => void;
   toggleNetwork: () => void;
   setLanguage: (lang: Language) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -42,12 +45,19 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
+  isAuthenticated: false,
   isOnline: true,
   language: 'en',
   themeMode: 'system',
   onlineCart: [],
   inStoreCart: [],
 
+  login: async (email) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    set({ isAuthenticated: true });
+  },
+  logout: () =>
+    set({ isAuthenticated: false, onlineCart: [], inStoreCart: [] }),
   toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
   setLanguage: (lang) => {
     i18n.changeLanguage(lang);

@@ -28,16 +28,21 @@ export const InStoreCheckoutScreen: React.FC = () => {
     isProcessing,
     error,
     handleCheckout,
+    isAuthenticated,
     t,
   } = useInStoreCheckout();
 
   const handlePayPress = () => {
-    handleCheckout((orderId) => {
-      navigation.navigate('PaymentSuccessScreen', {
-        orderId,
-        type: 'instore',
+    if (isAuthenticated) {
+      handleCheckout((orderId) => {
+        navigation.navigate('PaymentSuccessScreen', {
+          orderId,
+          type: 'instore',
+        });
       });
-    });
+    } else {
+      navigation.navigate('Login');
+    }
   };
 
   return (

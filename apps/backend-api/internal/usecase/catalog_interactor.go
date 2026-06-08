@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"sovereign-core/backend-api/internal/domain"
 )
@@ -27,22 +28,35 @@ func (c *CatalogInteractor) ExecuteCatalogQuery(ctx context.Context, query domai
 		return nil, err
 	}
 
-	// Enrich image URLs with beautiful, high-res placeholders to satisfy rich aesthetics.
+	// Enrich metadata concurrently utilizing the Scatter-Gather pattern to maximize throughput
+	// and prevent thread-blocking on large upstream catalog arrays.
+	var wg sync.WaitGroup
+	
 	for i := range products {
-		category := strings.ToLower(products[i].Category)
-		switch {
-		case strings.Contains(category, "electronics"):
-			products[i].Image = "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?q=80&w=600&auto=format&fit=crop"
-		case strings.Contains(category, "jewel"):
-			products[i].Image = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=600&auto=format&fit=crop"
-		case strings.Contains(category, "men's clothing"):
-			products[i].Image = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop"
-		case strings.Contains(category, "women's clothing"):
-			products[i].Image = "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=600&auto=format&fit=crop"
-		default:
-			products[i].Image = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600&auto=format&fit=crop"
-		}
+		wg.Add(1)
+		
+		// Spawn a lightweight Goroutine per item to execute the mapping logic in parallel
+		go func(index int) {
+			defer wg.Done()
+			
+			category := strings.ToLower(products[index].Category)
+			switch {
+			case strings.Contains(category, "electronics"):
+				products[index].Image = "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?q=80&w=600&auto=format&fit=crop"
+			case strings.Contains(category, "jewel"):
+				products[index].Image = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=600&auto=format&fit=crop"
+			case strings.Contains(category, "men's clothing"):
+				products[index].Image = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop"
+			case strings.Contains(category, "women's clothing"):
+				products[index].Image = "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=600&auto=format&fit=crop"
+			default:
+				products[index].Image = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600&auto=format&fit=crop"
+			}
+		}(i)
 	}
+	
+	// Block the primary thread until all concurrent scatter operations converge
+	wg.Wait()
 
 	return products, nil
 }

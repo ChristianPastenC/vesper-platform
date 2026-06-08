@@ -47,7 +47,7 @@ export function decodeHeaders(buffer: Uint8Array): Record<string, string> {
   for (const line of text.split('\n')) {
     const colonIndex = line.indexOf(': ');
     if (colonIndex === -1) continue;
-    const key   = line.slice(0, colonIndex);
+    const key = line.slice(0, colonIndex);
     const value = line.slice(colonIndex + 2);
     if (key.length > 0) result[key] = value;
   }
@@ -74,8 +74,8 @@ export function serializeAdapterRequest(
     timeoutMs?: number;
   }
 ): Uint8Array {
-  const method  = TEXT_ENCODER.encode(request.method);
-  const url     = TEXT_ENCODER.encode(request.url);
+  const method = TEXT_ENCODER.encode(request.method);
+  const url = TEXT_ENCODER.encode(request.url);
 
   const hdrs: Uint8Array =
     request.encodedHeaders !== undefined
@@ -99,8 +99,8 @@ export function serializeAdapterRequest(
     4;
 
   const buffer = new Uint8Array(totalLength);
-  const view   = new DataView(buffer.buffer);
-  let offset   = 0;
+  const view = new DataView(buffer.buffer);
+  let offset = 0;
 
   const writeSegment = (segment: Uint8Array): void => {
     view.setUint32(offset, segment.length, false);
@@ -128,28 +128,28 @@ export function deserializeAdapterRequest(
   const firstUint32 = new DataView(buffer.buffer, buffer.byteOffset, 4).getUint32(0, false);
   if (firstUint32 === 0) return null;
 
-  const view   = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-  let offset   = 0;
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  let offset = 0;
 
   const readSegment = (): Uint8Array => {
-    const length  = view.getUint32(offset, false);
+    const length = view.getUint32(offset, false);
     offset += 4;
     const segment = new Uint8Array(buffer.subarray(offset, offset + length));
     offset += length;
     return segment;
   };
 
-  const method      = TEXT_DECODER.decode(readSegment());
-  const url         = TEXT_DECODER.decode(readSegment());
-  const hdrsBuffer  = readSegment();
-  const bodyBuffer  = readSegment();
-  const timeoutMs   = view.getUint32(offset, false);
+  const method = TEXT_DECODER.decode(readSegment());
+  const url = TEXT_DECODER.decode(readSegment());
+  const hdrsBuffer = readSegment();
+  const bodyBuffer = readSegment();
+  const timeoutMs = view.getUint32(offset, false);
 
   return {
     method,
     url,
     encodedHeaders: hdrsBuffer,
-    body:      bodyBuffer.length > 0 ? bodyBuffer : null,
+    body: bodyBuffer.length > 0 ? bodyBuffer : null,
     ...(timeoutMs > 0 && { timeoutMs }),
   };
 }

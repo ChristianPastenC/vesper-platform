@@ -1,6 +1,6 @@
 # @sovereign/secure-client
 
-`@sovereign/secure-client` is a transport-agnostic cryptographic resilience library designed to sequester pending request payloads securely in volatile RAM during temporary infrastructure or connection failures. It mitigates heap memory exposure and guarantees the cryptographic integrity of enqueued transactions.
+`@sovereign/secure-client` is a transport-agnostic cryptographic resilience library designed to sequester pending request payloads securely in volatile RAM during connection failures. It guarantees the cryptographic integrity of enqueued transactions.
 
 ---
 
@@ -8,75 +8,88 @@
 
 The security architecture of the library is built upon 5 fundamental implementation pillars:
 
-1. **Volatile RAM Ledger (In-Memory Blockchain):** 
-   During connectivity failures or transient server responses (such as HTTP 503/504), outgoing requests are serialized to binary format (`Uint8Array`) and queued sequentially in a volatile memory ledger. Each block is cryptographically linked to its predecessor using chained SHA-256 hashes, constructing a secure blockchain-like ledger directly in RAM.
+1. **Volatile RAM Ledger (C++ Engine Core):** 
+   During connectivity failures or transient server responses (such as HTTP 503/504), outgoing requests are serialized to binary format (`Uint8Array`) and enqueued in a native C++ static ledger (`SovereignSecureCore`) in physical RAM (`std::vector<uint8_t>`). Each block is cryptographically linked to its predecessor using chained SHA-256 hashes.
 
 2. **Deterministic Zeroization (Active Memory Erasure):** 
-   To prevent credentials or sensitive payloads from lingering in the JavaScript heap (protecting against heap dumps and cold-boot extraction), the library enforces active zeroization. It explicitly calls `.fill(0)` on all `Uint8Array` buffers containing request payloads, encoded headers, and cryptographic hashes immediately after successful dispatch or upon TTL (Time-To-Live) expiration.
+   To prevent credentials or sensitive payloads from lingering in the JavaScript heap, the library enforces active zeroization. The C++ core explicitly calls `std::fill` on all payload vectors, previous hashes, and current hashes immediately after successful dispatch or upon TTL (Time-To-Live) expiration.
 
 3. **Integrity Watchdog (Tamper-Detection Engine):** 
-   A background thread continuously validates the cryptographic chain of the ledger. If it detects any dynamic memory manipulation (such as injection, memory corruption, or bit-flipping attacks), the watchdog instantly freezes queue execution (`isLocked = true`, `isIntegrityCompromised = true`), stops active TTL timeouts to preserve memory evidence for forensic auditing, and notifies the lifecycle observers.
+   A background watchdog validates the cryptographic chain of the ledger. If it detects any dynamic memory manipulation (such as injection, memory corruption, or bit-flipping), it instantly freezes queue execution (`isLocked = true`, `isIntegrityCompromised = true`), stopping active TTL timeouts to preserve evidence.
 
 4. **Dynamic DPoP Proofs (Ephemeral Proof-of-Possession):** 
-   The library handles the generation and signing of ephemeral OAuth 2.0 Demonstration of Proof-of-Possession (DPoP) proofs in compliance with **RFC 9449**. Upon queue drainage, the library computes fresh asymmetric proof signatures matching the target HTTP method and URL dynamically, using RSA or Elliptic Curve keys managed in hot memory via WebCrypto API (`SubtleCrypto` wrapped by `IDPoPCryptoProvider`).
+   The library handles the generation and signing of ephemeral OAuth 2.0 Demonstration of Proof-of-Possession (DPoP) proofs (RFC 9449). Ephemeral keys are managed inside TS via platform WebCrypto (`SubtleCrypto`), keeping the C++ core lightweight.
 
 5. **Transport Agnostic Core (Command Pattern Isolation):** 
-   The core is decoupled from the network transport layer, utilizing the Command pattern (`() => Promise<T>`) exposed via the `ISovereignNetworkAdapter` interface. This allows developers to plug in clean adapters for various networking stacks—such as Fetch API (`FetchAdapter`), Axios (`AxiosAdapter`), and GraphQL (`GraphQLAdapter`)—without exposing raw plaintext request payloads or violating binary isolation boundaries.
+   The core is decoupled from the network transport layer, utilizing the Command pattern (`() => Promise<T>`) exposed via the `ISovereignNetworkAdapter` interface. This allows developers to plug in clean adapters for various networking stacks—such as Fetch, Axios, and GraphQL.
 
 ---
 
 ## Architecture & Directory Layout
 
-The codebase follows a clean, modular structure with strictly defined module boundaries:
+The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and TypeScript adapters:
 
 ```
-src/
-├── adapters/
-│   ├── axios/      # Adapter and functional utilities for Axios.
-│   ├── fetch/      # Adapter and functional utilities for Fetch API.
-│   ├── graphql/    # Adapter and utilities for GraphQL requests.
-│   └── index.ts    # Main entry point exporting all network adapters.
-├── contracts/
-│   ├── crypto.ts   # Platform-agnostic interfaces for cryptographic providers (WebCrypto/SubtleCrypto).
-│   ├── index.ts    # Registry of abstraction contracts.
-│   └── network.ts  # Types and interfaces for network request/response adapters.
-├── core/
-│   ├── client.ts   # SovereignClientCore: Orchestrator managing dispatch, replay, and DPoP flows.
-│   ├── config.ts   # Normalization of trapping matrices and timeout configurations.
-│   ├── error-matrix.ts # Error-trapping decision matrix (401, 503, 504, and transport failures).
-│   ├── index.ts    # Main entry point for Core orchestration.
-│   └── utils.ts    # Utility helpers for DPoP contexts and memory clearing.
-├── ledger/
-│   ├── index.ts    # Main entry point for the Ledger subsystem.
-│   ├── queue.ts    # SovereignMemoryQueue: RAM queue chaining and watchdog implementation.
-│   └── zeroization.ts # Deterministic memory zeroization (.fill(0)) for volatile data.
-├── binary.ts       # Serialization helpers isolating headers/body in binary buffers.
-├── crypto.ts       # Cryptographic hashing, constant-time equality checks, and genesis vector.
-├── index.ts        # Primary package entry point (@sovereign/secure-client).
-└── types.ts        # Package-wide type definitions, error classes, and lifecycle observers.
+├── cpp/
+│   ├── SovereignSecureClient.h   # JSI Hybrid Object wrapper class definition.
+│   ├── SovereignSecureClient.cpp # JSI mapping and core delegation.
+│   ├── SovereignSecureCore.h     # Pure standard C++ Core engine definition.
+│   └── SovereignSecureCore.cpp   # Core ledger logic and SHA-256 implementation.
+├── src/
+│   ├── specs/
+│   │   └── SovereignSecureClient.nitro.ts # typescript specs contract for Nitrogen.
+│   ├── ledger/
+│   │   ├── index.ts              # Entry point for the ledger module.
+│   │   └── queue.ts              # SovereignMemoryQueue: dynamic environment loader and fallback.
+│   ├── core/
+│   │   ├── index.ts              # Entry point for orchestration.
+│   │   ├── client.ts             # SovereignClientCore orchestrator class.
+│   │   ├── config.ts             # Trapping configurations and HTTP status codes.
+│   │   ├── error-matrix.ts       # Transport error matrix decisions.
+│   │   └── utils.ts              # DPoP context resolution helpers.
+│   ├── dpop/
+│   │   ├── index.ts              # Entry point for the DPoP signature engine.
+│   │   ├── executor.ts           # Interceptor/executor bridge.
+│   │   ├── keys.ts               # Asymmetric keys generation (RSA/EC).
+│   │   ├── signer.ts             # JWT proof generator and signer.
+│   │   ├── types.ts              # DPoP types.
+│   │   └── utils.ts              # DPoP cryptographic utilities.
+│   ├── contracts/
+│   │   ├── index.ts              # Entry point for abstract interfaces.
+│   │   ├── crypto.ts             # Cryptographic provider contracts.
+│   │   └── network.ts            # Network transport contracts.
+│   ├── adapters/
+│   │   ├── index.ts              # Entry point for transport adapters.
+│   │   ├── axios/                # Axios adapter and interceptors.
+│   │   ├── fetch/                # Fetch adapter and error handlers.
+│   │   └── graphql/              # GraphQL client post adapters.
+│   ├── binary.ts                 # Binary pack/unpack serialization.
+│   ├── index.ts                  # Public library exports surface.
+│   └── types.ts                  # Package-wide types and error definitions.
+├── CMakeLists.txt                # Unified target-splitting compiler configuration.
+└── package.json                  # Package configuration with peerDependencies.
 ```
 
 ---
 
 ## Cryptographic Chain Formulation
 
-The in-memory ledger chains each block to its predecessor, ensuring that any payload tampering or block reordering invalidates the chain. The mathematical formulation of the block hashing is:
+The in-memory ledger chains each block to its predecessor. The mathematical formulation of the block hashing is:
 
-$$H_n = \text{SHA256}(P_n \mathbin{\Vert} H_{n-1} \mathbin{\Vert} \text{Timestamp\\_local}_{(\text{utf8})})$$
+$$H_n = \text{SHA256}(P_n \parallel H_{n-1} \parallel \text{Timestamp\_local\_utf8})$$
 
 ### Variable Definitions:
-
-- **$H_n$**: The resulting SHA-256 hash of the current block $n$ (represented as a 32-byte `Uint8Array`).
-- **$P_n$**: The binary payload of the current request (`serializedRequest` encoded as a `Uint8Array`), containing the serialized HTTP method, URL, headers, and body.
-- **$H_{n-1}$**: The SHA-256 hash of the preceding block in the ledger. For the genesis block ($n = 0$), this is a 32-byte zero-filled array (`genesisVector`).
-- **$\text{Timestamp\\_local}_{(\text{utf8})}$**: The UTF-8 encoded string representation of the local timestamp in milliseconds (`timestamp.toString()`) at which the request was enqueued.
-- **$\mathbin{\Vert}$**: The binary concatenation operator (`concatSegments`), merging the buffers sequentially before calculating the SHA-256 digest.
+- **$H_n$**: The resulting SHA-256 hash of the current block $n$ (32-byte array).
+- **$P_n$**: The binary payload of the current request (`serializedRequest`).
+- **$H_{n-1}$**: The SHA-256 hash of the preceding block (or 32-byte zero vector for genesis block).
+- **$\text{Timestamp\_local\_utf8}$**: UTF-8 encoded local timestamp string (`timestamp.toString()`).
+- **$\parallel$**: Binary concatenation operator.
 
 ---
 
 ## Operational In-Memory Flow
 
-The sequence diagram below outlines the runtime lifecycle of a request from the initial execution, through error trapping and memory sequestration, to successful replay or TTL expiration:
+The sequence diagram below outlines the runtime lifecycle of a request, demonstrating error trapping, memory sequestration, and native C++ core delegation:
 
 ```mermaid
 sequenceDiagram
@@ -84,144 +97,138 @@ sequenceDiagram
     actor App as Application (App)
     participant Core as SovereignClientCore
     participant Queue as SovereignMemoryQueue
+    participant Native as SovereignSecureCore (C++)
     participant Net as ISovereignNetworkAdapter
     
     App->>Core: executeRequest(requestId, request, dpop, config)
-    alt Ledger Compromised or Locked
+    alt Ledger Compromised
         Core-->>App: Throw IntegrityBreachError
     else Ledger Intact
-        Core->>Core: Check connection status (networkResolver)
-        alt Online (isOnline) && Queue Not Replaying
+        Core->>Core: Check connection status (isOnline)
+        alt Online & Queue Not Replaying
             Core->>Core: Resolve / Attach DPoP Proof
             Core->>Net: request(dispatchRequest)
-            alt Request Succeeds (HTTP 2xx)
-                Net-->>Core: Success Response
-                Core->>Core: Zeroize request buffers (.fill(0))
-                Core-->>App: Return Response Data (data)
-            else Trappable Failure (HTTP 503 / 504 / Transport Error)
+            alt Success (HTTP 2xx)
+                Net-->>Core: Response
+                Core->>Core: Zeroize request buffers
+                Core-->>App: Return Response Data
+            else Trappable Failure (HTTP 503 / Transport Error)
                 Core->>Core: shouldFreezeSession(error) -> true
                 Core->>Core: enqueueStructuredRequest()
-                Note over Core, Queue: Serialize to binary & zeroize source request
-                Core->>Queue: enqueue(id, binaryPayload, ttl, onExpire)
-                Queue->>Queue: Chain hash H_n and start TTL timer
+                Core->>Queue: enqueue(...)
+                Queue->>Native: executeTransaction(id, payload, ttl)
+                Native->>Native: Chain hash H_n (C++ std::fill zeroize)
                 Core-->>App: Return Pending Promise
             end
-        else Offline (isOffline)
+        else Offline
             Core->>Core: enqueueStructuredRequest()
-            Note over Core, Queue: Serialize to binary & zeroize source request
-            Core->>Queue: enqueue(id, binaryPayload, ttl, onExpire)
-            Queue->>Queue: Chain hash H_n and start TTL timer
+            Core->>Queue: enqueue(...)
+            Queue->>Native: executeTransaction(id, payload, ttl)
+            Native->>Native: Chain hash H_n (C++ std::fill zeroize)
             Core-->>App: Return Pending Promise
         end
-    end
-
-    opt TTL Timeout Expiration Flow
-        Queue->>Queue: TTL Timer Fires
-        Queue->>Queue: activeZeroization(id) -> apply .fill(0)
-        Queue->>Queue: Re-chain remaining blocks
-        Queue-->>Core: Callback onExpire
-        Core->>App: Reject Promise (Transaction expired in RAM)
     end
 ```
 
 ---
 
-## Conceptual Usage
+## Exported API Reference
 
-Here is a complete TypeScript example demonstrating how to instantiate `SovereignClientCore` and wrap a generic network request using `.executeRequest()`:
+| Category | Exported Symbol | Type | Description |
+| :--- | :--- | :--- | :--- |
+| **Core** | `SovereignClientCore` | Class | Main singleton orchestrator. Dispatches/traps requests and manages queue playbacks. |
+| **Core** | `SovereignMemoryQueue` | Class | Volatile JSI queue adapter. Controls C++ static ledger blocks and integrity verification. |
+| **Network** | `FetchAdapter` / `AxiosAdapter` / `GraphQLAdapter` | Class | Transport adapters implementing request handling over platform HTTP stacks. |
+| **Network** | `fetchWithTrapping` / `axiosWithTrapping` / `graphqlWithTrapping` | Function | Interceptor functions mapping HTTP responses and throwing `SovereignHttpError`. |
+| **Crypto** | `generateDPoPKeyPair()` | Function | Generates ephemeral RSA/EC asymmetric key pairs. |
+| **Crypto** | `withDPoP(client, executor)` | Function | Binds async execution context with lazy-generated DPoP proofs. |
+| **Binary** | `serializeAdapterRequest` / `deserializeAdapterRequest` | Function | Packs/unpacks request parameters to/from flat zeroizable binary arrays. |
+| **Binary** | `encodeJsonBody` / `encodeTextBody` / `encodeHeaders` / `decodeHeaders` / `decodeBody` | Function | Secure zeroizable buffer formatting and decoding helpers. |
+| **Errors** | `SovereignHttpError` | Class | Specialized HTTP status exception indicating trapping eligibility. |
+| **Errors** | `IntegrityBreachError` | Class | Fired when watchdog thread detects memory tampering or bit-flips. |
+| **Contracts**| `ISovereignCryptoProvider` / `IDPoPCryptoProvider` | Interface | Platform-agnostic cryptographic driver signatures. |
+| **Contracts**| `ISovereignNetworkAdapter` | Interface | Abstract transport adapter signature. |
+| **Config** | `SovereignClientCoreConfig` / `SessionLifecycleObservers` | Interface | Configuration and observer callback structures. |
 
+---
+
+## Conceptual Usage Examples
+
+### 1. Basic Setup (Offline Queueing & Replay)
 ```typescript
-import {
-  SovereignClientCore,
-  FetchAdapter,
-  SovereignHttpError
-} from '@sovereign/secure-client';
-import type {
-  ISovereignCryptoProvider,
-  NetworkStatusResolver,
-  SovereignAdapterRequest
-} from '@sovereign/secure-client';
+import { SovereignClientCore, FetchAdapter } from '@sovereign/secure-client';
 
-// 1. Define a platform-agnostic crypto provider (browser WebCrypto implementation)
-const cryptoProvider: ISovereignCryptoProvider = {
-  getRandomBytes: (n: number) => window.crypto.getRandomValues(new Uint8Array(n)),
-  sha256: async (data: Uint8Array) => {
-    const buffer = await window.crypto.subtle.digest('SHA-256', data);
-    return new Uint8Array(buffer);
-  }
-};
-
-// 2. Define a network status resolver (using navigator.onLine)
-const networkResolver: NetworkStatusResolver = async () => {
-  return navigator.onLine;
-};
-
-// 3. Instantiate the Sovereign Resilience Core Client
 const client = SovereignClientCore.getInstance({
-  cryptoProvider,
-  networkResolver,
-  networkAdapter: new FetchAdapter(), // Fetch transport layer
-  defaultTTL: 60_000,                  // 60-second default Time-To-Live in RAM
-  errorTrapping: {
-    freezeOn503_504: true,             // Sequester requests on temporary server errors
-    freezeOn401: false,                // Do not freeze session on auth failures
+  cryptoProvider: {
+    getRandomBytes: (n) => window.crypto.getRandomValues(new Uint8Array(n)),
+    sha256: async (d) => new Uint8Array(await window.crypto.subtle.digest('SHA-256', d))
   },
-  observers: {
-    onSessionFreeze: (reason) => {
-      console.warn('Network offline or degraded. Request sequestered in RAM:', reason);
-    },
-    onSessionResume: () => {
-      console.log('Connectivity restored. Queue synchronized successfully.');
-    },
-    onIntegrityBreach: () => {
-      console.error('CRITICAL: In-memory ledger tampering detected! Execution blocked.');
-    }
-  }
+  networkResolver: async () => navigator.onLine,
+  networkAdapter: new FetchAdapter(),
+  defaultTTL: 60_000
 });
 
-// 4. Wrap and dispatch a sensitive request
-async function submitTransaction() {
-  const transactionId = 'tx_' + Date.now();
-  
-  // Safe binary encoding of headers and body payloads
-  const bodyPayload = new TextEncoder().encode(JSON.stringify({ amount: 1500, currency: 'USD' }));
-  const headerPayload = new TextEncoder().encode(JSON.stringify({ 'Content-Type': 'application/json' }));
+// Traps in C++ memory if connection drops
+const pendingResponse = client.executeRequest('tx_101', {
+  method: 'POST',
+  url: 'https://api.sovereign.local/v1/ledger',
+  body: new TextEncoder().encode(JSON.stringify({ amount: 500 }))
+});
 
-  const secureRequest: SovereignAdapterRequest = {
-    method: 'POST',
-    url: 'https://api.sovereign.local/v1/ledger/transactions',
-    encodedHeaders: headerPayload,
-    body: bodyPayload,
-  };
+// Replay queue synchronously upon reconnection
+await client.processSynchronizedQueue(async () => true);
+```
 
-  try {
-    const response = await client.executeRequest<{ success: boolean }>(transactionId, secureRequest);
-    console.log('Transaction dispatched successfully:', response.success);
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('Execution failed:', error.message);
-    }
-  }
-}
+### 2. Axios Integration with Error Trapping
+```typescript
+import { SovereignClientCore, AxiosAdapter } from '@sovereign/secure-client';
+import axios from 'axios';
+
+const client = SovereignClientCore.getInstance({
+  cryptoProvider: myCryptoProvider,
+  networkResolver: async () => true,
+  networkAdapter: new AxiosAdapter({ axiosInstance: axios.create() }),
+  errorTrapping: { freezeOn503_504: true }
+});
+
+client.executeRequest('tx_102', { method: 'POST', url: '/api/ledger/degraded', body: myPayload });
+```
+
+### 3. Fetch Integration with Trapping
+```typescript
+import { SovereignClientCore, FetchAdapter } from '@sovereign/secure-client';
+
+const client = SovereignClientCore.getInstance({
+  cryptoProvider: myCryptoProvider,
+  networkResolver: async () => navigator.onLine,
+  networkAdapter: new FetchAdapter()
+});
+
+client.executeRequest('tx_103', { method: 'GET', url: 'https://api.sovereign.local/v1/data' });
+```
+
+### 4. GraphQL Integration with Trapping
+```typescript
+import { SovereignClientCore, GraphQLAdapter } from '@sovereign/secure-client';
+
+const client = SovereignClientCore.getInstance({
+  cryptoProvider: myCryptoProvider,
+  networkResolver: async () => navigator.onLine,
+  networkAdapter: new GraphQLAdapter({ endpoint: 'https://api.sovereign.local/graphql' })
+});
+
+client.executeRequest('tx_104', {
+  method: 'POST',
+  url: '',
+  body: new TextEncoder().encode(JSON.stringify({ query: 'mutation { createTx(amount: 1500) }' }))
+});
 ```
 
 ---
 
 ## Build Pipelines
 
-Compile and manage the package using standard Yarn commands:
-
-### Install dependencies
 ```bash
-yarn install
-```
-
-### Build TypeScript files
-```bash
-yarn build
-```
-
-### Clean and build
-```bash
-yarn rebuild
+yarn install  # Installs dependencies and generates lockfile
+yarn build    # Compiles and outputs type-safe TS build
 ```

@@ -91,7 +91,7 @@ export class SovereignClientCore {
   }
 
   public get isFrozen(): boolean { return this._isFrozen; }
-  
+
   public get isIntegrityCompromised(): boolean {
     return this.memoryQueue.isIntegrityCompromised || this.memoryQueue.getLocked();
   }
@@ -116,14 +116,14 @@ export class SovereignClientCore {
       try {
         let dispatchRequest = request;
         const activeDpop = resolveDPoPContext(request, this.dpopSigner, this.dpopConfig, dpop, config);
-        
+
         // Generate fresh DPoP proof at the moment of dispatch
         if (activeDpop) {
           const context = await activeDpop.contextResolver();
           const proofOptions: any = { method: activeDpop.method, url: activeDpop.url };
           if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
           if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
-          
+
           const proof = await activeDpop.signer.generateProof(proofOptions);
           if (request.encodedHeaders !== undefined) {
             dispatchRequest = {
@@ -136,7 +136,7 @@ export class SovereignClientCore {
         }
 
         const response = await this.networkAdapter.request<T>(dispatchRequest);
-        
+
         // Memory safety: fill request buffers with 0s after use
         zeroRequestBuffers(request);
         if (dispatchRequest !== request) zeroRequestBuffers(dispatchRequest);

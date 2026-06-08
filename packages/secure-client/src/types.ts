@@ -81,7 +81,7 @@ export type NetworkStatusResolver = () => Promise<boolean>;
 /** Internal request callback storage record (no request body/header strings). */
 export interface QueuedRequestRecord<T = unknown> {
   resolve: (value: T) => void;
-  reject:  (reason: unknown) => void;
+  reject: (reason: unknown) => void;
   dpop?: PendingDPoPContext;
 }
 

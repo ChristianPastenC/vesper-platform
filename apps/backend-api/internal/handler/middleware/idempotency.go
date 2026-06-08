@@ -113,7 +113,7 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 			}
 			if record.state == stateCompleted {
 				// Replay the cached response
-				w.Header().Set("X-Idempotency-Replayed", "true")
+				w.Header().Set("X-Cache-Lookup", "HIT - Idempotent")
 				// We don't restore all original headers for simplicity here, but we could
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(record.statusCode)

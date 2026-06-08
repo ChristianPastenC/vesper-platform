@@ -21,12 +21,12 @@ export interface ResolvedTrappingConfig {
  * for every optional field, producing a ResolvedTrappingConfig where all
  * values are fully defined and ready for use inside hot evaluation paths.
  */
-export function resolveTrappingConfig(
-  raw: ErrorTrappingConfig | undefined
-): ResolvedTrappingConfig {
+export const resolveTrappingConfig = (
+  raw: ErrorTrappingConfig | undefined,
+): ResolvedTrappingConfig => {
   return {
     freezeOn503_504: raw?.freezeOn503_504 ?? true,
     freezeOn401: raw?.freezeOn401 ?? false,
     additionalFreezableStatuses: new Set(raw?.additionalFreezableStatuses ?? []),
   };
-}
+};

@@ -11,10 +11,7 @@ import { RootStackParamList } from '../../../navigation/types';
 import { stylesFactory } from './PaymentSuccessScreen.styles';
 
 type RoutePropType = RouteProp<RootStackParamList, 'PaymentSuccessScreen'>;
-type NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'PaymentSuccessScreen'
->;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'PaymentSuccessScreen'>;
 
 export const PaymentSuccessScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -35,9 +32,7 @@ export const PaymentSuccessScreen: React.FC = () => {
           <Ionicons name="checkmark-circle-outline" size={60} color="#FFFFFF" />
         </View>
         <Text variant="title" style={styles.successTitle}>
-          {type === 'online'
-            ? t('online_checkout.success')
-            : t('scan_and_go.success')}
+          {type === 'online' ? t('online_checkout.success') : t('scan_and_go.success')}
         </Text>
         <Text variant="caption" style={styles.orderLabel}>
           Order ID
@@ -75,11 +70,7 @@ export const PaymentSuccessScreen: React.FC = () => {
         )}
       </View>
       <View style={styles.footer}>
-        <Button
-          title="Return to Catalog"
-          onPress={handleReturnToCatalog}
-          style={styles.doneBtn}
-        />
+        <Button title="Return to Catalog" onPress={handleReturnToCatalog} style={styles.doneBtn} />
       </View>
     </View>
   );

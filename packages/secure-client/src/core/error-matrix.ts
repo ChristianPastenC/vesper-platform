@@ -9,7 +9,7 @@ import {
 /**
  * Extracts a numeric HTTP status code from an error object.
  */
-export function extractHttpStatus(error: unknown): number | null {
+export const extractHttpStatus = (error: unknown): number | null => {
   if (!error || typeof error !== 'object') return null;
   const e = error as Record<string, unknown>;
 
@@ -30,12 +30,12 @@ export function extractHttpStatus(error: unknown): number | null {
   }
 
   return null;
-}
+};
 
 /**
  * Stage 1 — Transport-layer error detection.
  */
-export function isTransportError(error: unknown): boolean {
+export const isTransportError = (error: unknown): boolean => {
   if (!error || typeof error !== 'object') return false;
   const e = error as Record<string, unknown>;
 
@@ -44,15 +44,15 @@ export function isTransportError(error: unknown): boolean {
   if (e['networkError']) return true;
 
   return false;
-}
+};
 
 /**
  * Stage 2 — HTTP status code matrix evaluation.
  */
-export function isFreezableHttpStatus(
+export const isFreezableHttpStatus = (
   error: unknown,
-  trapping: ResolvedTrappingConfig
-): boolean {
+  trapping: ResolvedTrappingConfig,
+): boolean => {
   const status = extractHttpStatus(error);
   if (status === null) return false;
 
@@ -72,14 +72,11 @@ export function isFreezableHttpStatus(
   }
 
   return false;
-}
+};
 
 /**
  * Central decision function: should this error cause the session to freeze?
  */
-export function shouldFreezeSession(
-  error: unknown,
-  trapping: ResolvedTrappingConfig
-): boolean {
+export const shouldFreezeSession = (error: unknown, trapping: ResolvedTrappingConfig): boolean => {
   return isTransportError(error) || isFreezableHttpStatus(error, trapping);
-}
+};

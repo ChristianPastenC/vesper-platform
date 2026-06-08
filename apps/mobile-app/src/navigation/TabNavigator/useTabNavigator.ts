@@ -7,12 +7,8 @@ export const useTabNavigator = () => {
   const { colors } = useTheme();
 
   const getTabBarIconName = (
-    routeName: keyof TabParamList
-  ):
-    | 'home-outline'
-    | 'grid-outline'
-    | 'barcode-outline'
-    | 'person-outline' => {
+    routeName: keyof TabParamList,
+  ): 'home-outline' | 'grid-outline' | 'barcode-outline' | 'person-outline' => {
     if (routeName === 'HomeTab') {
       return 'home-outline';
     }

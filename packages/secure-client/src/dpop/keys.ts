@@ -12,9 +12,7 @@ import type { DPoPAlgorithm, DPoPKeyConfig, DPoPKeyPair, IDPoPCryptoProvider } f
  *  • PS256 → RSA-PSS, 2048-bit modulus, SHA-256
  *             (publicExponent 65537 = 0x010001)
  */
-function buildKeyGenParams(
-  algorithm: DPoPAlgorithm
-): EcKeyGenParams | RsaHashedKeyGenParams {
+const buildKeyGenParams = (algorithm: DPoPAlgorithm): EcKeyGenParams | RsaHashedKeyGenParams => {
   switch (algorithm) {
     case 'ES256':
       return { name: 'ECDSA', namedCurve: 'P-256' };
@@ -27,7 +25,7 @@ function buildKeyGenParams(
         hash: 'SHA-256',
       };
   }
-}
+};
 
 // ---------------------------------------------------------------------------
 // Private key material stripping
@@ -41,12 +39,17 @@ function buildKeyGenParams(
  *  • EC:  d
  *  • RSA: d, p, q, dp, dq, qi
  */
-function stripPrivateFields(jwk: JsonWebKey): JsonWebKey {
+const stripPrivateFields = (jwk: JsonWebKey): JsonWebKey => {
   const { d, p, q, dp, dq, qi, ...publicOnly } = jwk as Record<string, unknown>;
   // Suppress the unused-variable warning for destructured private fields
-  void d; void p; void q; void dp; void dq; void qi;
+  void d;
+  void p;
+  void q;
+  void dp;
+  void dq;
+  void qi;
   return publicOnly as JsonWebKey;
-}
+};
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -72,22 +75,22 @@ function stripPrivateFields(jwk: JsonWebKey): JsonWebKey {
  * @param cryptoProvider  DPoP-capable crypto provider exposing SubtleCrypto.
  * @param config          Optional key configuration (algorithm, etc.).
  */
-export async function generateDPoPKeyPair(
+export const generateDPoPKeyPair = async (
   cryptoProvider: IDPoPCryptoProvider,
-  config: DPoPKeyConfig = {}
-): Promise<DPoPKeyPair> {
+  config: DPoPKeyConfig = {},
+): Promise<DPoPKeyPair> => {
   const algorithm = config.algorithm ?? 'ES256';
   const params = buildKeyGenParams(algorithm);
 
-  const { publicKey, privateKey } = await cryptoProvider.subtle.generateKey(
+  const { publicKey, privateKey } = (await cryptoProvider.subtle.generateKey(
     params,
     /*extractable=*/ true, // Required to export the public key JWK below.
-    ['sign', 'verify']
-  ) as CryptoKeyPair;
+    ['sign', 'verify'],
+  )) as CryptoKeyPair;
 
   // Export the public key JWK and immediately strip any private fields.
   const rawJwk = await cryptoProvider.subtle.exportKey('jwk', publicKey);
   const publicKeyJwk = stripPrivateFields(rawJwk);
 
   return { publicKeyJwk, privateKey, algorithm };
-}
+};

@@ -43,7 +43,7 @@ describe('ProductCard Component', () => {
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />
+      />,
     );
 
     expect(getByText('Premium Coffee Beans')).toBeTruthy();
@@ -59,7 +59,7 @@ describe('ProductCard Component', () => {
         onAddToOnline={mockOnline}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />
+      />,
     );
 
     fireEvent.press(getByText('catalog.addToOnline'));
@@ -74,7 +74,7 @@ describe('ProductCard Component', () => {
         onAddToOnline={jest.fn()}
         onAddToInStore={mockInStore}
         onPress={jest.fn()}
-      />
+      />,
     );
 
     fireEvent.press(getByText('catalog.addToInStore'));
@@ -89,7 +89,7 @@ describe('ProductCard Component', () => {
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
         onPress={mockPress}
-      />
+      />,
     );
 
     fireEvent.press(getByTestId('product-card-press'));

@@ -6,10 +6,7 @@ export const useTheme = () => {
   const themeMode = useAppStore((state) => state.themeMode);
   const systemScheme = useColorScheme();
 
-  const isDarkMode =
-    themeMode === 'system'
-      ? systemScheme === 'dark'
-      : themeMode === 'dark';
+  const isDarkMode = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
 
   const colors: ThemeColors = isDarkMode ? DARK_COLORS : LIGHT_COLORS;
 

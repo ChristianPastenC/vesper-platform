@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "prettier"
+  ],
+  "rules": {
+    "func-style": ["error", "expression"],
+    "max-lines": ["warn", { "max": 250, "skipBlankLines": true, "skipComments": true }],
+    "complexity": ["warn", { "max": 10 }],
+    "max-params": ["warn", { "max": 4 }]
+  }
+}

@@ -40,7 +40,9 @@ The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and
 │   │   └── SovereignSecureClient.nitro.ts # typescript specs contract for Nitrogen.
 │   ├── ledger/
 │   │   ├── index.ts              # Entry point for the ledger module.
-│   │   └── queue.ts              # SovereignMemoryQueue: dynamic environment loader and fallback.
+│   │   ├── crypto.ts             # Synchronous SHA-256 fallback algorithm.
+│   │   ├── fallback.ts           # SovereignSecureClientFallback pure JS fallback.
+│   │   └── queue.ts              # SovereignMemoryQueue: dynamic environment loader.
 │   ├── core/
 │   │   ├── index.ts              # Entry point for orchestration.
 │   │   ├── client.ts             # SovereignClientCore orchestrator class.

@@ -10,7 +10,7 @@ export interface QueueStatus {
  * SovereignSecureClient JSI Specification Contract
  * Defines the native boundary for the C++ resilience core.
  */
-export interface SovereignSecureClient extends HybridObject<{ ios: 'c++', android: 'c++' }> {
+export interface SovereignSecureClient extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   /**
    * Enqueues a transaction if offline or under network degradation.
    * If online, returns true immediately. If enqueued, returns false.

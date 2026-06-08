@@ -9,19 +9,19 @@ import type { GraphQLErrorShape, GraphQLRequest, GraphQLRequestOptions } from '.
  * SovereignClientCore Error Trapping Matrix and works in all supported
  * JS runtimes without any GraphQL client dependency.
  */
-export async function graphqlWithTrapping<T>(
+export const graphqlWithTrapping = async <T>(
   url: string,
   request: GraphQLRequest,
-  options: GraphQLRequestOptions = {}
-): Promise<T> {
+  options: GraphQLRequestOptions = {},
+): Promise<T> => {
   const { headers = {}, fetchImpl, signal } = options;
   const fetchFn = fetchImpl ?? globalThis.fetch;
 
   if (typeof fetchFn !== 'function') {
     throw new TypeError(
       '[SovereignCore] graphqlWithTrapping: no fetch implementation available. ' +
-      'Pass a fetchImpl option (e.g. node-fetch, cross-fetch) for environments ' +
-      'that do not provide a global fetch.'
+        'Pass a fetchImpl option (e.g. node-fetch, cross-fetch) for environments ' +
+        'that do not provide a global fetch.',
     );
   }
 
@@ -29,7 +29,7 @@ export async function graphqlWithTrapping<T>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       ...headers,
     },
     body: JSON.stringify({
@@ -41,13 +41,10 @@ export async function graphqlWithTrapping<T>(
   });
 
   if (!response.ok) {
-    throw new SovereignHttpError(
-      response.status,
-      `HTTP ${response.status} ${response.statusText}`
-    );
+    throw new SovereignHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
   }
 
-  const envelope = await response.json() as {
+  const envelope = (await response.json()) as {
     data?: T;
     errors?: GraphQLErrorShape[];
   };
@@ -57,10 +54,10 @@ export async function graphqlWithTrapping<T>(
   }
 
   if (envelope.data === undefined || envelope.data === null) {
-    throw new GraphQLRequestError(
-      [{ message: 'GraphQL response contained no data and no errors.' }]
-    );
+    throw new GraphQLRequestError([
+      { message: 'GraphQL response contained no data and no errors.' },
+    ]);
   }
 
   return envelope.data;
-}
+};

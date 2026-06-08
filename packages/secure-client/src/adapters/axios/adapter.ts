@@ -1,4 +1,8 @@
-import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapterResponse } from '../../contracts/index.js';
+import type {
+  ISovereignNetworkAdapter,
+  SovereignAdapterRequest,
+  SovereignAdapterResponse,
+} from '../../contracts/index.js';
 import type { AxiosAdapterOptions, AxiosCompatRequestConfig, AxiosInstance } from './types.js';
 import { axiosWithTrapping } from './functional.js';
 import { decodeBody, decodeHeaders } from '../../binary.js';
@@ -25,9 +29,8 @@ export class AxiosAdapter implements ISovereignNetworkAdapter {
   }
 
   public async request<T = unknown>(
-    config: SovereignAdapterRequest
+    config: SovereignAdapterRequest,
   ): Promise<SovereignAdapterResponse<T>> {
-
     // Decode headers only at dispatch time.
     const resolvedHeaders: Record<string, string | undefined> =
       config.encodedHeaders !== undefined && config.encodedHeaders.length > 0
@@ -38,9 +41,7 @@ export class AxiosAdapter implements ISovereignNetworkAdapter {
     // as `data`, but we decode to string here so the deserialized form is
     // transient and never stored in a long-lived variable.
     const resolvedData: string | undefined =
-      config.body !== undefined && config.body !== null
-        ? decodeBody(config.body)
-        : undefined;
+      config.body !== undefined && config.body !== null ? decodeBody(config.body) : undefined;
 
     const axiosConfig: AxiosCompatRequestConfig = {
       method: config.method,

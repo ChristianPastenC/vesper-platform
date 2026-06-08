@@ -22,7 +22,7 @@ export const useInStoreCheckout = () => {
         onSuccess: (data) => {
           onSuccess(data.orderId);
         },
-      }
+      },
     );
   };
 

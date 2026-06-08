@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
@@ -12,7 +12,7 @@ export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
 
   const {
     isAuthenticated,
@@ -50,9 +50,7 @@ export const ProfileScreen: React.FC = () => {
         </View>
         <View style={styles.headerInfo}>
           <Text variant="bold" style={styles.welcomeText} testID="profile-greeting">
-            {isAuthenticated
-              ? `${t('auth.title') || 'Welcome'}, ${userName}!`
-              : 'Hello, Guest!'}
+            {isAuthenticated ? `${t('auth.title') || 'Welcome'}, ${userName}!` : 'Hello, Guest!'}
           </Text>
           <Text style={styles.statusText} testID="profile-status">
             {isAuthenticated ? 'Session Active' : 'Sign in to unlock checkout features'}
@@ -72,9 +70,7 @@ export const ProfileScreen: React.FC = () => {
             >
               <View style={styles.rowLeft}>
                 <Ionicons name="log-out-outline" size={22} color={theme.colors.error} />
-                <Text style={[styles.rowText, { color: theme.colors.error }]}>
-                  Sign Out
-                </Text>
+                <Text style={[styles.rowText, { color: theme.colors.error }]}>Sign Out</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={theme.colors.text + '40'} />
             </TouchableOpacity>
@@ -100,11 +96,7 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('shared_ui.theme') || 'Preferences'}</Text>
         <View style={styles.optionsList}>
-          <TouchableOpacity
-            style={styles.row}
-            onPress={toggleThemeMode}
-            testID="profile-theme-row"
-          >
+          <TouchableOpacity style={styles.row} onPress={toggleThemeMode} testID="profile-theme-row">
             <View style={styles.rowLeft}>
               <Ionicons name="color-palette-outline" size={22} color={theme.colors.text} />
               <Text style={styles.rowText}>{t('shared_ui.theme')}</Text>

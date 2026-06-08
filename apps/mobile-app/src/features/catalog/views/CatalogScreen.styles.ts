@@ -40,7 +40,8 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       width: scale(42),
       height: scale(42),
       borderRadius: scale(21),
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.04)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.04)',
       justifyContent: 'center',
       alignItems: 'center',
       marginLeft: scale(12),
@@ -120,7 +121,8 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       height: scale(64),
       borderRadius: scale(32),
       borderWidth: 1,
-      borderColor: colors.primary === '#F8FAFC' ? 'rgba(248, 250, 252, 0.2)' : 'rgba(15, 23, 42, 0.1)',
+      borderColor:
+        colors.primary === '#F8FAFC' ? 'rgba(248, 250, 252, 0.2)' : 'rgba(15, 23, 42, 0.1)',
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: scale(6),

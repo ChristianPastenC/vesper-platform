@@ -9,18 +9,15 @@ import type { AxiosCompatRequestConfig, AxiosCompatResponse, AxiosInstance } fro
  * correctly intercept Axios-based executors even when the Axios instance has
  * a custom `validateStatus` function that suppresses automatic throwing.
  */
-export async function axiosWithTrapping<T>(
+export const axiosWithTrapping = async <T>(
   axiosInstance: AxiosInstance,
-  config: AxiosCompatRequestConfig
-): Promise<AxiosCompatResponse<T>> {
+  config: AxiosCompatRequestConfig,
+): Promise<AxiosCompatResponse<T>> => {
   const response = await axiosInstance.request<T>(config);
 
   if (response.status >= 400) {
-    throw new SovereignHttpError(
-      response.status,
-      `HTTP ${response.status} ${response.statusText}`
-    );
+    throw new SovereignHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
   }
 
   return response;
-}
+};

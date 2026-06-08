@@ -7,12 +7,7 @@ import type {
   IDPoPCryptoProvider,
 } from './types.js';
 import { generateDPoPKeyPair } from './keys.js';
-import {
-  base64UrlEncode,
-  base64UrlEncodeJson,
-  buildSigningParams,
-  normalizeHtu,
-} from './utils.js';
+import { base64UrlEncode, base64UrlEncodeJson, buildSigningParams, normalizeHtu } from './utils.js';
 
 /** RFC 9449 §4.2 DPoP proof JWT payload claims. */
 interface DPoPProofPayload {
@@ -34,17 +29,14 @@ export class DPoPSigner {
   private readonly keyPair: DPoPKeyPair;
   private readonly cryptoProvider: IDPoPCryptoProvider;
 
-  private constructor(
-    cryptoProvider: IDPoPCryptoProvider,
-    keyPair: DPoPKeyPair
-  ) {
+  private constructor(cryptoProvider: IDPoPCryptoProvider, keyPair: DPoPKeyPair) {
     this.cryptoProvider = cryptoProvider;
     this.keyPair = keyPair;
   }
 
   public static async create(
     cryptoProvider: IDPoPCryptoProvider,
-    config: DPoPKeyConfig = {}
+    config: DPoPKeyConfig = {},
   ): Promise<DPoPSigner> {
     const keyPair = await generateDPoPKeyPair(cryptoProvider, config);
     return new DPoPSigner(cryptoProvider, keyPair);
@@ -85,10 +77,7 @@ export class DPoPSigner {
     return this.keyPair.algorithm;
   }
 
-  private async compact(
-    header: DPoPProofHeader,
-    payload: DPoPProofPayload
-  ): Promise<string> {
+  private async compact(header: DPoPProofHeader, payload: DPoPProofPayload): Promise<string> {
     const encodedHeader = base64UrlEncodeJson(header);
     const encodedPayload = base64UrlEncodeJson(payload);
     const signingInput = `${encodedHeader}.${encodedPayload}`;
@@ -99,7 +88,7 @@ export class DPoPSigner {
     const rawSignature = await this.cryptoProvider.subtle.sign(
       signingParams,
       this.keyPair.privateKey,
-      signingBytes
+      signingBytes,
     );
 
     const encodedSignature = base64UrlEncode(new Uint8Array(rawSignature));

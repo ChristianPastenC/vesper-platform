@@ -27,12 +27,7 @@ export const ProductDetailsScreen: React.FC = () => {
   const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation();
 
-  const {
-    product,
-    handleAddToOnline,
-    handleAddToInStore,
-    specifications,
-  } = useProductDetails();
+  const { product, handleAddToOnline, handleAddToInStore, specifications } = useProductDetails();
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -44,11 +39,7 @@ export const ProductDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer} testID="product-details-scroll">
         <View style={styles.imageContainer} testID="product-image-container">
-          <Ionicons
-            name={getProductIcon(product.name)}
-            size={80}
-            color={theme.colors.primary}
-          />
+          <Ionicons name={getProductIcon(product.name)} size={80} color={theme.colors.primary} />
         </View>
 
         <View style={styles.header}>
@@ -113,13 +104,7 @@ export const ProductDetailsScreen: React.FC = () => {
           <Button
             title={t('catalog.addToInStore')}
             variant="secondary"
-            leftIcon={
-              <Ionicons
-                name="barcode-outline"
-                size={18}
-                color={theme.colors.primary}
-              />
-            }
+            leftIcon={<Ionicons name="barcode-outline" size={18} color={theme.colors.primary} />}
             onPress={handleAddToInStore}
             style={styles.actionBtn}
             testID="details-add-instore-btn"

@@ -146,6 +146,4 @@ export interface DPoPTokenContext {
 /**
  * Zero-argument resolver function that returns the current DPoP token context.
  */
-export type DPoPContextResolver =
-  | (() => DPoPTokenContext)
-  | (() => Promise<DPoPTokenContext>);
+export type DPoPContextResolver = (() => DPoPTokenContext) | (() => Promise<DPoPTokenContext>);

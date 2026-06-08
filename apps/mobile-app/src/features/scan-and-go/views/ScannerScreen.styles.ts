@@ -94,7 +94,8 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       letterSpacing: -0.2,
     },
     toast: {
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.9)' : 'rgba(255, 255, 255, 0.9)',
       borderColor: colors.border,
       borderWidth: 1,
       borderRadius: scale(20),

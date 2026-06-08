@@ -11,9 +11,7 @@ interface CheckoutResponse {
   orderId: string;
 }
 
-const simulateOnlineCheckout = async (
-  payload: CheckoutPayload
-): Promise<CheckoutResponse> => {
+const simulateOnlineCheckout = async (_payload: CheckoutPayload): Promise<CheckoutResponse> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({

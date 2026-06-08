@@ -26,12 +26,20 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf dist",
-    "rebuild": "rimraf dist && tsc"
+    "rebuild": "rimraf dist && tsc",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "peerDependencies": {
     "react-native-nitro-modules": "*"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.12.0",
+    "@typescript-eslint/parser": "^7.12.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.1",
     "react-native-nitro-modules": "*",
     "typescript": "^5.4.5"
   }

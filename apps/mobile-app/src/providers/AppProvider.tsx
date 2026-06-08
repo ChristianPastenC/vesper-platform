@@ -25,9 +25,7 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const theme = useTheme();
   const language = useAppStore((state) => state.language);
 

@@ -21,7 +21,7 @@ export const useOnlineCart = () => {
         onSuccess: (data) => {
           onSuccess(data.orderId);
         },
-      }
+      },
     );
   };
 

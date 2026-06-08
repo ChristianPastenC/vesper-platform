@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, Text as RNText } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +14,7 @@ export const HomeScreen: React.FC = () => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
   const onlineCart = useAppStore((state) => state.onlineCart);
   const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -37,16 +37,10 @@ export const HomeScreen: React.FC = () => {
           style={styles.headerCartButton}
           testID="header-cart-button"
         >
-          <Ionicons
-            name="cart-outline"
-            size={26}
-            color={theme.colors.primary}
-          />
+          <Ionicons name="cart-outline" size={26} color={theme.colors.primary} />
           {cartItemsCount > 0 && (
             <View style={styles.badgeContainer} testID="header-cart-badge">
-              <RNText style={styles.badgeText}>
-                {cartItemsCount}
-              </RNText>
+              <RNText style={styles.badgeText}>{cartItemsCount}</RNText>
             </View>
           )}
         </TouchableOpacity>
@@ -55,9 +49,24 @@ export const HomeScreen: React.FC = () => {
   }, [navigation, cartItemsCount, theme.colors.primary, styles]);
 
   const CURATED_LOOKS = [
-    { id: '1', tag: t('home.newArrivals'), title: t('home.collectionTitle') + ' - Vol. I', color: '#0F172A' },
-    { id: '2', tag: t('home.newArrivals'), title: t('home.collectionTitle') + ' - Vol. II', color: '#1E293B' },
-    { id: '3', tag: t('home.newArrivals'), title: t('home.collectionTitle') + ' - Vol. III', color: '#334155' },
+    {
+      id: '1',
+      tag: t('home.newArrivals'),
+      title: t('home.collectionTitle') + ' - Vol. I',
+      color: '#0F172A',
+    },
+    {
+      id: '2',
+      tag: t('home.newArrivals'),
+      title: t('home.collectionTitle') + ' - Vol. II',
+      color: '#1E293B',
+    },
+    {
+      id: '3',
+      tag: t('home.newArrivals'),
+      title: t('home.collectionTitle') + ' - Vol. III',
+      color: '#334155',
+    },
   ];
 
   const TRANSACTIONS = [
@@ -79,16 +88,10 @@ export const HomeScreen: React.FC = () => {
           </Text>
           <View style={styles.welcomeSubtitleRow}>
             <Ionicons name="location-outline" size={13} color={theme.colors.text + '80'} />
-            <Text style={styles.welcomeSubtitle}>
-              {t('home.location')}
-            </Text>
+            <Text style={styles.welcomeSubtitle}>{t('home.location')}</Text>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={navigateToAccount}
-          testID="home-avatar-btn"
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity onPress={navigateToAccount} testID="home-avatar-btn" activeOpacity={0.7}>
           <View style={styles.avatarCircle}>
             <Ionicons name="person-outline" size={22} color={theme.colors.text} />
           </View>
@@ -108,12 +111,8 @@ export const HomeScreen: React.FC = () => {
             <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
           </View>
           <View>
-            <RNText style={styles.tileTitleLight}>
-              {t('Catalog')}
-            </RNText>
-            <RNText style={styles.tileSubtitleLight}>
-              {t('home.shopOnlineDesc')}
-            </RNText>
+            <RNText style={styles.tileTitleLight}>{t('Catalog')}</RNText>
+            <RNText style={styles.tileSubtitleLight}>{t('home.shopOnlineDesc')}</RNText>
           </View>
         </TouchableOpacity>
 
@@ -128,12 +127,8 @@ export const HomeScreen: React.FC = () => {
             <Ionicons name="barcode-outline" size={20} color={theme.colors.text} />
           </View>
           <View>
-            <RNText style={styles.tileTitleDark}>
-              {t('Scan & Go')}
-            </RNText>
-            <RNText style={styles.tileSubtitleDark}>
-              {t('home.scanGoDesc')}
-            </RNText>
+            <RNText style={styles.tileTitleDark}>{t('Scan & Go')}</RNText>
+            <RNText style={styles.tileSubtitleDark}>{t('home.scanGoDesc')}</RNText>
           </View>
         </TouchableOpacity>
       </View>
@@ -150,10 +145,7 @@ export const HomeScreen: React.FC = () => {
           snapToInterval={styles.carouselCard.width + 16}
         >
           {CURATED_LOOKS.map((item) => (
-            <View
-              key={item.id}
-              style={[styles.carouselCard, { backgroundColor: item.color }]}
-            >
+            <View key={item.id} style={[styles.carouselCard, { backgroundColor: item.color }]}>
               <View style={styles.carouselCardOverlay} />
               <View style={styles.carouselPill}>
                 <RNText style={styles.carouselPillText}>{item.tag}</RNText>
@@ -195,19 +187,13 @@ export const HomeScreen: React.FC = () => {
             size={18}
             color={isOnline ? theme.colors.success : theme.colors.error}
           />
-          <Text style={styles.networkTitle}>
-            {t('home.networkWidgetTitle')}
-          </Text>
+          <Text style={styles.networkTitle}>{t('home.networkWidgetTitle')}</Text>
         </View>
         <Text variant="caption" style={styles.networkDesc}>
           {t('home.networkWidgetDesc')}
         </Text>
         <Button
-          title={
-            isOnline
-              ? t('scan_and_go.onlineLabel')
-              : t('scan_and_go.offlineLabel')
-          }
+          title={isOnline ? t('scan_and_go.onlineLabel') : t('scan_and_go.offlineLabel')}
           variant="secondary"
           onPress={toggleNetwork}
           style={styles.networkBtn}

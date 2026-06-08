@@ -27,9 +27,7 @@ describe('Button Component', () => {
 
   it('calls onPress when clicked', () => {
     const onPressMock = jest.fn();
-    const { getByText } = render(
-      <Button title="Click Me" onPress={onPressMock} />
-    );
+    const { getByText } = render(<Button title="Click Me" onPress={onPressMock} />);
     fireEvent.press(getByText('Click Me'));
     expect(onPressMock).toHaveBeenCalledTimes(1);
   });
@@ -37,12 +35,7 @@ describe('Button Component', () => {
   it('disables pressing when loading', () => {
     const onPressMock = jest.fn();
     const { getByTestId } = render(
-      <Button
-        title="Click Me"
-        status="loading"
-        onPress={onPressMock}
-        testID="btn"
-      />
+      <Button title="Click Me" status="loading" onPress={onPressMock} testID="btn" />,
     );
     fireEvent.press(getByTestId('btn'));
     expect(onPressMock).not.toHaveBeenCalled();

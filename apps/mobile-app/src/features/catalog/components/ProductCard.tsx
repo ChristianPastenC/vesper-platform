@@ -35,27 +35,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <View style={styles.card}>
       <TouchableOpacity onPress={onPress} testID="product-card-press" activeOpacity={0.7}>
         <View style={styles.imagePlaceholder}>
-          <Ionicons
-            name="cube-outline"
-            size={32}
-            color={theme.colors.text + '33'}
-          />
+          <Ionicons name="cube-outline" size={32} color={theme.colors.text + '33'} />
         </View>
         <View style={styles.header}>
           <Text style={styles.name} numberOfLines={2}>
             {product.name}
           </Text>
           <View style={styles.priceTag}>
-            <Text style={styles.price}>
-              ${product.price.toFixed(2)}
-            </Text>
+            <Text style={styles.price}>${product.price.toFixed(2)}</Text>
           </View>
         </View>
         <View style={styles.infoContainer}>
           <View style={styles.barcodeTag}>
-            <Text style={styles.barcodeText}>
-              Barcode: {product.barcode}
-            </Text>
+            <Text style={styles.barcodeText}>Barcode: {product.barcode}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -76,13 +68,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Button
           title={t('catalog.addToInStore')}
           variant="secondary"
-          leftIcon={
-            <Ionicons
-              name="barcode-outline"
-              size={14}
-              color={theme.colors.text}
-            />
-          }
+          leftIcon={<Ionicons name="barcode-outline" size={14} color={theme.colors.text} />}
           onPress={() => onAddToInStore(product)}
           style={styles.actionBtn}
         />

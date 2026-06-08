@@ -87,7 +87,7 @@ export const useAppStore = create<AppState>()(
           if (existing) {
             return {
               onlineCart: state.onlineCart.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
               ),
             };
           }
@@ -96,10 +96,7 @@ export const useAppStore = create<AppState>()(
 
       clearOnlineCart: () => set({ onlineCart: [] }),
       getOnlineTotal: () => {
-        return get().onlineCart.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        );
+        return get().onlineCart.reduce((total, item) => total + item.price * item.quantity, 0);
       },
 
       addToInStoreCart: (item) =>
@@ -108,7 +105,7 @@ export const useAppStore = create<AppState>()(
           if (existing) {
             return {
               inStoreCart: state.inStoreCart.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
               ),
             };
           }
@@ -117,10 +114,7 @@ export const useAppStore = create<AppState>()(
 
       clearInStoreCart: () => set({ inStoreCart: [] }),
       getInStoreTotal: () => {
-        return get().inStoreCart.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        );
+        return get().inStoreCart.reduce((total, item) => total + item.price * item.quantity, 0);
       },
     }),
     {
@@ -134,6 +128,6 @@ export const useAppStore = create<AppState>()(
         onlineCart: state.onlineCart,
         inStoreCart: state.inStoreCart,
       }),
-    }
-  )
+    },
+  ),
 );

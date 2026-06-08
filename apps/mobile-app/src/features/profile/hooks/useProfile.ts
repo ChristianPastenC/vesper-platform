@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useAppStore, ThemeMode, Language } from '../../../store/useAppStore';
+import { useAppStore } from '../../../store/useAppStore';
 
 export const useProfile = () => {
   const { t } = useTranslation();

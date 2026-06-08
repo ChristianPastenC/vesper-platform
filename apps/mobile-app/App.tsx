@@ -4,7 +4,7 @@ import { AppProvider } from './src/providers/AppProvider';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useTheme } from './src/core/theme/useTheme';
 
-function MainApp() {
+const MainApp = () => {
   const { colors, isDarkMode } = useTheme();
 
   const theme = {
@@ -24,12 +24,14 @@ function MainApp() {
       <AppNavigator />
     </NavigationContainer>
   );
-}
+};
 
-export default function App() {
+const App = () => {
   return (
     <AppProvider>
       <MainApp />
     </AppProvider>
   );
-}
+};
+
+export default App;

@@ -12,10 +12,7 @@ import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
 import { stylesFactory } from './InStoreCheckoutScreen.styles';
 
-type NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'InStoreCheckoutModal'
->;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'InStoreCheckoutModal'>;
 
 export const InStoreCheckoutScreen: React.FC = () => {
   const theme = useTheme();
@@ -59,9 +56,7 @@ export const InStoreCheckoutScreen: React.FC = () => {
         <View style={styles.networkInfo}>
           <Text variant="bold">{t('scan_and_go.networkStatus')}</Text>
           <Text style={styles.networkStatusLabel}>
-            {isOnline
-              ? t('scan_and_go.onlineLabel')
-              : t('scan_and_go.offlineLabel')}
+            {isOnline ? t('scan_and_go.onlineLabel') : t('scan_and_go.offlineLabel')}
           </Text>
         </View>
         <Switch
@@ -107,13 +102,7 @@ export const InStoreCheckoutScreen: React.FC = () => {
         </View>
         <Button
           title={t('scan_and_go.payButton')}
-          status={
-            isProcessing
-              ? 'loading'
-              : cartItems.length === 0
-                ? 'disabled'
-                : 'idle'
-          }
+          status={isProcessing ? 'loading' : cartItems.length === 0 ? 'disabled' : 'idle'}
           onPress={handlePayPress}
           style={styles.payBtn}
         />

@@ -30,11 +30,7 @@ export const AppNavigator: React.FC = () => {
         },
       }}
     >
-      <Stack.Screen
-        name="MainTabs"
-        component={TabNavigator}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />
       <Stack.Screen
         name="Login"
         component={LoginScreen}
@@ -43,10 +39,7 @@ export const AppNavigator: React.FC = () => {
           title: 'Sign In',
         }}
       />
-      <Stack.Screen
-        name="ProductDetails"
-        component={ProductDetailsScreen}
-      />
+      <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
       <Stack.Screen
         name="OnlineCart"
         component={OnlineCartScreen}

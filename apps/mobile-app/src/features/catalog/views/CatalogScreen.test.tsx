@@ -84,7 +84,7 @@ describe('CatalogScreen View', () => {
   it('navigates to ProductDetails when product card is tapped', () => {
     const { getAllByTestId } = render(<CatalogScreen />);
     const cardPressables = getAllByTestId('product-card-press');
-    
+
     fireEvent.press(cardPressables[0]);
     expect(mockNavigate).toHaveBeenCalledWith('ProductDetails', {
       product: { id: '1', name: 'Product 1', price: 10.0, barcode: '11111' },

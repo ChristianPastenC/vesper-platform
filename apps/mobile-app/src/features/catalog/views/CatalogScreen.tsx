@@ -24,11 +24,7 @@ export const CatalogScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isEs = i18n?.language?.startsWith('es');
 
-  const {
-    products,
-    handleAddToOnline,
-    handleAddToInStore,
-  } = useCatalog();
+  const { products, handleAddToOnline, handleAddToInStore } = useCatalog();
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -77,9 +73,7 @@ export const CatalogScreen: React.FC = () => {
           color={theme.colors.text + '80'}
           style={styles.searchIcon}
         />
-        <Text style={styles.searchPlaceholderText}>
-          {t('catalog.searchPlaceholder')}
-        </Text>
+        <Text style={styles.searchPlaceholderText}>{t('catalog.searchPlaceholder')}</Text>
         <View style={styles.searchSeparator} />
         <TouchableOpacity
           onPress={() => navigation.navigate('ScanAndGoTab')}

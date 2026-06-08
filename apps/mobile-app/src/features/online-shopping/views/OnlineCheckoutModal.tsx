@@ -9,10 +9,7 @@ import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
 import { stylesFactory } from './OnlineCheckoutModal.styles';
 
-type NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'OnlineCheckoutModal'
->;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'OnlineCheckoutModal'>;
 
 export const OnlineCheckoutModal: React.FC = () => {
   const theme = useTheme();
@@ -52,9 +49,7 @@ export const OnlineCheckoutModal: React.FC = () => {
         {isProcessing && (
           <View style={styles.loaderSection}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loaderText}>
-              {t('online_checkout.processing')}
-            </Text>
+            <Text style={styles.loaderText}>{t('online_checkout.processing')}</Text>
           </View>
         )}
       </View>

@@ -6,7 +6,6 @@ import { CatalogScreen } from '../../features/catalog/views/CatalogScreen';
 import { ScannerScreen } from '../../features/scan-and-go/views/ScannerScreen';
 import { ProfileScreen } from '../../features/profile/views/ProfileScreen';
 import { HomeScreen } from '../../features/home/views/HomeScreen';
-import { useTheme } from '../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabNavigator } from './useTabNavigator';
 import { stylesFactory } from './TabNavigator.styles';

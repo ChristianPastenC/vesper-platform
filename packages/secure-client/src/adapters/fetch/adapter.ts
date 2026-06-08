@@ -1,4 +1,8 @@
-import type { ISovereignNetworkAdapter, SovereignAdapterRequest, SovereignAdapterResponse } from '../../contracts/index.js';
+import type {
+  ISovereignNetworkAdapter,
+  SovereignAdapterRequest,
+  SovereignAdapterResponse,
+} from '../../contracts/index.js';
 import type { FetchAdapterOptions } from './types.js';
 import { fetchWithTrapping } from './functional.js';
 import { decodeBody, decodeHeaders } from '../../binary.js';
@@ -25,9 +29,8 @@ export class FetchAdapter implements ISovereignNetworkAdapter {
   }
 
   public async request<T = unknown>(
-    config: SovereignAdapterRequest
+    config: SovereignAdapterRequest,
   ): Promise<SovereignAdapterResponse<T>> {
-
     // Decode headers only at dispatch time — never store the decoded Record
     // in any long-lived variable.
     const resolvedHeaders: Record<string, string> =
@@ -37,23 +40,22 @@ export class FetchAdapter implements ISovereignNetworkAdapter {
 
     // Decode body only at dispatch time — `decodeBody` is a pure one-shot call.
     const resolvedBody: BodyInit | null =
-      config.body !== undefined && config.body !== null
-        ? decodeBody(config.body)
-        : null;
+      config.body !== undefined && config.body !== null ? decodeBody(config.body) : null;
 
     const response = await fetchWithTrapping(config.url, {
       method: config.method,
       ...(Object.keys(resolvedHeaders).length > 0 && { headers: resolvedHeaders as HeadersInit }),
       ...(resolvedBody !== null && { body: resolvedBody }),
-      ...(config.signal !== undefined
-        && config.signal !== null && { signal: config.signal }),
+      ...(config.signal !== undefined && config.signal !== null && { signal: config.signal }),
       ...(this.fetchImpl !== undefined && { fetchImpl: this.fetchImpl }),
     });
 
     const responseHeaders: Record<string, string> = {};
-    response.headers.forEach((value, key) => { responseHeaders[key] = value; });
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
 
-    const data = await response.json() as T;
+    const data = (await response.json()) as T;
 
     return {
       status: response.status,

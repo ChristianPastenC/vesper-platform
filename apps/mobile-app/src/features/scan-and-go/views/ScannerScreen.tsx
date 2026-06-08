@@ -22,7 +22,7 @@ export const ScannerScreen: React.FC = () => {
   const { lastScanned, simulateScan, t } = useScanner();
 
   const itemsCount = useAppStore((state) =>
-    state.inStoreCart.reduce((acc, item) => acc + item.quantity, 0)
+    state.inStoreCart.reduce((acc, item) => acc + item.quantity, 0),
   );
 
   const handleCheckoutPress = () => {
@@ -70,13 +70,7 @@ export const ScannerScreen: React.FC = () => {
         <Button
           title={`${t('scan_and_go.checkoutTitle')} (${itemsCount})`}
           variant="secondary"
-          leftIcon={
-            <Ionicons
-              name="cart-outline"
-              size={18}
-              color={theme.colors.text}
-            />
-          }
+          leftIcon={<Ionicons name="cart-outline" size={18} color={theme.colors.text} />}
           onPress={handleCheckoutPress}
           style={styles.checkoutBtn}
         />

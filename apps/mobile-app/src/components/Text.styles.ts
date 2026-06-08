@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { ThemeColors } from '../core/theme/colors';
-import { scaleFont, verticalScale } from '../core/theme/responsive';
+import { scaleFont } from '../core/theme/responsive';
 
 export const stylesFactory = (colors: ThemeColors) =>
   StyleSheet.create({

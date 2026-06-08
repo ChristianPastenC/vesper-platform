@@ -2,16 +2,16 @@ import type { DPoPContextResolver } from './types.js';
 import type { DPoPSigner } from './signer.js';
 import type { PendingDPoPContext } from '../types.js';
 
-export function withDPoP(
+export const withDPoP = (
   signer: DPoPSigner,
   method: string,
   url: string,
-  contextResolver: DPoPContextResolver
-): PendingDPoPContext {
+  contextResolver: DPoPContextResolver,
+): PendingDPoPContext => {
   return {
     signer,
     method,
     url,
-    contextResolver
+    contextResolver,
   };
-}
+};

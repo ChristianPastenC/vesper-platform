@@ -64,7 +64,6 @@ export {
 export { SovereignMemoryQueue } from './ledger/index.js';
 export { SovereignClientCore } from './core/index.js';
 
-
 // ---------------------------------------------------------------------------
 // DPoP — asymmetric proof-of-possession signing client
 // ---------------------------------------------------------------------------
@@ -108,4 +107,8 @@ export type {
   GraphQLErrorShape,
   GraphQLAdapterOptions,
 } from './adapters/graphql/index.js';
-export { GraphQLRequestError, graphqlWithTrapping, GraphQLAdapter } from './adapters/graphql/index.js';
+export {
+  GraphQLRequestError,
+  graphqlWithTrapping,
+  GraphQLAdapter,
+} from './adapters/graphql/index.js';

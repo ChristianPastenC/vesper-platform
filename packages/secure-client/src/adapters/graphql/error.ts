@@ -12,7 +12,7 @@ export class GraphQLRequestError extends Error {
   public readonly partialData: unknown;
 
   constructor(errors: GraphQLErrorShape[], partialData?: unknown) {
-    super(errors.map(e => e.message).join(' | '));
+    super(errors.map((e) => e.message).join(' | '));
     this.name = 'GraphQLRequestError';
     this.errors = errors;
     this.partialData = partialData;

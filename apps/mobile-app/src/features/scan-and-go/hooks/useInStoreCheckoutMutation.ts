@@ -14,9 +14,7 @@ export const useInStoreCheckoutMutation = () => {
   const isOnline = useAppStore((state) => state.isOnline);
   const clearInStoreCart = useAppStore((state) => state.clearInStoreCart);
 
-  const simulateInStoreCheckout = async (
-    payload: CheckoutPayload
-  ): Promise<CheckoutResponse> => {
+  const simulateInStoreCheckout = async (_payload: CheckoutPayload): Promise<CheckoutResponse> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (!isOnline) {

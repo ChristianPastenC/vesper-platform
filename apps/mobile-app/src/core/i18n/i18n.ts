@@ -30,13 +30,15 @@ const resources = {
         dimensions: 'Dimensions',
         availability: 'Availability',
         inStock: 'In Stock',
-        mockDescription: 'Experience high-fidelity sound and premium build quality designed to meet your daily professional and personal needs.',
+        mockDescription:
+          'Experience high-fidelity sound and premium build quality designed to meet your daily professional and personal needs.',
         searchPlaceholder: 'Search products, brands...',
         trendingTitle: 'Trending Now',
         seeAll: 'See All',
         heroTag: 'Exclusive Access',
         heroTitle: 'Summer Collection',
-        heroSubText: 'Discover premium seasonal pieces. Enjoy complementary home shipping and priority checkout.',
+        heroSubText:
+          'Discover premium seasonal pieces. Enjoy complementary home shipping and priority checkout.',
       },
       online_checkout: {
         title: 'Online Checkout',
@@ -120,13 +122,15 @@ const resources = {
         dimensions: 'Dimensiones',
         availability: 'Disponibilidad',
         inStock: 'En Stock',
-        mockDescription: 'Experimenta un sonido de alta fidelidad y una calidad de construcción premium diseñada para satisfacer tus necesidades de forma diaria.',
+        mockDescription:
+          'Experimenta un sonido de alta fidelidad y una calidad de construcción premium diseñada para satisfacer tus necesidades de forma diaria.',
         searchPlaceholder: 'Buscar productos, marcas...',
         trendingTitle: 'Tendencias Ahora',
         seeAll: 'Ver Todo',
         heroTag: 'Acceso Exclusivo',
         heroTitle: 'Colección de Verano',
-        heroSubText: 'Descubre piezas premium de temporada. Disfruta de envío a casa gratis y pago prioritario.',
+        heroSubText:
+          'Descubre piezas premium de temporada. Disfruta de envío a casa gratis y pago prioritario.',
       },
       online_checkout: {
         title: 'Pago en Línea',
@@ -184,16 +188,14 @@ const resources = {
   },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    compatibilityJSON: 'v3',
-    resources,
-    lng: 'en', // Default language
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  compatibilityJSON: 'v3',
+  resources,
+  lng: 'en', // Default language
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
 export default i18n;

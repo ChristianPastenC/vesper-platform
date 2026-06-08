@@ -8,11 +8,20 @@ import {
   type SessionLifecycleObservers,
   type DPoPAlgorithm,
 } from '../types.js';
-import type { ISovereignCryptoProvider, ISovereignNetworkAdapter, SovereignAdapterRequest } from '../contracts/index.js';
+import type {
+  ISovereignCryptoProvider,
+  ISovereignNetworkAdapter,
+  SovereignAdapterRequest,
+} from '../contracts/index.js';
 import { SovereignMemoryQueue } from '../ledger/index.js';
 import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js';
 import { shouldFreezeSession } from './error-matrix.js';
-import { serializeAdapterRequest, deserializeAdapterRequest, appendHeaderToBinary, decodeHeaders } from '../binary.js';
+import {
+  serializeAdapterRequest,
+  deserializeAdapterRequest,
+  appendHeaderToBinary,
+  decodeHeaders,
+} from '../binary.js';
 import { DPoPSigner } from '../dpop/signer.js';
 import type { IDPoPCryptoProvider } from '../contracts/index.js';
 import { resolveDPoPContext, zeroRequestBuffers } from './utils.js';
@@ -60,7 +69,7 @@ export class SovereignClientCore {
     });
 
     if (this.dpopConfig || this.enableAutoDPoP) {
-      this.dpopBootstrapPromise = this.bootstrapAutoDPoP().catch(err => {
+      this.dpopBootstrapPromise = this.bootstrapAutoDPoP().catch((err) => {
         console.error('[SovereignCore] Failed to auto-bootstrap DPoP keys:', err);
         return null;
       });
@@ -68,7 +77,8 @@ export class SovereignClientCore {
   }
 
   public static getInstance(config: SovereignClientCoreConfig): SovereignClientCore {
-    if (!SovereignClientCore.instance) SovereignClientCore.instance = new SovereignClientCore(config);
+    if (!SovereignClientCore.instance)
+      SovereignClientCore.instance = new SovereignClientCore(config);
     return SovereignClientCore.instance;
   }
 
@@ -79,9 +89,12 @@ export class SovereignClientCore {
   private async bootstrapAutoDPoP(): Promise<JsonWebKey | null> {
     if (!this.dpopSigner && (this.dpopConfig || this.enableAutoDPoP)) {
       const alg = this.dpopAlgorithm ?? this.dpopConfig?.algorithm;
-      this.dpopSigner = await DPoPSigner.create(this.cryptoProvider as unknown as IDPoPCryptoProvider, {
-        ...(alg && { algorithm: alg }),
-      });
+      this.dpopSigner = await DPoPSigner.create(
+        this.cryptoProvider as unknown as IDPoPCryptoProvider,
+        {
+          ...(alg && { algorithm: alg }),
+        },
+      );
     }
     return this.dpopSigner ? this.dpopSigner.getPublicKeyJwk() : null;
   }
@@ -90,7 +103,9 @@ export class SovereignClientCore {
     return this.dpopSigner ? this.dpopSigner.getPublicKeyJwk() : null;
   }
 
-  public get isFrozen(): boolean { return this._isFrozen; }
+  public get isFrozen(): boolean {
+    return this._isFrozen;
+  }
 
   public get isIntegrityCompromised(): boolean {
     return this.memoryQueue.isIntegrityCompromised || this.memoryQueue.getLocked();
@@ -106,8 +121,10 @@ export class SovereignClientCore {
     dpop?: PendingDPoPContext,
     config?: SovereignRequestConfig,
   ): Promise<T> {
-    if (this.isIntegrityCompromised) throw new IntegrityBreachError('[SovereignCore] Execution blocked. Memory is frozen.');
-    if (!this.networkAdapter) throw new Error('[SovereignCore] executeRequest() requires a networkAdapter.');
+    if (this.isIntegrityCompromised)
+      throw new IntegrityBreachError('[SovereignCore] Execution blocked. Memory is frozen.');
+    if (!this.networkAdapter)
+      throw new Error('[SovereignCore] executeRequest() requires a networkAdapter.');
     if (this.dpopBootstrapPromise) await this.dpopBootstrapPromise;
 
     const online = await this.isOnline();
@@ -115,12 +132,26 @@ export class SovereignClientCore {
     if (online && !this.isProcessingQueue) {
       try {
         let dispatchRequest = request;
-        const activeDpop = resolveDPoPContext(request, this.dpopSigner, this.dpopConfig, dpop, config);
+        const activeDpop = resolveDPoPContext(
+          request,
+          this.dpopSigner,
+          this.dpopConfig,
+          dpop,
+          config,
+        );
 
         // Generate fresh DPoP proof at the moment of dispatch
         if (activeDpop) {
           const context = await activeDpop.contextResolver();
-          const proofOptions: any = { method: activeDpop.method, url: activeDpop.url };
+          const proofOptions: {
+            method: string;
+            url: string;
+            accessToken?: string;
+            nonce?: string;
+          } = {
+            method: activeDpop.method,
+            url: activeDpop.url,
+          };
           if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
           if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
 
@@ -128,7 +159,11 @@ export class SovereignClientCore {
           if (request.encodedHeaders !== undefined) {
             dispatchRequest = {
               ...request,
-              encodedHeaders: appendHeaderToBinary(request.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
+              encodedHeaders: appendHeaderToBinary(
+                request.encodedHeaders ?? new Uint8Array(0),
+                'DPoP',
+                proof,
+              ),
             };
           } else {
             dispatchRequest = { ...request, headers: { ...(request.headers || {}), DPoP: proof } };
@@ -143,7 +178,13 @@ export class SovereignClientCore {
         return response.data;
       } catch (error) {
         if (shouldFreezeSession(error, this.trapping)) {
-          const freezeDpop = resolveDPoPContext(request, this.dpopSigner, this.dpopConfig, dpop, config);
+          const freezeDpop = resolveDPoPContext(
+            request,
+            this.dpopSigner,
+            this.dpopConfig,
+            dpop,
+            config,
+          );
           return this.enqueueStructuredRequest<T>(requestId, request, freezeDpop, config, error);
         }
         zeroRequestBuffers(request);
@@ -152,14 +193,23 @@ export class SovereignClientCore {
     }
 
     const queueDpop = resolveDPoPContext(request, this.dpopSigner, this.dpopConfig, dpop, config);
-    return this.enqueueStructuredRequest<T>(requestId, request, queueDpop, config, new Error('Offline or processing queue'));
+    return this.enqueueStructuredRequest<T>(
+      requestId,
+      request,
+      queueDpop,
+      config,
+      new Error('Offline or processing queue'),
+    );
   }
 
   /**
    * Replays enqueued requests sequentially after establishing connectivity legitimacy.
    */
   public async processSynchronizedQueue(handshakeValidator: () => Promise<boolean>): Promise<void> {
-    if (this.isIntegrityCompromised) throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+    if (this.isIntegrityCompromised)
+      throw new IntegrityBreachError(
+        '[SovereignCore] Ledger integrity compromised. Execution blocked.',
+      );
     if (this.dpopBootstrapPromise) await this.dpopBootstrapPromise;
     if (this.isProcessingQueue) return;
     this.isProcessingQueue = true;
@@ -172,10 +222,15 @@ export class SovereignClientCore {
       }
 
       // Check for RAM integrity tampering before reading blocks
-      if (!(await this.memoryQueue.verifyLedgerIntegrity(this.cryptoProvider)) || this.memoryQueue.isIntegrityCompromised) {
+      if (
+        !(await this.memoryQueue.verifyLedgerIntegrity(this.cryptoProvider)) ||
+        this.memoryQueue.isIntegrityCompromised
+      ) {
         this.memoryQueue.suspendAndFreezeLedger();
         this.observers?.onIntegrityBreach?.();
-        throw new IntegrityBreachError('[SovereignCore] Ledger integrity compromised. Execution blocked.');
+        throw new IntegrityBreachError(
+          '[SovereignCore] Ledger integrity compromised. Execution blocked.',
+        );
       }
 
       const executionOrder = this.memoryQueue.getExecutionOrder();
@@ -189,7 +244,9 @@ export class SovereignClientCore {
           try {
             const deserialized = deserializeAdapterRequest(block.serializedRequest);
             if (!deserialized) {
-              pending.reject(new Error(`[SovereignCore] Transaction [${id}] buffer was zeroized before replay.`));
+              pending.reject(
+                new Error(`[SovereignCore] Transaction [${id}] buffer was zeroized before replay.`),
+              );
               this.pendingRequests.delete(id);
               await this.memoryQueue.dequeue(this.cryptoProvider, id);
               continue;
@@ -206,7 +263,8 @@ export class SovereignClientCore {
               if (deserialized.encodedHeaders && deserialized.encodedHeaders.length > 0) {
                 const decoded = decodeHeaders(deserialized.encodedHeaders);
                 authHeaderValue = decoded['Authorization'] || decoded['authorization'];
-                if (decoded['DPoP'] !== undefined || decoded['dpop'] !== undefined) requiresDPoP = true;
+                if (decoded['DPoP'] !== undefined || decoded['dpop'] !== undefined)
+                  requiresDPoP = true;
               }
 
               let accessToken: string | undefined;
@@ -220,20 +278,32 @@ export class SovereignClientCore {
                   signer: this.dpopSigner,
                   method: deserialized.method,
                   url: deserialized.url,
-                  contextResolver: () => (accessToken !== undefined ? { accessToken } : {})
+                  contextResolver: () => (accessToken !== undefined ? { accessToken } : {}),
                 };
               }
             }
 
             if (activeDpop) {
               const context = await activeDpop.contextResolver();
-              const proofOptions: any = { method: activeDpop.method, url: activeDpop.url };
+              const proofOptions: {
+                method: string;
+                url: string;
+                accessToken?: string;
+                nonce?: string;
+              } = {
+                method: activeDpop.method,
+                url: activeDpop.url,
+              };
               if (context.accessToken !== undefined) proofOptions.accessToken = context.accessToken;
               if (context.nonce !== undefined) proofOptions.nonce = context.nonce;
               const proof = await activeDpop.signer.generateProof(proofOptions);
               dispatchRequest = {
                 ...deserialized,
-                encodedHeaders: appendHeaderToBinary(deserialized.encodedHeaders ?? new Uint8Array(0), 'DPoP', proof)
+                encodedHeaders: appendHeaderToBinary(
+                  deserialized.encodedHeaders ?? new Uint8Array(0),
+                  'DPoP',
+                  proof,
+                ),
               };
             }
 
@@ -290,7 +360,11 @@ export class SovereignClientCore {
       this.memoryQueue
         .enqueue(this.cryptoProvider, id, binaryRequest, ttl, onExpiry)
         .then(() => {
-          this.pendingRequests.set(id, { resolve: resolve as (v: unknown) => void, reject, ...(dpop && { dpop }) });
+          this.pendingRequests.set(id, {
+            resolve: resolve as (v: unknown) => void,
+            reject,
+            ...(dpop && { dpop }),
+          });
         })
         .catch(reject);
     });
@@ -299,7 +373,9 @@ export class SovereignClientCore {
   public purgeAll(): void {
     this.memoryQueue.clearAll();
     this.memoryQueue.isIntegrityCompromised = false;
-    const purgeError = new Error('[SovereignCore] Session purged. All pending transactions rejected.');
+    const purgeError = new Error(
+      '[SovereignCore] Session purged. All pending transactions rejected.',
+    );
     for (const [, record] of this.pendingRequests) record.reject(purgeError);
     this.pendingRequests.clear();
     this._isFrozen = false;

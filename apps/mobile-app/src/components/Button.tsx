@@ -23,14 +23,8 @@ export const Button: React.FC<ButtonProps> = ({
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 
-  const isButtonDisabled =
-    disabled || status === 'disabled' || status === 'loading';
-  const buttonStyle = [
-    styles.button,
-    styles[variant],
-    isButtonDisabled && styles.disabled,
-    style,
-  ];
+  const isButtonDisabled = disabled || status === 'disabled' || status === 'loading';
+  const buttonStyle = [styles.button, styles[variant], isButtonDisabled && styles.disabled, style];
 
   return (
     <TouchableOpacity
@@ -45,8 +39,8 @@ export const Button: React.FC<ButtonProps> = ({
             variant === 'secondary'
               ? theme.colors.text
               : theme.colors.primary === '#F8FAFC'
-              ? '#09090B'
-              : '#FFFFFF'
+                ? '#09090B'
+                : '#FFFFFF'
           }
         />
       ) : (
@@ -54,10 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
           {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
           <Text
             variant="bold"
-            style={[
-              styles.text,
-              variant === 'secondary' && styles.textSecondary,
-            ]}
+            style={[styles.text, variant === 'secondary' && styles.textSecondary]}
           >
             {title}
           </Text>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text as MockText } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { TabNavigator } from './TabNavigator';
 import { useTabNavigator } from './useTabNavigator';
@@ -38,16 +39,20 @@ jest.mock('react-native-safe-area-context', () => ({
 
 jest.mock('@react-navigation/bottom-tabs', () => ({
   createBottomTabNavigator: () => ({
-    Navigator: ({ children, screenOptions }: any) => {
+    Navigator: ({
+      children,
+      screenOptions,
+    }: {
+      children: React.ReactNode;
+      screenOptions?: (props: { route: { name: string } }) => unknown;
+    }) => {
       if (typeof screenOptions === 'function') {
         screenOptions({ route: { name: 'CatalogTab' } });
       }
       return <>{children}</>;
     },
-    Screen: ({ options }: any) => {
-      const React = require('react');
-      const { Text } = require('react-native');
-      return <Text>{options?.title || ''}</Text>;
+    Screen: ({ options }: { options?: { title?: string } }) => {
+      return <MockText>{options?.title || ''}</MockText>;
     },
   }),
 }));

@@ -125,7 +125,8 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       width: scale(36),
       height: scale(36),
       borderRadius: scale(18),
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.04)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.04)',
       justifyContent: 'center',
       alignItems: 'center',
     },

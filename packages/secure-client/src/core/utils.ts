@@ -1,15 +1,19 @@
 import type { SovereignAdapterRequest } from '../contracts/index.js';
-import type { PendingDPoPContext, SovereignRequestConfig, SovereignClientCoreConfig } from '../types.js';
+import type {
+  PendingDPoPContext,
+  SovereignRequestConfig,
+  SovereignClientCoreConfig,
+} from '../types.js';
 import type { DPoPSigner } from '../dpop/signer.js';
 import { decodeHeaders } from '../binary.js';
 
-export function resolveDPoPContext(
+export const resolveDPoPContext = (
   request: SovereignAdapterRequest,
   dpopSigner?: DPoPSigner,
   dpopConfig?: SovereignClientCoreConfig['dpop'],
   dpop?: PendingDPoPContext,
-  config?: SovereignRequestConfig
-): PendingDPoPContext | undefined {
+  config?: SovereignRequestConfig,
+): PendingDPoPContext | undefined => {
   if (dpop) return dpop;
 
   let authHeaderValue: string | undefined;
@@ -39,7 +43,7 @@ export function resolveDPoPContext(
       signer: dpopSigner,
       method: request.method,
       url: request.url,
-      contextResolver: () => (accessToken !== undefined ? { accessToken } : {})
+      contextResolver: () => (accessToken !== undefined ? { accessToken } : {}),
     };
   }
 
@@ -53,13 +57,15 @@ export function resolveDPoPContext(
   }
 
   return undefined;
-}
+};
 
-export function zeroRequestBuffers(request: Pick<SovereignAdapterRequest, 'body' | 'encodedHeaders'>): void {
+export const zeroRequestBuffers = (
+  request: Pick<SovereignAdapterRequest, 'body' | 'encodedHeaders'>,
+): void => {
   if (request.body && request.body.length > 0) {
     request.body.fill(0);
   }
   if (request.encodedHeaders && request.encodedHeaders.length > 0) {
     request.encodedHeaders.fill(0);
   }
-}
+};

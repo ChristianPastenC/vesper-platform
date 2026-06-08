@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"time"
@@ -33,8 +34,13 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, total float64, car
 		return domain.TransactionResponse{}, fmt.Errorf("payment_interactor: order processing failed: %w", err)
 	}
 
-	// 2. Compute an immutable verification receipt hash using SHA-256 over trans details.
-	hashInput := fmt.Sprintf("%s:%.2f:%d", resp.TransactionID, total, time.Now().UnixNano())
+	// 2. Compute an immutable verification receipt hash using strong cryptographic entropy
+	nonce := make([]byte, 16)
+	if _, err := rand.Read(nonce); err != nil {
+		return domain.TransactionResponse{}, fmt.Errorf("payment_interactor: failed to generate cryptographic nonce: %w", err)
+	}
+	
+	hashInput := fmt.Sprintf("%s:%.2f:%d:%x", resp.TransactionID, total, time.Now().UnixNano(), nonce)
 	hash := sha256.Sum256([]byte(hashInput))
 	resp.ReceiptHash = fmt.Sprintf("%x", hash)
 

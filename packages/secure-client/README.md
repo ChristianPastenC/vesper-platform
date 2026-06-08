@@ -76,15 +76,14 @@ The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and
 
 The in-memory ledger chains each block to its predecessor. The mathematical formulation of the block hashing is:
 
-$$H_n = \text{SHA256}(P_n \parallel H_{n-1} \parallel \text{Timestamp\_local\_utf8})$$
+$$H_n = \text{SHA256}(P_n \parallel H_{n-1} \parallel \text{Timestamp\\_local\\_utf8})$$
 
 ### Variable Definitions:
-- **$H_n$**: The resulting SHA-256 hash of the current block $n$ (32-byte array).
-- **$P_n$**: The binary payload of the current request (`serializedRequest`).
-- **$H_{n-1}$**: The SHA-256 hash of the preceding block (or 32-byte zero vector for genesis block).
-- **$\text{Timestamp\_local\_utf8}$**: UTF-8 encoded local timestamp string (`timestamp.toString()`).
-- **$\parallel$**: Binary concatenation operator.
-
+* **$H_n$**: The resulting SHA-256 hash of the current block $n$ (32-byte array).
+* **$P_n$**: The binary payload of the current request (`serializedRequest`).
+* **$H_{n-1}$**: The SHA-256 hash of the preceding block (or 32-byte zero vector for genesis block).
+* **`Timestamp_local_utf8`**: UTF-8 encoded local timestamp string (`timestamp.toString()`).
+* **$\parallel$**: Binary concatenation operator.
 ---
 
 ## Operational In-Memory Flow

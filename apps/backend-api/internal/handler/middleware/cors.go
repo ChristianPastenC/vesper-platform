@@ -50,26 +50,31 @@ func CORS(cfg CORSConfig) func(http.Handler) http.Handler {
 			origin := r.Header.Get("Origin")
 
 			if origin != "" {
-				if isAllowedOrigin(allowedOriginSet, origin) {
+				if isAllowedOrigin(allowedOriginSet, origin, cfg.AllowCredentials) {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 					w.Header().Add("Vary", "Origin")
-				}
 
-				w.Header().Set("Access-Control-Allow-Methods", joinedMethods)
-				w.Header().Set("Access-Control-Allow-Headers", joinedHeaders)
+					w.Header().Set("Access-Control-Allow-Methods", joinedMethods)
+					w.Header().Set("Access-Control-Allow-Headers", joinedHeaders)
 
-				if joinedExposed != "" {
-					w.Header().Set("Access-Control-Expose-Headers", joinedExposed)
-				}
+					if joinedExposed != "" {
+						w.Header().Set("Access-Control-Expose-Headers", joinedExposed)
+					}
 
-				if cfg.AllowCredentials {
-					w.Header().Set("Access-Control-Allow-Credentials", "true")
-				}
+					if cfg.AllowCredentials {
+						w.Header().Set("Access-Control-Allow-Credentials", "true")
+					}
 
-				if r.Method == http.MethodOptions {
-					w.Header().Set("Access-Control-Max-Age", cfg.MaxAge)
-					w.WriteHeader(http.StatusNoContent)
-					return
+					if r.Method == http.MethodOptions {
+						w.Header().Set("Access-Control-Max-Age", cfg.MaxAge)
+						w.WriteHeader(http.StatusNoContent)
+						return
+					}
+				} else {
+					if r.Method == http.MethodOptions {
+						w.WriteHeader(http.StatusForbidden)
+						return
+					}
 				}
 			}
 
@@ -78,9 +83,11 @@ func CORS(cfg CORSConfig) func(http.Handler) http.Handler {
 	}
 }
 
-func isAllowedOrigin(allowed map[string]struct{}, origin string) bool {
-	if _, ok := allowed["*"]; ok {
-		return true
+func isAllowedOrigin(allowed map[string]struct{}, origin string, allowCredentials bool) bool {
+	if !allowCredentials {
+		if _, ok := allowed["*"]; ok {
+			return true
+		}
 	}
 	_, ok := allowed[origin]
 	return ok

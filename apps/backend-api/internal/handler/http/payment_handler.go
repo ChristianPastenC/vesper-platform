@@ -51,7 +51,17 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if req.Total <= 0 {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Checkout total must be greater than zero")
+		writeError(w, http.StatusBadRequest, "invalid_request", "Checkout total must be strictly greater than zero")
+		return
+	}
+
+	// Fail-fast Domain Validation to aggressively protect egress gateway rate limits
+	if len(req.Card.Number) < 13 || len(req.Card.Number) > 19 {
+		writeError(w, http.StatusBadRequest, "invalid_card", "Credit card number length is invalid. Aborting early.")
+		return
+	}
+	if req.Card.CVC == "" || len(req.Card.CVC) > 4 {
+		writeError(w, http.StatusBadRequest, "invalid_card", "Credit card CVV is malformed. Aborting early.")
 		return
 	}
 

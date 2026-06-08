@@ -81,10 +81,13 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Enforce strict memory boundary (e.g., 1MB max) BEFORE reading the payload in the middleware layer
+		r.Body = http.MaxBytesReader(w, r.Body, 1024*1024)
+		
 		// Read and parse the request body to extract the mobile client's unique block hash
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			writeErrorJSON(w, http.StatusBadRequest, "bad_request", "Failed to read request payload")
+			writeErrorJSON(w, http.StatusRequestEntityTooLarge, "payload_too_large", "Failed to read request payload or payload exceeds strict memory limits")
 			return
 		}
 		

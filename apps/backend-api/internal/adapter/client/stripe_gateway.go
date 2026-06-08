@@ -30,10 +30,13 @@ func NewStripeGateway() *StripeGateway {
 	}
 }
 
-// CreateCharge executes a simulated Stripe charge request, handling timeouts
-// and context cancellation, and returns a transaction result.
+// CreateCharge executes a simulated Stripe charge request, enforcing a strict egress timeout.
 func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, currency string, card domain.CardDetails) (domain.TransactionResponse, error) {
-	// Prepare URL and body to look like a real Stripe integration
+	// Enforce strict 3-second timeout for the egress boundary call
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	// Prepare URL and body to emulate a real Stripe integration
 	reqURL := "https://api.stripe.com/v1/charges"
 	
 	// Create post payload simulating form urlencoding

@@ -2,8 +2,7 @@ package middleware
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
+	"encoding/json"
 	"io"
 	"net/http"
 	"sync"
@@ -82,19 +81,34 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Read and hash the request body to prevent payload alterations
+		// Read and parse the request body to extract the mobile client's unique block hash
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			writeErrorJSON(w, http.StatusBadRequest, "bad_request", "Failed to read request body")
+			writeErrorJSON(w, http.StatusBadRequest, "bad_request", "Failed to read request payload")
 			return
 		}
 		
-		// Restore body for subsequent handlers
+		// Restore body buffer for subsequent HTTP handlers
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-		hash := sha256.Sum256(bodyBytes)
-		hashStr := hex.EncodeToString(hash[:])
-		compositeKey := idempotencyKey + ":" + hashStr
+		// Extract the latest transaction block hash from the embedded ledger
+		var payload struct {
+			Ledger []struct {
+				Hash string `json:"hash"`
+			} `json:"ledger"`
+		}
+		
+		var blockHash string
+		if err := json.Unmarshal(bodyBytes, &payload); err == nil && len(payload.Ledger) > 0 {
+			// Retrieve the most recent block's hash representing the offline mutation
+			blockHash = payload.Ledger[len(payload.Ledger)-1].Hash
+		} else {
+			writeErrorJSON(w, http.StatusBadRequest, "bad_request", "Missing mobile client block hash in ledger")
+			return
+		}
+
+		// Utilize the extracted block hash as the primary cryptographic composite key
+		compositeKey := idempotencyKey + ":" + blockHash
 
 		im.mu.Lock()
 		record, exists := im.records[compositeKey]

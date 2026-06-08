@@ -24,8 +24,8 @@ type StripeGateway struct {
 func NewStripeGateway() *StripeGateway {
 	return &StripeGateway{
 		client: &http.Client{
-			Timeout: 5 * time.Second,
-			Transport: &stripeMockTransport{},
+			Timeout:   5 * time.Second,
+			Transport: NewResilientRoundTripper(&stripeMockTransport{}),
 		},
 	}
 }

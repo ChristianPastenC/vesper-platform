@@ -32,7 +32,8 @@ type FakeStoreGateway struct {
 func NewFakeStoreGateway() *FakeStoreGateway {
 	return &FakeStoreGateway{
 		client: &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout:   5 * time.Second,
+			Transport: NewResilientRoundTripper(http.DefaultTransport),
 		},
 		baseURL: "https://fakestoreapi.com/products",
 	}

@@ -24,6 +24,9 @@ func NewPaymentInteractor(gw domain.PaymentGateway) *PaymentInteractor {
 // ProcessOrder handles checkout payments by sending transaction requests to Stripe
 // and returning a transaction confirmation including a cryptographically signed receipt hash.
 func (p *PaymentInteractor) ProcessOrder(ctx context.Context, total float64, card domain.CardDetails) (domain.TransactionResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	// 1. Invoke outbound PaymentGateway
 	resp, err := p.gateway.CreateCharge(ctx, total, "USD", card)
 	if err != nil {

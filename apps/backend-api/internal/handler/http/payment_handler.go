@@ -23,8 +23,9 @@ func NewPaymentHandler(interactor *usecase.PaymentInteractor) *PaymentHandler {
 
 // CheckoutRequest wraps the cart total and card details sent by the client.
 type CheckoutRequest struct {
-	Total float64            `json:"total"`
-	Card  domain.CardDetails `json:"card"`
+	Total  float64                   `json:"total"`
+	Card   domain.CardDetails        `json:"card"`
+	Ledger []domain.TransactionBlock `json:"ledger"`
 }
 
 // ProcessPayment handles POST /api/v1/checkout/pay. It extracts the authenticated
@@ -54,7 +55,13 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// 2. Invoke the business logic interactor
+	// 2. Validate cryptographic ledger chain
+	if !usecase.ValidateLedgerChain(req.Ledger) {
+		writeError(w, http.StatusUnprocessableEntity, "invalid_ledger", "Cryptographic chain validation failed")
+		return
+	}
+
+	// 3. Invoke the business logic interactor
 	resp, err := h.interactor.ProcessOrder(r.Context(), req.Total, req.Card)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())

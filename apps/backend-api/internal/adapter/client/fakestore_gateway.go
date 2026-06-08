@@ -42,6 +42,9 @@ func NewFakeStoreGateway() *FakeStoreGateway {
 // GetProducts fetches product data from FakeStoreAPI, applying category and limit parameters,
 // and maps them into optimized domain Products with simulated EAN-13 barcodes.
 func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.CatalogQuery) ([]domain.Product, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	targetURL := f.baseURL
 
 	// 1. Determine base endpoint based on category

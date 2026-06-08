@@ -19,6 +19,15 @@ type CardDetails struct {
 	CVC      string `json:"cvc"`
 }
 
+// TransactionBlock represents a cryptographically secure, immutable step in the local client ledger.
+type TransactionBlock struct {
+	Index         int    `json:"index"`
+	Timestamp     int64  `json:"timestamp"`
+	Payload       string `json:"payload"`
+	PrecedingHash string `json:"precedingHash"`
+	Hash          string `json:"hash"`
+}
+
 // TransactionResponse contains the results of a processed checkout transaction.
 type TransactionResponse struct {
 	TransactionID string `json:"transactionId"`

@@ -60,7 +60,7 @@ func JWTAuth(tokenService domain.TokenService) func(http.Handler) http.Handler {
 			}
 
 			// Enforce DPoP Binding if jkt claim is present
-			if claims.Cnf.Jkt != "" {
+			if claims.Cnf != nil && claims.Cnf.Jkt != "" {
 				jkt, ok := GetJKTFromContext(r.Context())
 				if !ok || jkt != claims.Cnf.Jkt {
 					writeErrorJSON(w, http.StatusUnauthorized, "invalid_dpop_binding", "DPoP token binding mismatch")

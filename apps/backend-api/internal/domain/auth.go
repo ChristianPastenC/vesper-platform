@@ -15,17 +15,17 @@ type UserCredentials struct {
 	Password string `json:"password"`
 }
 
-// CnfClaim represents the confirmation claim for DPoP binding.
-type CnfClaim struct {
-	Jkt string `json:"jkt,omitempty"`
+// Confirmation represents the confirmation claim for DPoP binding.
+type Confirmation struct {
+	Jkt string `json:"jkt"`
 }
 
 // TokenClaims represents the payload embedded in the asymmetric JWT access tokens.
 type TokenClaims struct {
-	UserID    string   `json:"userId"`
-	Username  string   `json:"username"`
-	ExpiresAt int64    `json:"expiresAt"`
-	Cnf       CnfClaim `json:"cnf,omitempty"`
+	UserID    string        `json:"userId"`
+	Username  string        `json:"username"`
+	ExpiresAt int64         `json:"expiresAt"`
+	Cnf       *Confirmation `json:"cnf,omitempty"`
 }
 
 // AuthRepository defines the outbound port for querying user authorization details.

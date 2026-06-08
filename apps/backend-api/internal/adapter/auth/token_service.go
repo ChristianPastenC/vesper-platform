@@ -57,7 +57,7 @@ func (e *EcdsaTokenService) GenerateTokenPair(ctx context.Context, user domain.U
 		ExpiresAt: time.Now().Add(e.tokenTTL).Unix(),
 	}
 	if jkt != "" {
-		claims.Cnf = domain.CnfClaim{Jkt: jkt}
+		claims.Cnf = &domain.Confirmation{Jkt: jkt}
 	}
 	claimsBytes, err := json.Marshal(claims)
 	if err != nil {

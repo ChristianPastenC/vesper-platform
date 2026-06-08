@@ -227,6 +227,40 @@ client.executeRequest('tx_104', {
 
 ---
 
+## Pure JavaScript Mock Mode
+
+For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@sovereign/secure-client` provides a built-in pure JavaScript fallback engine.
+
+This mode skips all attempts to load the native JSI/Nitro modules or Node `.node` addons, preventing Metro/Webpack static analysis or compile-time resolution errors.
+
+### Enabling Mock Mode
+
+You can enable mock mode in one of two ways:
+
+#### 1. Via Client Configuration (Instance Level)
+Pass `mock: true` in the `SovereignClientCoreConfig` when instantiating the core client:
+
+```typescript
+import { SovereignClientCore } from '@sovereign/secure-client';
+
+const client = SovereignClientCore.getInstance({
+  cryptoProvider: myCryptoProvider,
+  networkResolver: async () => navigator.onLine,
+  networkAdapter: new FetchAdapter(),
+  mock: true // <-- Force pure JS fallback engine and skip native C++ loading
+});
+```
+
+#### 2. Via Global Flag (Environment Level)
+Define `globalThis.__SOVEREIGN_MOCK__ = true` before the library is imported or evaluated. This is especially useful for setting mock behavior globally across an entire test execution or environment:
+
+```typescript
+// Define mock flag globally in your app entrypoint or test setup file
+globalThis.__SOVEREIGN_MOCK__ = true;
+```
+
+---
+
 ## Build Pipelines
 
 ```bash

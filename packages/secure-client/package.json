@@ -1,6 +1,6 @@
 {
   "name": "@sovereign/secure-client",
-  "version": "1.2.0",
+  "version": "0.1.0",
   "description": "Cryptographic resilience middleware: volatile RAM ledger, Error Trapping Matrix, DPoP asymmetric proof-of-possession signing, and platform-agnostic transport adapters.",
   "license": "UNLICENSED",
   "type": "module",

@@ -53,6 +53,7 @@ export interface SovereignClientCoreConfig {
   };
   enableAutoDPoP?: boolean;
   dpopAlgorithm?: DPoPAlgorithm;
+  mock?: boolean;
 }
 
 /** Observers that monitor state transitions of the volatile session. */

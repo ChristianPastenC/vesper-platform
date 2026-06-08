@@ -13,22 +13,48 @@ import type { SovereignSecureClient } from '../specs/SovereignSecureClient.nitro
 import { SovereignSecureClientFallback } from './fallback.js';
 
 // Load native JSI object in React Native Hermes, node addon in desktop, or fallback to pure JS
-let nativeClient: SovereignSecureClient;
-const isHermes = typeof (globalThis as Record<string, unknown>).HermesInternal !== 'undefined';
+let nativeClient: SovereignSecureClient | null = null;
+let forcedMock = false;
 
-if (isHermes) {
-  try {
-    const { NitroModules } = require('react-native-nitro-modules');
-    nativeClient = NitroModules.createHybridObject('SovereignSecureClient');
-  } catch (e) {
+export const configureQueueEngine = (options: { mock?: boolean | undefined }): void => {
+  if (options.mock) {
+    forcedMock = true;
     nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
   }
-} else {
-  try {
-    nativeClient = require('./SovereignSecureClient.node');
-  } catch (e) {
+};
+
+const getNativeClient = (): SovereignSecureClient => {
+  if (nativeClient) return nativeClient;
+
+  const isMockEnv =
+    forcedMock ||
+    (typeof globalThis !== 'undefined' &&
+      (globalThis as Record<string, unknown>).__SOVEREIGN_MOCK__ === true);
+
+  if (isMockEnv) {
     nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+    return nativeClient;
   }
+
+  const isHermes = typeof (globalThis as Record<string, unknown>).HermesInternal !== 'undefined';
+
+  if (isHermes) {
+    try {
+      // Use dynamic string name to prevent Metro/Webpack from statically failing on this optional peer dependency
+      const nitroModuleName = 'react-native-nitro-modules';
+      const { NitroModules } = require(nitroModuleName);
+      nativeClient = NitroModules.createHybridObject('SovereignSecureClient');
+    } catch (e) {
+      nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+    }
+  } else {
+    try {
+      nativeClient = require('./SovereignSecureClient.node');
+    } catch (e) {
+      nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+    }
+  }
+  return nativeClient;
 }
 
 export class SovereignMemoryQueue {
@@ -45,11 +71,11 @@ export class SovereignMemoryQueue {
   }
 
   public get size(): number {
-    return nativeClient.getQueueStatus().size;
+    return getNativeClient().getQueueStatus().size;
   }
 
   public get isIntegrityCompromised(): boolean {
-    return nativeClient.getQueueStatus().isIntegrityCompromised;
+    return getNativeClient().getQueueStatus().isIntegrityCompromised;
   }
   public set isIntegrityCompromised(value: boolean) {}
 
@@ -60,7 +86,7 @@ export class SovereignMemoryQueue {
     ttl: number,
     onExpire: (id: string) => void,
   ): Promise<void> {
-    const status = nativeClient.getQueueStatus();
+    const status = getNativeClient().getQueueStatus();
     if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
     if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
@@ -81,15 +107,15 @@ export class SovereignMemoryQueue {
       binaryPayload.byteOffset,
       binaryPayload.byteOffset + binaryPayload.byteLength,
     ) as ArrayBuffer;
-    nativeClient.executeTransaction(id, exactBuffer, ttl);
+    getNativeClient().executeTransaction(id, exactBuffer, ttl);
   }
 
   public getExecutionOrder(): string[] {
-    return nativeClient.getQueueIds();
+    return getNativeClient().getQueueIds();
   }
 
   public getPayload(id: string): LedgerBlock | undefined {
-    const rawPayload = nativeClient.getTransactionPayload(id);
+    const rawPayload = getNativeClient().getTransactionPayload(id);
     return rawPayload
       ? {
           id,
@@ -105,7 +131,7 @@ export class SovereignMemoryQueue {
   }
 
   public async dequeue(cryptoProvider: ISovereignCryptoProvider, id: string): Promise<void> {
-    const status = nativeClient.getQueueStatus();
+    const status = getNativeClient().getQueueStatus();
     if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
     if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
@@ -114,14 +140,14 @@ export class SovereignMemoryQueue {
       clearTimeout(timer as number);
       this.expiryTimers.delete(id);
     }
-    nativeClient.dequeueTransaction(id);
+    getNativeClient().dequeueTransaction(id);
   }
 
   public async activeZeroization(
     cryptoProvider: ISovereignCryptoProvider,
     id: string,
   ): Promise<void> {
-    const status = nativeClient.getQueueStatus();
+    const status = getNativeClient().getQueueStatus();
     if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
     if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
 
@@ -130,7 +156,7 @@ export class SovereignMemoryQueue {
       clearTimeout(timer as number);
       this.expiryTimers.delete(id);
     }
-    nativeClient.zeroize(id);
+    getNativeClient().zeroize(id);
   }
 
   public clearAll(): void {
@@ -138,11 +164,11 @@ export class SovereignMemoryQueue {
       clearTimeout(timer as number);
     }
     this.expiryTimers.clear();
-    nativeClient.clearQueue();
+    getNativeClient().clearQueue();
   }
 
   public async verifyLedgerIntegrity(_cryptoProvider: ISovereignCryptoProvider): Promise<boolean> {
-    return nativeClient.verifyIntegrity();
+    return getNativeClient().verifyIntegrity();
   }
 
   public startWatchdog(
@@ -156,7 +182,7 @@ export class SovereignMemoryQueue {
       if (!this.isWatchdogRunning) return;
       if (this.size > 0) {
         try {
-          if (!nativeClient.verifyIntegrity()) {
+          if (!getNativeClient().verifyIntegrity()) {
             this.suspendAndFreezeLedger();
             onTamper();
             return;
@@ -185,7 +211,7 @@ export class SovereignMemoryQueue {
   }
 
   public getLocked(): boolean {
-    return nativeClient.getQueueStatus().isLocked;
+    return getNativeClient().getQueueStatus().isLocked;
   }
 
   public stopWatchdog(): void {

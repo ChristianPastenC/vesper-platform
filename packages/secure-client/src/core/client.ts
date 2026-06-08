@@ -13,7 +13,7 @@ import type {
   ISovereignNetworkAdapter,
   SovereignAdapterRequest,
 } from '../contracts/index.js';
-import { SovereignMemoryQueue } from '../ledger/index.js';
+import { SovereignMemoryQueue, configureQueueEngine } from '../ledger/index.js';
 import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js';
 import { shouldFreezeSession } from './error-matrix.js';
 import {
@@ -50,6 +50,7 @@ export class SovereignClientCore {
   private dpopBootstrapPromise?: Promise<JsonWebKey | null>;
 
   private constructor(config: SovereignClientCoreConfig) {
+    configureQueueEngine({ mock: config.mock });
     this.cryptoProvider = config.cryptoProvider;
     this.isOnline = config.networkResolver;
     this.defaultTTL = config.defaultTTL ?? 60_000;

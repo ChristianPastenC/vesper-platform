@@ -13,9 +13,10 @@ type contextKey string
 
 // Context keys used to store verified user information in requests.
 const (
-	UserIDKey     contextKey = "userID"
-	UsernameKey   contextKey = "username"
-	JKTContextKey contextKey = "jkt"
+	UserIDKey      contextKey = "userID"
+	UsernameKey    contextKey = "username"
+	JKTContextKey  contextKey = "jkt"
+	TokenClaimsKey contextKey = "tokenClaims"
 )
 
 // GetUserIDFromContext retrieves the user ID from the request context, if present.
@@ -33,6 +34,12 @@ func GetUsernameFromContext(ctx context.Context) (string, bool) {
 // GetJKTFromContext retrieves the DPoP JKT from the request context, if present.
 func GetJKTFromContext(ctx context.Context) (string, bool) {
 	val, ok := ctx.Value(JKTContextKey).(string)
+	return val, ok
+}
+
+// GetTokenClaimsFromContext retrieves the full TokenClaims from the request context, if present.
+func GetTokenClaimsFromContext(ctx context.Context) (*domain.TokenClaims, bool) {
+	val, ok := ctx.Value(TokenClaimsKey).(*domain.TokenClaims)
 	return val, ok
 }
 
@@ -71,6 +78,7 @@ func JWTAuth(tokenService domain.TokenService) func(http.Handler) http.Handler {
 			// Bind claims variables safely to the request context
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			ctx = context.WithValue(ctx, UsernameKey, claims.Username)
+			ctx = context.WithValue(ctx, TokenClaimsKey, &claims)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

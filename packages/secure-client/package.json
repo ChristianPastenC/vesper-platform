@@ -28,7 +28,11 @@
     "clean":    "rimraf dist",
     "rebuild":  "rimraf dist && tsc"
   },
+  "peerDependencies": {
+    "react-native-nitro-modules": "*"
+  },
   "devDependencies": {
+    "react-native-nitro-modules": "*",
     "typescript": "^5.4.5"
   }
 }

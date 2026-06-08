@@ -51,7 +51,7 @@ func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, curren
 	}
 	defer resp.Body.Close()
 
-	bodyBytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024))
 	if err != nil {
 		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to read response: %w", err)
 	}

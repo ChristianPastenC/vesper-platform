@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -68,7 +69,7 @@ func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.Catalog
 	}
 
 	var rawProducts []FakeStoreProduct
-	if err := json.NewDecoder(resp.Body).Decode(&rawProducts); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 2*1024*1024)).Decode(&rawProducts); err != nil {
 		return nil, fmt.Errorf("fakestore_gateway: failed to decode JSON payload: %w", err)
 	}
 

@@ -51,11 +51,14 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		// Protected Checkout Route (JWT + DPoP validation)
 		r.Group(func(r chi.Router) {
 			dpopValidator := middleware.NewDPoPValidator()
+			idempotencyManager := middleware.NewIdempotencyManager()
 
 			// First validate the JWT token validity
 			r.Use(middleware.JWTAuth(cfg.TokenService))
 			// Then validate client signature on DPoP header
 			r.Use(dpopValidator.Middleware)
+			// Apply idempotency interceptor
+			r.Use(idempotencyManager.Middleware)
 
 			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
 		})

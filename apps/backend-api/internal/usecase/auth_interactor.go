@@ -42,8 +42,8 @@ func (a *AuthInteractor) AuthenticateUser(ctx context.Context, username, passwor
 }
 
 // GenerateTokenPair generates an asymmetric JWT and a refresh token for an authenticated user.
-func (a *AuthInteractor) GenerateTokenPair(ctx context.Context, user domain.User) (string, string, error) {
-	accessToken, refreshToken, err := a.tokenService.GenerateTokenPair(ctx, user)
+func (a *AuthInteractor) GenerateTokenPair(ctx context.Context, user domain.User, jkt string) (string, string, error) {
+	accessToken, refreshToken, err := a.tokenService.GenerateTokenPair(ctx, user, jkt)
 	if err != nil {
 		return "", "", err
 	}

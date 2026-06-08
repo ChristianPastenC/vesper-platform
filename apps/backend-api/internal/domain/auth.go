@@ -15,11 +15,17 @@ type UserCredentials struct {
 	Password string `json:"password"`
 }
 
+// CnfClaim represents the confirmation claim for DPoP binding.
+type CnfClaim struct {
+	Jkt string `json:"jkt,omitempty"`
+}
+
 // TokenClaims represents the payload embedded in the asymmetric JWT access tokens.
 type TokenClaims struct {
-	UserID    string `json:"userId"`
-	Username  string `json:"username"`
-	ExpiresAt int64  `json:"expiresAt"`
+	UserID    string   `json:"userId"`
+	Username  string   `json:"username"`
+	ExpiresAt int64    `json:"expiresAt"`
+	Cnf       CnfClaim `json:"cnf,omitempty"`
 }
 
 // AuthRepository defines the outbound port for querying user authorization details.
@@ -29,6 +35,6 @@ type AuthRepository interface {
 
 // TokenService defines the outbound port for signing and verifying tokens using asymmetric keys.
 type TokenService interface {
-	GenerateTokenPair(ctx context.Context, user User) (string, string, error)
+	GenerateTokenPair(ctx context.Context, user User, jkt string) (string, string, error)
 	ValidateToken(ctx context.Context, tokenStr string) (*TokenClaims, error)
 }

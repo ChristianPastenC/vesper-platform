@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
@@ -186,6 +187,40 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		// Calculate JKT and inject into context
+		jkt, err := CalculateJKT(header.Jwk)
+		if err != nil {
+			writeErrorJSON(w, http.StatusInternalServerError, "internal_error", "Failed to calculate JKT")
+			return
+		}
+		ctx := context.WithValue(r.Context(), JKTContextKey, jkt)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// CalculateJKT computes the JWK Thumbprint according to RFC 7638.
+func CalculateJKT(jwk JWK) (string, error) {
+	// RFC 7638 requires lexicographic order of the required members: crv, kty, x, y
+	type thumbprintJWK struct {
+		Crv string `json:"crv"`
+		Kty string `json:"kty"`
+		X   string `json:"x"`
+		Y   string `json:"y"`
+	}
+
+	tpJWK := thumbprintJWK{
+		Crv: jwk.Crv,
+		Kty: jwk.Kty,
+		X:   jwk.X,
+		Y:   jwk.Y,
+	}
+
+	jsonBytes, err := json.Marshal(tpJWK)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(jsonBytes)
+	return base64.RawURLEncoding.EncodeToString(hash[:]), nil
 }

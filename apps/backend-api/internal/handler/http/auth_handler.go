@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/handler/middleware"
 	"sovereign-core/backend-api/internal/usecase"
 )
 
@@ -40,7 +41,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.interactor.GenerateTokenPair(r.Context(), user)
+	jkt, _ := middleware.GetJKTFromContext(r.Context())
+	accessToken, refreshToken, err := h.interactor.GenerateTokenPair(r.Context(), user, jkt)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "token_generation_failed", err.Error())
 		return

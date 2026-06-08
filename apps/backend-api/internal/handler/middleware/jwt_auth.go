@@ -13,8 +13,9 @@ type contextKey string
 
 // Context keys used to store verified user information in requests.
 const (
-	UserIDKey   contextKey = "userID"
-	UsernameKey contextKey = "username"
+	UserIDKey     contextKey = "userID"
+	UsernameKey   contextKey = "username"
+	JKTContextKey contextKey = "jkt"
 )
 
 // GetUserIDFromContext retrieves the user ID from the request context, if present.
@@ -26,6 +27,12 @@ func GetUserIDFromContext(ctx context.Context) (string, bool) {
 // GetUsernameFromContext retrieves the username from the request context, if present.
 func GetUsernameFromContext(ctx context.Context) (string, bool) {
 	val, ok := ctx.Value(UsernameKey).(string)
+	return val, ok
+}
+
+// GetJKTFromContext retrieves the DPoP JKT from the request context, if present.
+func GetJKTFromContext(ctx context.Context) (string, bool) {
+	val, ok := ctx.Value(JKTContextKey).(string)
 	return val, ok
 }
 
@@ -50,6 +57,15 @@ func JWTAuth(tokenService domain.TokenService) func(http.Handler) http.Handler {
 			if err != nil {
 				writeErrorJSON(w, http.StatusUnauthorized, "invalid_token", err.Error())
 				return
+			}
+
+			// Enforce DPoP Binding if jkt claim is present
+			if claims.Cnf.Jkt != "" {
+				jkt, ok := GetJKTFromContext(r.Context())
+				if !ok || jkt != claims.Cnf.Jkt {
+					writeErrorJSON(w, http.StatusUnauthorized, "invalid_dpop_binding", "DPoP token binding mismatch")
+					return
+				}
 			}
 
 			// Bind claims variables safely to the request context

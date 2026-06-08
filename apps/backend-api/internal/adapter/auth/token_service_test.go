@@ -32,7 +32,7 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 	}
 
 	// 3. Generate Token Pair
-	accessToken, refreshToken, err := svc.GenerateTokenPair(ctx, user)
+	accessToken, refreshToken, err := svc.GenerateTokenPair(ctx, user, "")
 	if err != nil {
 		t.Fatalf("Failed to generate token pair: %v", err)
 	}

@@ -41,7 +41,7 @@ func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicK
 }
 
 // GenerateTokenPair issues an asymmetric JWT access token and a mock refresh token.
-func (e *EcdsaTokenService) GenerateTokenPair(ctx context.Context, user domain.User) (string, string, error) {
+func (e *EcdsaTokenService) GenerateTokenPair(ctx context.Context, user domain.User, jkt string) (string, string, error) {
 	// 1. Build and encode Header
 	header := JWTHeader{Alg: "ES256", Typ: "JWT"}
 	headerBytes, err := json.Marshal(header)
@@ -55,6 +55,9 @@ func (e *EcdsaTokenService) GenerateTokenPair(ctx context.Context, user domain.U
 		UserID:    user.ID,
 		Username:  user.Username,
 		ExpiresAt: time.Now().Add(e.tokenTTL).Unix(),
+	}
+	if jkt != "" {
+		claims.Cnf = domain.CnfClaim{Jkt: jkt}
 	}
 	claimsBytes, err := json.Marshal(claims)
 	if err != nil {

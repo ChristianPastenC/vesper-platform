@@ -1,0 +1,65 @@
+package http
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
+
+	"sovereign-core/backend-api/internal/challenge"
+	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/handler/middleware"
+	oldhandlers "sovereign-core/backend-api/internal/handlers"
+)
+
+// RouterConfig gathers dependencies required to spin up the HTTP router.
+type RouterConfig struct {
+	Log             *slog.Logger
+	ChallengeIssuer *challenge.Issuer
+	TokenService    domain.TokenService
+	AuthHandler     *AuthHandler
+	CatalogHandler  *CatalogHandler
+	PaymentHandler  *PaymentHandler
+}
+
+// NewRouter constructs a configured chi.Mux handler with security interceptors.
+func NewRouter(cfg RouterConfig) http.Handler {
+	r := chi.NewRouter()
+
+	// 1. Basic request instrumentation
+	r.Use(chimiddleware.RequestID)
+	r.Use(chimiddleware.RealIP)
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
+
+	// 2. Global CORS configuration allowing Authorization and DPoP headers
+	r.Use(middleware.CORS(middleware.DefaultCORSConfig()))
+
+	// 3. Infrastructure and Legacy Compatibility routes
+	r.HandleFunc("/health", oldhandlers.HealthHandler())
+	r.HandleFunc("/api/handshake", oldhandlers.HandshakeHandler(cfg.ChallengeIssuer, cfg.Log))
+
+	// 4. API v1 Group
+	r.Route("/api/v1", func(r chi.Router) {
+		// Public Login
+		r.Post("/auth/login", cfg.AuthHandler.Login)
+
+		// Public Catalog (ESB orchestrator for Fakestore API)
+		r.Get("/catalog", cfg.CatalogHandler.GetCatalog)
+
+		// Protected Checkout Route (JWT + DPoP validation)
+		r.Group(func(r chi.Router) {
+			dpopValidator := middleware.NewDPoPValidator()
+
+			// First validate the JWT token validity
+			r.Use(middleware.JWTAuth(cfg.TokenService))
+			// Then validate client signature on DPoP header
+			r.Use(dpopValidator.Middleware)
+
+			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
+		})
+	})
+
+	return r
+}

@@ -1,0 +1,54 @@
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/usecase"
+)
+
+// AuthHandler handles HTTP requests targeting authorization endpoints.
+type AuthHandler struct {
+	interactor *usecase.AuthInteractor
+}
+
+// NewAuthHandler initializes an AuthHandler with an AuthInteractor.
+func NewAuthHandler(interactor *usecase.AuthInteractor) *AuthHandler {
+	return &AuthHandler{
+		interactor: interactor,
+	}
+}
+
+// Login handles POST /api/v1/auth/login. It parses incoming credentials,
+// authenticates the user against the database, and issues an ECDSA JWT.
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
+		return
+	}
+
+	var creds domain.UserCredentials
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		return
+	}
+
+	user, err := h.interactor.AuthenticateUser(r.Context(), creds.Username, creds.Password)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized", err.Error())
+		return
+	}
+
+	accessToken, refreshToken, err := h.interactor.GenerateTokenPair(r.Context(), user)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "token_generation_failed", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"user":         user,
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
+	})
+}

@@ -21,6 +21,7 @@
     "@sovereign/secure-client": "link:../../packages/secure-client",
     "@tanstack/react-query": "^5.0.0",
     "expo": "~54.0.0",
+    "expo-crypto": "~15.0.9",
     "expo-status-bar": "~3.0.9",
     "i18next": "^23.11.5",
     "react": "19.1.0",

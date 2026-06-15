@@ -59,11 +59,11 @@ export const useAppStore = create<AppState>()(
       onlineCart: [],
       inStoreCart: [],
 
-      login: async (email, name) => {
+      login: async (_email, name) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ isAuthenticated: true, userName: name || 'User' });
       },
-      signUp: async (email, name) => {
+      signUp: async (_email, name) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ isAuthenticated: true, userName: name || 'User' });
       },

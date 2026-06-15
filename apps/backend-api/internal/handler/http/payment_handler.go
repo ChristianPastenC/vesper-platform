@@ -78,7 +78,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// 3. Return confirmation response with receipt hash and auditing fields
+	// 4. Return confirmation response with receipt hash and auditing fields
 	writeJSON(w, http.StatusOK, map[string]any{
 		"userId":        userID,
 		"transactionId": resp.TransactionID,

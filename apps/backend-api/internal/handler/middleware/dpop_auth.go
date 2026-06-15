@@ -111,9 +111,13 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 
 		// 3. Reconstruct client public key from JWK
 		xBytes, err := base64.RawURLEncoding.DecodeString(header.Jwk.X)
+		if err != nil {
+			writeErrorJSON(w, http.StatusBadRequest, "invalid_dpop", "Failed to decode JWK X coordinate")
+			return
+		}
 		yBytes, err := base64.RawURLEncoding.DecodeString(header.Jwk.Y)
 		if err != nil {
-			writeErrorJSON(w, http.StatusBadRequest, "invalid_dpop", "Failed to decode JWK key coordinates")
+			writeErrorJSON(w, http.StatusBadRequest, "invalid_dpop", "Failed to decode JWK Y coordinate")
 			return
 		}
 
@@ -168,7 +172,11 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 
 		// 7. Validate iat (Issued At) timestamp: max drift allowed is 120 seconds
 		now := time.Now().Unix()
-		if now - claims.Iat > 120 || claims.Iat - now > 120 {
+		diff := now - claims.Iat
+		if diff < 0 {
+			diff = -diff
+		}
+		if diff > 120 {
 			writeErrorJSON(w, http.StatusUnauthorized, "dpop_expired", "DPoP token has expired or clock is out of sync")
 			return
 		}

@@ -21,12 +21,12 @@ func ValidateLedgerChain(blocks []domain.TransactionBlock) bool {
 		if i == 0 {
 			// Genesis block must contain "0" or an empty string as preceding hash
 			if block.PrecedingHash != "0" && block.PrecedingHash != "" {
-				panic("Integrity Gate: Genesis block has invalid preceding hash. Operation aborted due to suspected fraud.")
+				return false
 			}
 		} else {
 			// Subsequent blocks must securely link to their direct ancestor
 			if block.PrecedingHash != blocks[i-1].Hash {
-				panic("Integrity Gate: Cryptographic chain link broken. Operation aborted due to suspected memory manipulation.")
+				return false
 			}
 		}
 
@@ -34,9 +34,9 @@ func ValidateLedgerChain(blocks []domain.TransactionBlock) bool {
 		raw := fmt.Sprintf("%s%s%d", block.Payload, block.PrecedingHash, block.Timestamp)
 		calculatedHash := fmt.Sprintf("%x", sha256.Sum256([]byte(raw)))
 
-		// 3. Trigger controlled panic on mismatch to secure the CAP consistency boundary
+		// 3. Hash mismatch signals tampered or forged block — abort chain validation
 		if calculatedHash != block.Hash {
-			panic(fmt.Sprintf("Integrity Gate: Hash signature mismatch at block %d. Operation aborted to prevent ledger corruption.", i))
+			return false
 		}
 	}
 

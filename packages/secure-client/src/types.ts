@@ -70,8 +70,7 @@ export interface LedgerBlock {
   serializedRequest: Uint8Array;
   timestamp: number;
   ttl: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  expiryTimer: any;
+  expiryTimer: unknown;
   previousHash: Uint8Array;
   currentHash: Uint8Array;
   isZeroized: boolean;

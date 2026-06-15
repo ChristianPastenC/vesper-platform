@@ -44,17 +44,17 @@ const getNativeClient = (): SovereignSecureClient => {
       const nitroModuleName = 'react-native-nitro-modules';
       const { NitroModules } = require(nitroModuleName);
       nativeClient = NitroModules.createHybridObject('SovereignSecureClient');
-    } catch (e) {
+    } catch {
       nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
     }
   } else {
     try {
       nativeClient = require('./SovereignSecureClient.node');
-    } catch (e) {
+    } catch {
       nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
     }
   }
-  return nativeClient;
+  return nativeClient!;
 }
 
 export class SovereignMemoryQueue {

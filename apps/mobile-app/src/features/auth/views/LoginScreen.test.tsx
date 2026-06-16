@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { LoginScreen } from './LoginScreen';
-import { useLogin } from '../hooks/useLogin';
+import { useSovereignLogin } from '../hooks/useSovereignLogin';
 import { useTheme } from '../../../core/theme/useTheme';
 
-jest.mock('../hooks/useLogin', () => ({
-  useLogin: jest.fn(),
+jest.mock('../hooks/useSovereignLogin', () => ({
+  useSovereignLogin: jest.fn(),
 }));
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -33,7 +33,7 @@ describe('LoginScreen View', () => {
   });
 
   it('renders form inputs correctly', () => {
-    (useLogin as jest.Mock).mockReturnValue({
+    (useSovereignLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: jest.fn(),
       email: '',
@@ -55,7 +55,7 @@ describe('LoginScreen View', () => {
   });
 
   it('triggers input and login submission callbacks', () => {
-    (useLogin as jest.Mock).mockReturnValue({
+    (useSovereignLogin as jest.Mock).mockReturnValue({
       name: 'John Doe',
       setName: jest.fn(),
       email: 'test@example.com',
@@ -76,7 +76,7 @@ describe('LoginScreen View', () => {
   });
 
   it('displays error banner if validation fail error is returned', () => {
-    (useLogin as jest.Mock).mockReturnValue({
+    (useSovereignLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: jest.fn(),
       email: '',

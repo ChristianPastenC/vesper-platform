@@ -21,6 +21,9 @@
         "backgroundColor": "#0f0f0f"
       },
       "package": "mx.edu.sovereign.core"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

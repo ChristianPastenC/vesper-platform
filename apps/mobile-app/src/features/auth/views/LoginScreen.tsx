@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TextInput } from 'react-native';
 import { useTheme } from '../../../core/theme/useTheme';
-import { useLogin } from '../hooks/useLogin';
+import { useSovereignLogin } from '../hooks/useSovereignLogin';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
 import { stylesFactory } from './LoginScreen.styles';
@@ -20,7 +20,7 @@ export const LoginScreen: React.FC = () => {
     isPending,
     handleLogin,
     t,
-  } = useLogin();
+  } = useSovereignLogin();
 
   return (
     <View style={styles.container}>

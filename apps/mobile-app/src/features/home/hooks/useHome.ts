@@ -19,7 +19,7 @@ export const useHome = () => {
   };
 
   const navigateToOnlineCart = () => {
-    navigation.navigate('OnlineCartTab');
+    navigation.navigate('OnlineCart');
   };
 
   const navigateToScanner = () => {

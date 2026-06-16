@@ -50,7 +50,7 @@ describe('CatalogScreen View', () => {
       navigate: mockNavigate,
     });
 
-    (useAppStore as jest.Mock).mockReturnValue([]); // Return empty onlineCart array
+    (useAppStore as unknown as jest.Mock).mockReturnValue([]); // Return empty onlineCart array
 
     (useTheme as jest.Mock).mockReturnValue({
       colors: {

@@ -41,7 +41,7 @@ describe('HomeScreen Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAppStore as jest.Mock).mockReturnValue([]);
+    (useAppStore as unknown as jest.Mock).mockReturnValue([]);
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',

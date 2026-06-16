@@ -8,11 +8,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useCatalog } from '../hooks/useCatalog';
 import { ProductCard, Product } from '../components/ProductCard';
-import { RootStackParamList } from '../../../navigation/types';
+import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
 import { stylesFactory } from './CatalogScreen.styles';
 
-type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
+type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
 
 export const CatalogScreen: React.FC = () => {
   const theme = useTheme();
@@ -95,7 +95,7 @@ export const CatalogScreen: React.FC = () => {
             <View key={cat.id} style={styles.categoryItem}>
               <View style={styles.categoryOuterRing}>
                 <View style={styles.categoryInnerCircle}>
-                  <Ionicons name={cat.icon} size={22} color={theme.colors.text} />
+                  <Ionicons name={cat.icon as keyof typeof Ionicons.glyphMap} size={22} color={theme.colors.text} />
                 </View>
               </View>
               <Text style={styles.categoryText} numberOfLines={1}>

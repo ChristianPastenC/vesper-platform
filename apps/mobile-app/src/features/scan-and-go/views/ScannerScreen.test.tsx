@@ -57,7 +57,7 @@ describe('ScannerScreen View', () => {
       simulateScan: mockSimulate,
       t: (key: string) => key,
     });
-    (useAppStore as jest.Mock).mockReturnValue(3); // Mock cart itemsCount = 3
+    (useAppStore as unknown as jest.Mock).mockReturnValue(3); // Mock cart itemsCount = 3
   });
 
   it('renders scanner screen UI elements', () => {

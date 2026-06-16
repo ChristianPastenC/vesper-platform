@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import * as SecureStore from 'expo-secure-store';
+import { saveTokens } from '../../../core/auth/tokenStore';
 import { encodeJsonBody, SovereignAdapterRequest } from '@sovereign/secure-client';
 
 import { useAppStore } from '../../../store/useAppStore';
@@ -53,12 +53,7 @@ export const useSovereignLogin = () => {
       
       const response = await client.executeRequest<AuthResponse>(requestId, request);
       
-      if (response.accessToken) {
-        await SecureStore.setItemAsync('accessToken', response.accessToken);
-      }
-      if (response.refreshToken) {
-        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-      }
+      await saveTokens(response.accessToken || '', response.refreshToken || '');
 
       await loginAction(email, name);
       

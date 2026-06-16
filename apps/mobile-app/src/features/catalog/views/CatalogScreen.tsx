@@ -24,7 +24,8 @@ export const CatalogScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isEs = i18n?.language?.startsWith('es');
 
-  const { products, loading, error, isEmpty, refetch } = useSovereignCatalog();
+  const [selectedCategory, setSelectedCategory] = React.useState<string | undefined>(undefined);
+  const { products, loading, error, isEmpty, refetch } = useSovereignCatalog(selectedCategory, 20);
   const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
   const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
 
@@ -110,18 +111,30 @@ export const CatalogScreen: React.FC = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesScrollContent}
         >
-          {CATEGORIES.map((cat) => (
-            <View key={cat.id} style={styles.categoryItem}>
-              <View style={styles.categoryOuterRing}>
-                <View style={styles.categoryInnerCircle}>
-                  <Ionicons name={cat.icon as keyof typeof Ionicons.glyphMap} size={22} color={theme.colors.text} />
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={styles.categoryItem}
+                activeOpacity={0.7}
+                onPress={() => setSelectedCategory(isSelected ? undefined : cat.id)}
+              >
+                <View style={[styles.categoryOuterRing, isSelected && { borderColor: theme.colors.primary }]}>
+                  <View style={[styles.categoryInnerCircle, isSelected && { backgroundColor: theme.colors.primary + '1A' }]}>
+                    <Ionicons 
+                      name={cat.icon as keyof typeof Ionicons.glyphMap} 
+                      size={22} 
+                      color={isSelected ? theme.colors.primary : theme.colors.text} 
+                    />
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.categoryText} numberOfLines={1}>
-                {cat.name}
-              </Text>
-            </View>
-          ))}
+                <Text style={[styles.categoryText, isSelected && { color: theme.colors.primary, fontWeight: '600' }]} numberOfLines={1}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 

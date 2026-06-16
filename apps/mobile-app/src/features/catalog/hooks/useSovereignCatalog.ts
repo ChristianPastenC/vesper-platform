@@ -4,14 +4,26 @@ import { Product } from '../components/ProductCard';
 import { useSovereignClient } from '../../../providers/SovereignClientContext';
 import { SovereignAdapterRequest } from '@sovereign/secure-client';
 
-export const useSovereignCatalog = () => {
+const catalogCache = new Map<string, Product[]>();
+
+export const useSovereignCatalog = (category?: string, limit: number = 20) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
   const client = useSovereignClient();
 
-  const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
+  const fetchCatalog = useCallback(async (signal?: AbortSignal, forceRefetch = false) => {
+    const cacheKey = `${category || 'all'}-${limit}`;
+    
+    // Evitar refetches si ya existe en caché, a menos que se fuerce
+    if (!forceRefetch && catalogCache.has(cacheKey)) {
+      setProducts(catalogCache.get(cacheKey)!);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -25,9 +37,14 @@ export const useSovereignCatalog = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      let url = `/api/v1/catalog?limit=${limit}`;
+      if (category) {
+        url += `&category=${encodeURIComponent(category)}`;
+      }
+
       const request: SovereignAdapterRequest = {
         method: 'GET',
-        url: '/api/v1/catalog?limit=20',
+        url,
         headers,
         signal,
       };
@@ -57,6 +74,7 @@ export const useSovereignCatalog = () => {
 
       if (signal?.aborted) return;
 
+      catalogCache.set(cacheKey, mappedProducts);
       setProducts(mappedProducts);
     } catch (err: any) {
       if (err.name === 'AbortError' || err.message === 'Canceled' || signal?.aborted) {
@@ -68,16 +86,20 @@ export const useSovereignCatalog = () => {
         setLoading(false);
       }
     }
-  }, [client]);
+  }, [client, category, limit]);
 
   useEffect(() => {
     const controller = new AbortController();
     
-    fetchCatalog(controller.signal);
+    fetchCatalog(controller.signal, false);
 
     return () => {
       controller.abort();
     };
+  }, [fetchCatalog]);
+
+  const refetch = useCallback(() => {
+    fetchCatalog(undefined, true);
   }, [fetchCatalog]);
 
   return {
@@ -85,6 +107,6 @@ export const useSovereignCatalog = () => {
     loading,
     error,
     isEmpty: !loading && products.length === 0,
-    refetch: () => fetchCatalog()
+    refetch
   };
 };

@@ -25,6 +25,21 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
+import { SovereignClientCore } from '@sovereign/secure-client';
+
+// We provide a dummy crypto provider for now, since mock: true will force 
+// SovereignMemoryQueue to use SovereignSecureClientFallback in JS.
+const dummyCryptoProvider = {} as any;
+
+const secureClient = SovereignClientCore.getInstance({
+  cryptoProvider: dummyCryptoProvider,
+  networkResolver: async () => true,
+  mock: true,
+  networkAdapter: undefined,
+});
+
+console.log('[App] SovereignClientCore instantiated in mock mode. Watchdog should be active.');
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const theme = useTheme();
   const language = useAppStore((state) => state.language);

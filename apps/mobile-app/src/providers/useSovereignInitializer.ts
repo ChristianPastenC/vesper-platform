@@ -6,6 +6,7 @@ import {
   startNetworkTransitionsListener, 
   stopNetworkTransitionsListener 
 } from '../core/network/networkResolver';
+import { validateHandshake } from '../core/network/handshakeValidator';
 
 // 1. Initialize the real SovereignClientCore instance
 export const secureClient = SovereignClientCore.getInstance({
@@ -21,10 +22,7 @@ export const useSovereignInitializer = () => {
 
   useEffect(() => {
     // Setup Network listener to process inactive queues on reconnection
-    startNetworkTransitionsListener(secureClient, async () => {
-      // Identity validation stub: validate against local auth token later
-      return true;
-    });
+    startNetworkTransitionsListener(secureClient, validateHandshake);
 
     // Bootstrap DPoP keys asynchronously before the first protected render
     const initSovereignClient = async () => {

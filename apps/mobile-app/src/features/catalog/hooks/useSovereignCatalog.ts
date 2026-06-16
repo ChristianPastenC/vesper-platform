@@ -70,6 +70,7 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
         name: String(p.name ?? 'Unknown Product'),
         price: Number(p.price ?? 0),
         barcode: String(p.barcode ?? ''),
+        image: p.image ? String(p.image) : undefined,
       }));
 
       if (signal?.aborted) return;

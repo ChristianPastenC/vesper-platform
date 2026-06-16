@@ -10,6 +10,7 @@ import { useSovereignCatalog } from '../hooks/useSovereignCatalog';
 import { ProductCard, Product } from '../components/ProductCard';
 import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
+import { Button } from '../../../components/Button';
 import { stylesFactory } from './CatalogScreen.styles';
 
 type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
@@ -178,19 +179,27 @@ export const CatalogScreen: React.FC = () => {
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={
           loading ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
+            <View style={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map((key) => (
+                <View key={key} style={styles.skeletonCard} />
+              ))}
             </View>
           ) : error ? (
-            <TouchableOpacity onPress={() => refetch()} style={{ padding: 40, alignItems: 'center' }}>
-              <Text style={{ color: theme.colors.error || 'red', textAlign: 'center' }}>
-                Failed to load catalog. Tap to retry.
+            <View style={styles.emptyStateContainer}>
+              <Ionicons name="cloud-offline-outline" size={48} color={theme.colors.error || '#ef4444'} style={styles.errorIcon} />
+              <Text style={styles.errorText}>
+                {t('catalog.errorLoad') || 'Failed to load catalog. Please check your connection.'}
               </Text>
-            </TouchableOpacity>
+              <Button 
+                title={t('catalog.retry') || 'Retry'} 
+                onPress={() => refetch()} 
+                variant="secondary"
+              />
+            </View>
           ) : isEmpty ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
-              <Text style={{ color: theme.colors.text, textAlign: 'center' }}>
-                No products found.
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyText}>
+                {t('catalog.empty') || 'No products found.'}
               </Text>
             </View>
           ) : null

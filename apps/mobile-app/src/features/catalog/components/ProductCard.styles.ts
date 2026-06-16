@@ -28,6 +28,23 @@ export const stylesFactory = (colors: ThemeColors) =>
       marginBottom: verticalScale(10),
       overflow: 'hidden',
     },
+    image: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'cover',
+    },
+    skeletonOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 1,
+    },
+    skeletonContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    skeletonIcon: {
+      opacity: 0.3,
+    },
     header: {
       flexDirection: 'column',
       alignItems: 'flex-start',

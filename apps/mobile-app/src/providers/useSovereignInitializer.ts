@@ -15,7 +15,7 @@ export const secureClient = SovereignClientCore.getInstance({
   mock: false,
 });
 
-export const useSovereignClient = () => {
+export const useSovereignInitializer = () => {
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [dpopPublicKey, setDpopPublicKey] = useState<JsonWebKey | null>(null);
 
@@ -31,9 +31,9 @@ export const useSovereignClient = () => {
       try {
         const jwk = await secureClient.bootstrap();
         setDpopPublicKey(jwk);
-        console.log('[useSovereignClient] Successfully bootstrapped Sovereign Client and DPoP keys.');
+        console.log('[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys.');
       } catch (error) {
-        console.error('[useSovereignClient] Failed to bootstrap SovereignClientCore DPoP keys:', error);
+        console.error('[useSovereignInitializer] Failed to bootstrap SovereignClientCore DPoP keys:', error);
       } finally {
         setIsBootstrapped(true);
       }

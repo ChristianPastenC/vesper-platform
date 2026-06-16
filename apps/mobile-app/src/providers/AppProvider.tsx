@@ -10,7 +10,8 @@ import { useTheme } from '../core/theme/useTheme';
 import { ThemeColors } from '../core/theme/colors';
 import { useAppStore } from '../store/useAppStore';
 
-import { useSovereignClient } from './useSovereignClient';
+import { useSovereignInitializer } from './useSovereignInitializer';
+import { SovereignClientContext } from './SovereignClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
 
 const queryClient = new QueryClient({
@@ -31,19 +32,13 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
-export interface SovereignContextType {
-  client: SovereignClientCore;
-  dpopPublicKey: JsonWebKey | null;
-}
-
-// Global context for accessing Sovereign Client and public keys
-export const SovereignClientContext = createContext<SovereignContextType | null>(null);
+// Context is imported from SovereignClientContext.ts
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Logic
   const theme = useTheme();
   const language = useAppStore((state) => state.language);
-  const { client, isBootstrapped, dpopPublicKey } = useSovereignClient();
+  const { client, isBootstrapped, dpopPublicKey } = useSovereignInitializer();
 
   useEffect(() => {
     if (language) {

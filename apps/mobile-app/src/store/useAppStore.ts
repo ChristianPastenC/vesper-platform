@@ -32,7 +32,8 @@ interface AppState {
 
   login: (email: string, name: string) => Promise<void>;
   signUp: (email: string, name: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  initAuth: () => Promise<void>;
   toggleNetwork: () => void;
   setLanguage: (lang: Language) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -60,20 +61,26 @@ export const useAppStore = create<AppState>()(
       inStoreCart: [],
 
       login: async (_email, name) => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ isAuthenticated: true, userName: name || 'User' });
       },
       signUp: async (_email, name) => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ isAuthenticated: true, userName: name || 'User' });
       },
-      logout: () =>
+      logout: async () => {
+        const { clearTokens } = await import('../core/auth/tokenStore');
+        await clearTokens();
         set({
           isAuthenticated: false,
           userName: null,
           onlineCart: [],
           inStoreCart: [],
-        }),
+        });
+      },
+      initAuth: async () => {
+        const { getAccessToken } = await import('../core/auth/tokenStore');
+        const token = await getAccessToken();
+        set({ isAuthenticated: !!token });
+      },
       toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
       setLanguage: (lang) => {
         i18n.changeLanguage(lang);
@@ -123,11 +130,12 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         language: state.language,
         themeMode: state.themeMode,
-        isAuthenticated: state.isAuthenticated,
-        userName: state.userName,
         onlineCart: state.onlineCart,
         inStoreCart: state.inStoreCart,
       }),
     },
   ),
 );
+
+export const useIsAuthenticated = () => useAppStore((state) => state.isAuthenticated);
+

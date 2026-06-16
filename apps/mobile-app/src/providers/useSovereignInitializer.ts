@@ -27,6 +27,9 @@ export const useSovereignInitializer = () => {
     // Bootstrap DPoP keys asynchronously before the first protected render
     const initSovereignClient = async () => {
       try {
+        const { useAppStore } = await import('../store/useAppStore');
+        await useAppStore.getState().initAuth();
+
         const jwk = await secureClient.bootstrap();
         setDpopPublicKey(jwk);
         console.log('[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys.');

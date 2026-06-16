@@ -221,4 +221,8 @@ export class SovereignMemoryQueue {
       this.watchdogTimer = undefined;
     }
   }
+
+  public toggleNetworkSim(online: boolean): void {
+    getNativeClient().toggleNetworkSim(online);
+  }
 }

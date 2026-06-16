@@ -13,7 +13,6 @@ import { useAppStore } from '../store/useAppStore';
 import { useSovereignInitializer } from './useSovereignInitializer';
 import { SovereignClientContext } from './SovereignClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
-import NetInfo from '@react-native-community/netinfo';
 import { validateHandshake } from '../core/network/handshakeValidator';
 import { startNetworkTransitionsListener, stopNetworkTransitionsListener } from '../core/network/networkResolver';
 
@@ -66,6 +65,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Styles
   const styles = createAppProviderStyles(theme.colors);
 
+  // Global Store state
+  const isFrozen = useAppStore((state) => state.isFrozen);
+
   // Render blocking state
   if (!isBootstrapped) {
     return (
@@ -74,9 +76,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       </View>
     );
   }
-
-  // Global Store state
-  const isFrozen = useAppStore((state) => state.isFrozen);
 
   // Main Render
   return (

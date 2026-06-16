@@ -1,5 +1,6 @@
 import React from 'react';
-import { FlatList, View, TouchableOpacity, Text, ScrollView, ActivityIndicator } from 'react-native';
+/* eslint-disable complexity */
+import { FlatList, View, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';

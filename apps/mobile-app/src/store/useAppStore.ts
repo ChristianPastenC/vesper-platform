@@ -70,7 +70,7 @@ export const useAppStore = create<AppState>()(
         set({ isAuthenticated: true, userName: name || 'User' });
       },
       logout: async () => {
-        const { clearTokens } = await import('../core/auth/tokenStore');
+        const { clearTokens } = require('../core/auth/tokenStore');
         await clearTokens();
         set({
           isAuthenticated: false,
@@ -80,7 +80,7 @@ export const useAppStore = create<AppState>()(
         });
       },
       initAuth: async () => {
-        const { getAccessToken } = await import('../core/auth/tokenStore');
+        const { getAccessToken } = require('../core/auth/tokenStore');
         const token = await getAccessToken();
         set({ isAuthenticated: !!token });
       },

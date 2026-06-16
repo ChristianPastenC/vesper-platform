@@ -20,7 +20,7 @@ export const useSovereignCheckout = () => {
   const [error, setError] = useState<Error | null>(null);
   const client = useSovereignClient();
 
-  const executeCheckout = async <T = any>(items: T[]): Promise<CheckoutResponse | null> => {
+  const executeCheckout = async <T = unknown>(items: T[]): Promise<CheckoutResponse | null> => {
     try {
       setIsProcessing(true);
       setError(null);
@@ -57,7 +57,7 @@ export const useSovereignCheckout = () => {
       const response = await client.executeRequest<CheckoutResponse>(requestId, request);
 
       return response;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[SovereignCheckout] Transaction failed:', err);
       // We only expose the error if it isn't automatically sequestered.
       // Depending on the executeRequest implementation, offline scenarios

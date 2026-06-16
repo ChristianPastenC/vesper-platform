@@ -15,7 +15,7 @@ export interface TransactionBlock {
  * @param items Array of cart items (OnlineCartItem, InStoreCartItem, or generic items).
  * @returns Array of linked TransactionBlock objects.
  */
-export const buildTransactionLedger = async <T = any>(
+export const buildTransactionLedger = async <T = unknown>(
   items: T[]
 ): Promise<TransactionBlock[]> => {
   const ledger: TransactionBlock[] = [];

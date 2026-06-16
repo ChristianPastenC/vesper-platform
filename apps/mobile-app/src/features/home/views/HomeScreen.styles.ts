@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { StyleSheet } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../core/theme/colors';

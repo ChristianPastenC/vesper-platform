@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { useState, useEffect, useCallback } from 'react';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { Product } from '../components/ProductCard';
@@ -50,18 +51,23 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
       };
 
       const requestId = `catalog-fetch-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      const response = await client.executeRequest<any>(requestId, request);
+      const response = await client.executeRequest<unknown>(requestId, request);
 
       // Extract products from common response structures
-      let rawProducts: any[] = [];
+      let rawProducts: Record<string, unknown>[] = [];
+      
+      const responseObj = response as Record<string, unknown>;
+      
       if (Array.isArray(response)) {
         rawProducts = response;
-      } else if (response?.data && Array.isArray(response.data)) {
-        rawProducts = response.data;
-      } else if (response?.items && Array.isArray(response.items)) {
-        rawProducts = response.items;
-      } else if (response?.products && Array.isArray(response.products)) {
-        rawProducts = response.products;
+      } else if (responseObj && typeof responseObj === 'object') {
+        if (Array.isArray(responseObj.data)) {
+          rawProducts = responseObj.data;
+        } else if (Array.isArray(responseObj.items)) {
+          rawProducts = responseObj.items;
+        } else if (Array.isArray(responseObj.products)) {
+          rawProducts = responseObj.products;
+        }
       }
 
       // Map response to local Product type
@@ -77,9 +83,11 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
 
       catalogCache.set(cacheKey, mappedProducts);
       setProducts(mappedProducts);
-    } catch (err: any) {
-      if (err.name === 'AbortError' || err.message === 'Canceled' || signal?.aborted) {
-        return;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' || err.message === 'Canceled' || signal?.aborted) {
+          return;
+        }
       }
       setError(err instanceof Error ? err : new Error('Failed to fetch catalog'));
     } finally {

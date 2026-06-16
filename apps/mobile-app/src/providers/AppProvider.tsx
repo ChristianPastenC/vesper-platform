@@ -1,11 +1,17 @@
 import React, { createContext, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SovereignClientCore } from '@sovereign/secure-client';
+
 import i18n from '../core/i18n/i18n';
 import { useTheme } from '../core/theme/useTheme';
 import { ThemeColors } from '../core/theme/colors';
 import { useAppStore } from '../store/useAppStore';
+
+import { useSovereignClient } from './useSovereignClient';
+import { createAppProviderStyles } from './AppProvider.styles';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,24 +31,19 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
-import { SovereignClientCore } from '@sovereign/secure-client';
+export interface SovereignContextType {
+  client: SovereignClientCore;
+  dpopPublicKey: JsonWebKey | null;
+}
 
-// We provide a dummy crypto provider for now, since mock: true will force 
-// SovereignMemoryQueue to use SovereignSecureClientFallback in JS.
-const dummyCryptoProvider = {} as any;
-
-const secureClient = SovereignClientCore.getInstance({
-  cryptoProvider: dummyCryptoProvider,
-  networkResolver: async () => true,
-  mock: true,
-  networkAdapter: undefined,
-});
-
-console.log('[App] SovereignClientCore instantiated in mock mode. Watchdog should be active.');
+// Global context for accessing Sovereign Client and public keys
+export const SovereignClientContext = createContext<SovereignContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Logic
   const theme = useTheme();
   const language = useAppStore((state) => state.language);
+  const { client, isBootstrapped, dpopPublicKey } = useSovereignClient();
 
   useEffect(() => {
     if (language) {
@@ -50,13 +51,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [language]);
 
+  // Styles
+  const styles = createAppProviderStyles(theme.colors);
+
+  // Render blocking state
+  if (!isBootstrapped) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  // Main Render
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <I18nextProvider i18n={i18n}>
-          <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
-        </I18nextProvider>
-      </QueryClientProvider>
+      <SovereignClientContext.Provider value={{ client, dpopPublicKey }}>
+        <QueryClientProvider client={queryClient}>
+          <I18nextProvider i18n={i18n}>
+            <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
+          </I18nextProvider>
+        </QueryClientProvider>
+      </SovereignClientContext.Provider>
     </SafeAreaProvider>
   );
 };

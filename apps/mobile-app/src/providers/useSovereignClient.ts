@@ -1,0 +1,55 @@
+import { useState, useEffect } from 'react';
+import { SovereignClientCore } from '@sovereign/secure-client';
+import { nativeCryptoProvider } from '../core/crypto/NativeCryptoProvider';
+import { 
+  networkResolver, 
+  startNetworkTransitionsListener, 
+  stopNetworkTransitionsListener 
+} from '../core/network/networkResolver';
+
+// 1. Initialize the real SovereignClientCore instance
+export const secureClient = SovereignClientCore.getInstance({
+  cryptoProvider: nativeCryptoProvider,
+  networkResolver: networkResolver,
+  enableAutoDPoP: true,
+  mock: false,
+});
+
+export const useSovereignClient = () => {
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const [dpopPublicKey, setDpopPublicKey] = useState<JsonWebKey | null>(null);
+
+  useEffect(() => {
+    // Setup Network listener to process inactive queues on reconnection
+    startNetworkTransitionsListener(secureClient, async () => {
+      // Identity validation stub: validate against local auth token later
+      return true;
+    });
+
+    // Bootstrap DPoP keys asynchronously before the first protected render
+    const initSovereignClient = async () => {
+      try {
+        const jwk = await secureClient.bootstrap();
+        setDpopPublicKey(jwk);
+        console.log('[useSovereignClient] Successfully bootstrapped Sovereign Client and DPoP keys.');
+      } catch (error) {
+        console.error('[useSovereignClient] Failed to bootstrap SovereignClientCore DPoP keys:', error);
+      } finally {
+        setIsBootstrapped(true);
+      }
+    };
+
+    initSovereignClient();
+
+    // Cleanup listeners on unmount
+    return () => {
+      stopNetworkTransitionsListener();
+    };
+  }, []);
+
+  return {
+    client: secureClient,
+    isBootstrapped,
+    dpopPublicKey,
+  };
+};

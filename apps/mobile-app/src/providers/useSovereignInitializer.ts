@@ -8,12 +8,29 @@ import {
 } from '../core/network/networkResolver';
 import { validateHandshake } from '../core/network/handshakeValidator';
 
+// Import useAppStore correctly at runtime to avoid circular dependency issues at boot
+import { useAppStore } from '../store/useAppStore';
+
 // 1. Initialize the real SovereignClientCore instance
 export const secureClient = SovereignClientCore.getInstance({
   cryptoProvider: nativeCryptoProvider,
   networkResolver: networkResolver,
   enableAutoDPoP: true,
   mock: false,
+  observers: {
+    onSessionFreeze: () => {
+      console.log('[SovereignClient] Session Frozen (Volatile RAM active)');
+      useAppStore.getState().setFrozen(true);
+    },
+    onSessionResume: () => {
+      console.log('[SovereignClient] Session Resumed (Volatile RAM flushed)');
+      useAppStore.getState().setFrozen(false);
+    },
+    onSessionPurge: () => {
+      console.log('[SovereignClient] Session Purged (Security breach or forced drop)');
+      useAppStore.getState().setFrozen(false);
+    },
+  }
 });
 
 export const useSovereignInitializer = () => {

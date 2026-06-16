@@ -1,5 +1,5 @@
 import React, { createContext, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,6 +13,9 @@ import { useAppStore } from '../store/useAppStore';
 import { useSovereignInitializer } from './useSovereignInitializer';
 import { SovereignClientContext } from './SovereignClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
+import NetInfo from '@react-native-community/netinfo';
+import { validateHandshake } from '../core/network/handshakeValidator';
+import { startNetworkTransitionsListener, stopNetworkTransitionsListener } from '../core/network/networkResolver';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +49,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [language]);
 
+  // Network listener to process synchronized queue upon reconnection
+  useEffect(() => {
+    if (!client) return;
+
+    // (1) Call handshakeValidator to validate the channel
+    // (2) Replay the queue in FIFO order (handled natively by startNetworkTransitionsListener)
+    // (3) Invoke observers.onSessionResume to update the UI
+    startNetworkTransitionsListener(client, validateHandshake);
+
+    return () => {
+      stopNetworkTransitionsListener();
+    };
+  }, [client]);
+
   // Styles
   const styles = createAppProviderStyles(theme.colors);
 
@@ -58,13 +75,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }
 
+  // Global Store state
+  const isFrozen = useAppStore((state) => state.isFrozen);
+
   // Main Render
   return (
     <SafeAreaProvider>
       <SovereignClientContext.Provider value={{ client, dpopPublicKey }}>
         <QueryClientProvider client={queryClient}>
           <I18nextProvider i18n={i18n}>
-            <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
+            <ThemeContext.Provider value={theme}>
+              {isFrozen && (
+                <View style={{ backgroundColor: theme.colors.primary, padding: 12, paddingTop: 40, alignItems: 'center' }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+                    {i18n.t('system.pendingTransaction') || 'Transacción pendiente de sincronización...'}
+                  </Text>
+                </View>
+              )}
+              {children}
+            </ThemeContext.Provider>
           </I18nextProvider>
         </QueryClientProvider>
       </SovereignClientContext.Provider>

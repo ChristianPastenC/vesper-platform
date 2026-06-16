@@ -25,6 +25,7 @@ interface AppState {
   isAuthenticated: boolean;
   userName: string | null;
   isOnline: boolean;
+  isFrozen: boolean;
   language: Language;
   themeMode: ThemeMode;
   onlineCart: OnlineCartItem[];
@@ -35,6 +36,7 @@ interface AppState {
   logout: () => Promise<void>;
   initAuth: () => Promise<void>;
   toggleNetwork: () => void;
+  setFrozen: (frozen: boolean) => void;
   setLanguage: (lang: Language) => void;
   setThemeMode: (mode: ThemeMode) => void;
 
@@ -55,6 +57,7 @@ export const useAppStore = create<AppState>()(
       isAuthenticated: false,
       userName: null,
       isOnline: true,
+      isFrozen: false,
       language: 'en',
       themeMode: 'system',
       onlineCart: [],
@@ -82,6 +85,7 @@ export const useAppStore = create<AppState>()(
         set({ isAuthenticated: !!token });
       },
       toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
+      setFrozen: (frozen) => set({ isFrozen: frozen }),
       setLanguage: (lang) => {
         i18n.changeLanguage(lang);
         set({ language: lang });

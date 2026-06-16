@@ -1,12 +1,12 @@
 import React from 'react';
-import { FlatList, View, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { FlatList, View, TouchableOpacity, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useCatalog } from '../hooks/useCatalog';
+import { useSovereignCatalog } from '../hooks/useSovereignCatalog';
 import { ProductCard, Product } from '../components/ProductCard';
 import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
@@ -24,7 +24,26 @@ export const CatalogScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isEs = i18n?.language?.startsWith('es');
 
-  const { products, handleAddToOnline, handleAddToInStore } = useCatalog();
+  const { products, loading, error, isEmpty, refetch } = useSovereignCatalog();
+  const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
+  const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
+
+  const handleAddToOnline = (product: Product) => {
+    addToOnlineCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+    });
+  };
+
+  const handleAddToInStore = (product: Product) => {
+    addToInStoreCart({
+      id: product.id,
+      barcode: product.barcode,
+      name: product.name,
+      price: product.price,
+    });
+  };
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -144,6 +163,25 @@ export const CatalogScreen: React.FC = () => {
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
         ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          ) : error ? (
+            <TouchableOpacity onPress={() => refetch()} style={{ padding: 40, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.error || 'red', textAlign: 'center' }}>
+                Failed to load catalog. Tap to retry.
+              </Text>
+            </TouchableOpacity>
+          ) : isEmpty ? (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.text, textAlign: 'center' }}>
+                No products found.
+              </Text>
+            </View>
+          ) : null
+        }
         showsVerticalScrollIndicator={false}
       />
     </View>

@@ -1,13 +1,13 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { CatalogScreen } from './CatalogScreen';
-import { useCatalog } from '../hooks/useCatalog';
+import { useSovereignCatalog } from '../hooks/useSovereignCatalog';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../../../store/useAppStore';
 
-jest.mock('../hooks/useCatalog', () => ({
-  useCatalog: jest.fn(),
+jest.mock('../hooks/useSovereignCatalog', () => ({
+  useSovereignCatalog: jest.fn(),
 }));
 
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
@@ -63,15 +63,15 @@ describe('CatalogScreen View', () => {
       isDarkMode: false,
     });
 
-    (useCatalog as jest.Mock).mockReturnValue({
+    (useSovereignCatalog as jest.Mock).mockReturnValue({
       products: [
         { id: '1', name: 'Product 1', price: 10.0, barcode: '11111' },
         { id: '2', name: 'Product 2', price: 20.0, barcode: '22222' },
       ],
-      handleAddToOnline: jest.fn(),
-      handleAddToInStore: jest.fn(),
-      isAuthenticated: false,
-      logout: jest.fn(),
+      loading: false,
+      error: null,
+      isEmpty: false,
+      refetch: jest.fn(),
     });
   });
 

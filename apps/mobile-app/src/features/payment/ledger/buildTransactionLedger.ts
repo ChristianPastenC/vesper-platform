@@ -1,4 +1,4 @@
-import * as Crypto from 'expo-crypto';
+import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
 
 export interface TransactionBlock {
   index: number;
@@ -28,10 +28,8 @@ export const buildTransactionLedger = async <T = unknown>(
     // Concatenate payload, precedingHash, and timestamp to generate the hash
     const dataToHash = `${payload}${precedingHash}${timestamp}`;
     
-    const hash = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      dataToHash
-    );
+    const bytes = await nativeCryptoProvider.sha256(new TextEncoder().encode(dataToHash));
+    const hash = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
     const block: TransactionBlock = {
       index: i,

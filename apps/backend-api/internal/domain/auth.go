@@ -15,6 +15,11 @@ type UserCredentials struct {
 	Password string `json:"password"`
 }
 
+// RefreshRequest payload for refreshing tokens.
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 // Confirmation represents the confirmation claim for DPoP binding.
 type Confirmation struct {
 	Jkt string `json:"jkt"`
@@ -31,10 +36,12 @@ type TokenClaims struct {
 // AuthRepository defines the outbound port for querying user authorization details.
 type AuthRepository interface {
 	GetUserByUsername(ctx context.Context, username string) (User, string, error)
+	GetUserByID(ctx context.Context, id string) (User, error)
 }
 
 // TokenService defines the outbound port for signing and verifying tokens using asymmetric keys.
 type TokenService interface {
 	GenerateTokenPair(ctx context.Context, user User, jkt string) (string, string, error)
 	ValidateToken(ctx context.Context, tokenStr string) (*TokenClaims, error)
+	ValidateRefreshToken(ctx context.Context, refreshToken string) (User, error)
 }

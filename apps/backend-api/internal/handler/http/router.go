@@ -44,6 +44,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public Login
 		r.Post("/auth/login", cfg.AuthHandler.Login)
+		
+		// Public Refresh
+		r.Post("/auth/refresh", cfg.AuthHandler.Refresh)
 
 		// Public Catalog (ESB orchestrator for Fakestore API)
 		r.Get("/catalog", cfg.CatalogHandler.GetCatalog)

@@ -23,7 +23,7 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 	pubKey := &privKey.PublicKey
 
 	// 2. Initialize service
-	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute)
+	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, nil)
 
 	user := domain.User{
 		ID:       "usr_test_123",
@@ -63,7 +63,7 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 	// 5. Test validation fails with a wrong public key
 	wrongPrivKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	wrongPubKey := &wrongPrivKey.PublicKey
-	wrongSvc := auth.NewEcdsaTokenService(privKey, wrongPubKey, 1*time.Minute)
+	wrongSvc := auth.NewEcdsaTokenService(privKey, wrongPubKey, 1*time.Minute, nil)
 
 	_, err = wrongSvc.ValidateToken(ctx, accessToken)
 	if err == nil {

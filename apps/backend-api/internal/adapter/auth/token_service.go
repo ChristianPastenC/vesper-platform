@@ -26,10 +26,11 @@ type EcdsaTokenService struct {
 	privateKey *ecdsa.PrivateKey
 	publicKey  *ecdsa.PublicKey
 	tokenTTL   time.Duration
+	repo       domain.AuthRepository
 }
 
 // NewEcdsaTokenService creates an EcdsaTokenService instance.
-func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, tokenTTL time.Duration) *EcdsaTokenService {
+func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, tokenTTL time.Duration, repo domain.AuthRepository) *EcdsaTokenService {
 	if tokenTTL <= 0 {
 		tokenTTL = 15 * time.Minute
 	}
@@ -37,6 +38,7 @@ func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicK
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		tokenTTL:   tokenTTL,
+		repo:       repo,
 	}
 }
 
@@ -119,4 +121,20 @@ func (e *EcdsaTokenService) ValidateToken(ctx context.Context, tokenStr string) 
 	}
 
 	return &claims, nil
+}
+
+// ValidateRefreshToken checks if the refresh token is valid and returns the associated user.
+func (e *EcdsaTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
+	parts := strings.Split(refreshToken, "_")
+	if len(parts) != 3 || parts[0] != "ref" {
+		return domain.User{}, errors.New("token_service: invalid refresh token format")
+	}
+
+	userID := parts[2]
+	user, err := e.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return domain.User{}, errors.New("token_service: user not found for refresh token")
+	}
+
+	return user, nil
 }

@@ -49,3 +49,12 @@ func (a *AuthInteractor) GenerateTokenPair(ctx context.Context, user domain.User
 	}
 	return accessToken, refreshToken, nil
 }
+
+// RefreshTokens validates the refresh token and issues a new token pair.
+func (a *AuthInteractor) RefreshTokens(ctx context.Context, refreshToken string, jkt string) (string, string, error) {
+	user, err := a.tokenService.ValidateRefreshToken(ctx, refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+	return a.tokenService.GenerateTokenPair(ctx, user, jkt)
+}

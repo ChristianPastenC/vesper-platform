@@ -47,3 +47,13 @@ func (r *InMemoryUserRepository) GetUserByUsername(ctx context.Context, username
 	}
 	return user, r.passwords[username], nil
 }
+
+// GetUserByID retrieves the user details by ID.
+func (r *InMemoryUserRepository) GetUserByID(ctx context.Context, id string) (domain.User, error) {
+	for _, user := range r.users {
+		if user.ID == id {
+			return user, nil
+		}
+	}
+	return domain.User{}, errors.New("user_repository: user not found")
+}

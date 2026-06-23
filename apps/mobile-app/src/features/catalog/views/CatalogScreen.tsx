@@ -7,7 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useSovereignCatalog } from '../hooks/useSovereignCatalog';
+import { useCatalog } from '../hooks/useCatalog';
 import { ProductCard, Product } from '../components/ProductCard';
 import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
@@ -27,7 +27,7 @@ export const CatalogScreen: React.FC = () => {
   const isEs = i18n?.language?.startsWith('es');
 
   const [selectedCategory, setSelectedCategory] = React.useState<string | undefined>(undefined);
-  const { products, loading, error, isEmpty, refetch } = useSovereignCatalog(selectedCategory, 20);
+  const { products, loading, error, isEmpty, refetch } = useCatalog(selectedCategory, 20);
   const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
   const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
 

@@ -11,6 +11,10 @@ jest.mock('../../../core/auth/tokenStore', () => ({
   getAccessToken: jest.fn(),
 }));
 
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'mock-uuid'),
+}));
+
 describe('useSovereignCatalog', () => {
   const mockExecuteRequest = jest.fn();
 
@@ -23,7 +27,7 @@ describe('useSovereignCatalog', () => {
 
   it('fetches and returns products', async () => {
     mockExecuteRequest.mockResolvedValue([
-      { id: '1', name: 'Product 1', price: 10, barcode: '111' },
+      { id: 1, title: 'Product 1', price: 10, barcode: '111', description: 'desc', category: 'cat', image: 'url' },
     ]);
 
     const { result } = renderHook(() => useSovereignCatalog());
@@ -37,21 +41,6 @@ describe('useSovereignCatalog', () => {
     expect(result.current.products).toHaveLength(1);
     expect(result.current.products[0].name).toBe('Product 1');
     expect(result.current.error).toBeNull();
-  });
-
-  it('handles nested data structures', async () => {
-    mockExecuteRequest.mockResolvedValue({
-      data: [{ id: '2', name: 'Product 2', price: 20, barcode: '222' }]
-    });
-
-    const { result } = renderHook(() => useSovereignCatalog('cat-2', 20));
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    expect(result.current.products).toHaveLength(1);
-    expect(result.current.products[0].name).toBe('Product 2');
   });
 
   it('handles error', async () => {

@@ -1,44 +1,44 @@
-/* eslint-disable complexity */
 import { useState, useEffect, useCallback } from 'react';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { Product } from '../components/ProductCard';
 import { useSovereignClient } from '../../../providers/SovereignClientContext';
 import { SovereignAdapterRequest } from '@sovereign/secure-client';
+import { randomUUID } from 'expo-crypto';
 
-const catalogCache = new Map<string, Product[]>();
+const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+
+export interface BackendProduct {
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  category: string;
+  image: string;
+  barcode: string;
+}
 
 export const useSovereignCatalog = (category?: string, limit: number = 20) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   const client = useSovereignClient();
 
-  const fetchCatalog = useCallback(async (signal?: AbortSignal, forceRefetch = false) => {
-    const cacheKey = `${category || 'all'}-${limit}`;
-    
-    // Evitar refetches si ya existe en caché, a menos que se fuerce
-    if (!forceRefetch && catalogCache.has(cacheKey)) {
-      setProducts(catalogCache.get(cacheKey)!);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
+  const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = await getAccessToken();
       const headers: Record<string, string> = {
         Accept: 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      let url = `/api/v1/catalog?limit=${limit}`;
+      let url = `${API_URL}/api/v1/catalog?limit=${limit}`;
       if (category) {
         url += `&category=${encodeURIComponent(category)}`;
       }
@@ -50,38 +50,19 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
         signal,
       };
 
-      const requestId = `catalog-fetch-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      const response = await client.executeRequest<unknown>(requestId, request);
+      const requestId = randomUUID();
+      const response = await client.executeRequest<BackendProduct[]>(requestId, request);
 
-      // Extract products from common response structures
-      let rawProducts: Record<string, unknown>[] = [];
-      
-      const responseObj = response as Record<string, unknown>;
-      
-      if (Array.isArray(response)) {
-        rawProducts = response;
-      } else if (responseObj && typeof responseObj === 'object') {
-        if (Array.isArray(responseObj.data)) {
-          rawProducts = responseObj.data;
-        } else if (Array.isArray(responseObj.items)) {
-          rawProducts = responseObj.items;
-        } else if (Array.isArray(responseObj.products)) {
-          rawProducts = responseObj.products;
-        }
-      }
-
-      // Map response to local Product type
-      const mappedProducts: Product[] = rawProducts.map((p) => ({
-        id: String(p.id ?? p._id ?? Math.random().toString()),
-        name: String(p.name ?? 'Unknown Product'),
-        price: Number(p.price ?? 0),
-        barcode: String(p.barcode ?? ''),
-        image: p.image ? String(p.image) : undefined,
+      const mappedProducts: Product[] = response.map((p) => ({
+        id: String(p.id),
+        name: p.title,
+        price: p.price,
+        barcode: p.barcode,
+        image: p.image,
       }));
 
       if (signal?.aborted) return;
 
-      catalogCache.set(cacheKey, mappedProducts);
       setProducts(mappedProducts);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -99,16 +80,14 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
 
   useEffect(() => {
     const controller = new AbortController();
-    
-    fetchCatalog(controller.signal, false);
-
+    fetchCatalog(controller.signal);
     return () => {
       controller.abort();
     };
   }, [fetchCatalog]);
 
   const refetch = useCallback(() => {
-    fetchCatalog(undefined, true);
+    fetchCatalog();
   }, [fetchCatalog]);
 
   return {
@@ -116,6 +95,6 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
     loading,
     error,
     isEmpty: !loading && products.length === 0,
-    refetch
+    refetch,
   };
 };

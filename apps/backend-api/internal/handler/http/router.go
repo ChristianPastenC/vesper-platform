@@ -33,6 +33,10 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 
+	// Rate limiter for public routes (must be before CORS)
+	publicLimiter := middleware.PublicLimiter()
+	r.Use(publicLimiter.Middleware)
+
 	// 2. Global CORS configuration allowing Authorization and DPoP headers
 	r.Use(middleware.CORS(middleware.DefaultCORSConfig()))
 
@@ -55,9 +59,12 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		r.Group(func(r chi.Router) {
 			dpopValidator := middleware.NewDPoPValidator()
 			idempotencyManager := middleware.NewIdempotencyManager()
+			protectedLimiter := middleware.ProtectedLimiter()
 
 			// First validate the JWT token validity
 			r.Use(middleware.JWTAuth(cfg.TokenService))
+			// Apply protected rate limiting
+			r.Use(protectedLimiter.Middleware)
 			// Then validate client signature on DPoP header
 			r.Use(dpopValidator.Middleware)
 			// Apply idempotency interceptor

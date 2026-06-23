@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SovereignClientCore } from '@sovereign/secure-client';
+import { SovereignClientCore, FetchAdapter } from '@sovereign/secure-client';
 import { nativeCryptoProvider } from '../core/crypto/NativeCryptoProvider';
 import { 
   networkResolver, 
@@ -15,6 +15,7 @@ import { useAppStore } from '../store/useAppStore';
 export const secureClient = SovereignClientCore.getInstance({
   cryptoProvider: nativeCryptoProvider,
   networkResolver: networkResolver,
+  networkAdapter: new FetchAdapter(),
   enableAutoDPoP: true,
   mock: false,
   observers: {

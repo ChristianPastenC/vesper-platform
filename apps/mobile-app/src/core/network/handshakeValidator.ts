@@ -1,4 +1,4 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
 
 const getChallenge = async (): Promise<string | null> => {
   const getRes = await fetch(`${API_URL}/api/handshake`, {
@@ -11,19 +11,17 @@ const getChallenge = async (): Promise<string | null> => {
   if (!getRes.ok) return null;
 
   const data = await getRes.json();
-  return data.challenge || data || null;
+  return data.encoded_challenge || data || null;
 };
 
 const verifyChallenge = async (challenge: unknown): Promise<boolean> => {
-  const encodedChallenge = encodeURIComponent(
-    typeof challenge === 'string' ? challenge : JSON.stringify(challenge)
-  );
+  const rawChallenge = typeof challenge === 'string' ? challenge : JSON.stringify(challenge);
 
   const postRes = await fetch(`${API_URL}/api/handshake`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Challenge-Token': encodedChallenge,
+      'X-Challenge-Token': rawChallenge,
     },
   });
 

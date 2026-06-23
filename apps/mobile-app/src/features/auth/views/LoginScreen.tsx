@@ -10,10 +10,8 @@ export const LoginScreen: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const {
-    name,
-    setName,
-    email,
-    setEmail,
+    username,
+    setUsername,
     password,
     setPassword,
     error,
@@ -40,34 +38,17 @@ export const LoginScreen: React.FC = () => {
 
         <View style={styles.inputGroup}>
           <Text variant="bold" style={styles.label}>
-            {t('auth.nameLabel')}
+            {t('auth.usernameLabel', 'Username')}
           </Text>
           <TextInput
             style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder={t('auth.namePlaceholder')}
+            value={username}
+            onChangeText={setUsername}
+            placeholder={t('auth.usernamePlaceholder', 'Enter your username')}
             placeholderTextColor={theme.colors.text + '50'}
-            autoCapitalize="words"
-            editable={!isPending}
-            testID="name-input"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text variant="bold" style={styles.label}>
-            {t('auth.emailLabel')}
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t('auth.emailPlaceholder')}
-            placeholderTextColor={theme.colors.text + '50'}
-            keyboardType="email-address"
             autoCapitalize="none"
             editable={!isPending}
-            testID="email-input"
+            testID="username-input"
           />
         </View>
 

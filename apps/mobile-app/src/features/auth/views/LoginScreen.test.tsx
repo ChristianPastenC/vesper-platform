@@ -14,7 +14,7 @@ jest.mock('../../../core/theme/useTheme', () => ({
 
 describe('LoginScreen View', () => {
   const mockLogin = jest.fn();
-  const mockSetEmail = jest.fn();
+  const mockSetUsername = jest.fn();
   const mockSetPassword = jest.fn();
 
   beforeEach(() => {
@@ -34,10 +34,8 @@ describe('LoginScreen View', () => {
 
   it('renders form inputs correctly', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      name: '',
-      setName: jest.fn(),
-      email: '',
-      setEmail: mockSetEmail,
+      username: '',
+      setUsername: mockSetUsername,
       password: '',
       setPassword: mockSetPassword,
       error: null,
@@ -49,17 +47,14 @@ describe('LoginScreen View', () => {
     const { getByTestId, getByText } = render(<LoginScreen />);
 
     expect(getByText('auth.title')).toBeTruthy();
-    expect(getByTestId('name-input')).toBeTruthy();
-    expect(getByTestId('email-input')).toBeTruthy();
+    expect(getByTestId('username-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
   });
 
   it('triggers input and login submission callbacks', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      name: 'John Doe',
-      setName: jest.fn(),
-      email: 'test@example.com',
-      setEmail: mockSetEmail,
+      username: 'johndoe',
+      setUsername: mockSetUsername,
       password: 'password123',
       setPassword: mockSetPassword,
       error: null,
@@ -77,13 +72,11 @@ describe('LoginScreen View', () => {
 
   it('displays error banner if validation fail error is returned', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      name: '',
-      setName: jest.fn(),
-      email: '',
-      setEmail: mockSetEmail,
+      username: '',
+      setUsername: mockSetUsername,
       password: '',
       setPassword: mockSetPassword,
-      error: 'Please enter a valid email and password.',
+      error: 'Please enter a valid username and password.',
       isPending: false,
       handleLogin: mockLogin,
       t: (key: string) => key,
@@ -91,6 +84,6 @@ describe('LoginScreen View', () => {
 
     const { getByText, getByTestId } = render(<LoginScreen />);
     expect(getByTestId('login-error-banner')).toBeTruthy();
-    expect(getByText('Please enter a valid email and password.')).toBeTruthy();
+    expect(getByText('Please enter a valid username and password.')).toBeTruthy();
   });
 });

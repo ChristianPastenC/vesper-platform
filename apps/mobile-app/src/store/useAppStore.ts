@@ -35,6 +35,7 @@ interface AppState {
   signUp: (email: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   initAuth: () => Promise<void>;
+  setIsAuthenticated: (auth: boolean, username?: string) => void;
   toggleNetwork: () => void;
   setFrozen: (frozen: boolean) => void;
   setLanguage: (lang: Language) => void;
@@ -84,6 +85,7 @@ export const useAppStore = create<AppState>()(
         const token = await getAccessToken();
         set({ isAuthenticated: !!token });
       },
+      setIsAuthenticated: (auth, username) => set({ isAuthenticated: auth, userName: username || null }),
       toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
       setFrozen: (frozen) => set({ isFrozen: frozen }),
       setLanguage: (lang) => {

@@ -3,11 +3,21 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { saveTokens } from '../../../core/auth/tokenStore';
 import { encodeJsonBody, SovereignAdapterRequest } from '@sovereign/secure-client';
+import { randomUUID } from 'expo-crypto';
 
 import { useAppStore } from '../../../store/useAppStore';
 import { useSovereignClient } from '../../../providers/SovereignClientContext';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+}
+
 export interface AuthResponse {
+  user: User;
   accessToken: string;
   refreshToken: string;
 }
@@ -15,24 +25,16 @@ export interface AuthResponse {
 export const useSovereignLogin = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const loginAction = useAppStore((state) => state.login);
   const client = useSovereignClient();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   const handleLogin = async () => {
     setError(null);
-    if (!name || !email || !password) {
-      setError(t('auth.invalidError'));
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) || password.length < 4) {
+    if (!username || !password) {
       setError(t('auth.invalidError'));
       return;
     }
@@ -42,36 +44,34 @@ export const useSovereignLogin = () => {
 
       const request: SovereignAdapterRequest = {
         method: 'POST',
-        url: '/api/v1/auth/login',
+        url: `${API_URL}/api/v1/auth/login`,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: encodeJsonBody({ username: email, password }),
+        body: encodeJsonBody({ username, password }),
       };
 
-      const requestId = 'login-' + Date.now().toString() + '-' + Math.random().toString(36).substring(2);
+      const requestId = randomUUID();
       
       const response = await client.executeRequest<AuthResponse>(requestId, request);
       
-      await saveTokens(response.accessToken || '', response.refreshToken || '');
+      await saveTokens(response.accessToken, response.refreshToken);
 
-      await loginAction(email, name);
+      useAppStore.getState().setIsAuthenticated(true, response.user.username);
       
       if (navigation.canGoBack()) {
         navigation.goBack();
       }
-    } catch (err) {
-      setError(t('auth.invalidError'));
+    } catch (err: any) {
+      setError(err.message || t('auth.invalidError'));
     } finally {
       setIsPending(false);
     }
   };
 
   return {
-    name,
-    setName,
-    email,
-    setEmail,
+    username,
+    setUsername,
     password,
     setPassword,
     error,

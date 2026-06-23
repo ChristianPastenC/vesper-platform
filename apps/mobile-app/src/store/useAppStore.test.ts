@@ -80,6 +80,24 @@ describe('useAppStore', () => {
     expect(result.current.isAuthenticated).toBe(true);
   });
 
+  it('setIsAuthenticated sets auth state and username', () => {
+    const { result } = renderHook(() => useAppStore());
+
+    act(() => {
+      result.current.setIsAuthenticated(true, 'some_user');
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.userName).toBe('some_user');
+
+    act(() => {
+      result.current.setIsAuthenticated(false);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.userName).toBeNull();
+  });
+
   it('useIsAuthenticated returns the auth state', () => {
     const { result: storeResult } = renderHook(() => useAppStore());
     act(() => {

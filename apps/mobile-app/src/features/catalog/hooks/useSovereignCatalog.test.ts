@@ -1,10 +1,10 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { useSovereignCatalog } from './useSovereignCatalog';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 
-jest.mock('../../../providers/SovereignClientContext', () => ({
-  useSovereignClient: jest.fn(),
+jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
+  useAuthenticatedRequest: jest.fn(),
 }));
 
 jest.mock('../../../core/auth/tokenStore', () => ({
@@ -21,7 +21,7 @@ describe('useSovereignCatalog', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    (useSovereignClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
+    (useAuthenticatedRequest as jest.Mock).mockReturnValue({ execute: mockExecuteRequest });
     (getAccessToken as jest.Mock).mockResolvedValue('mock-token');
   });
 

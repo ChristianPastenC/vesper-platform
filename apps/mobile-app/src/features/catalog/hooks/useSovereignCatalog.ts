@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { Product } from '../components/ProductCard';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { SovereignAdapterRequest } from '@sovereign/secure-client';
 import { randomUUID } from 'expo-crypto';
 
@@ -22,7 +22,7 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const client = useSovereignClient();
+  const { execute } = useAuthenticatedRequest();
 
   const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -51,7 +51,7 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
       };
 
       const requestId = randomUUID();
-      const response = await client.executeRequest<BackendProduct[]>(requestId, request);
+      const response = await execute<BackendProduct[]>(requestId, request);
 
       const mappedProducts: Product[] = response.map((p) => ({
         id: String(p.id),
@@ -76,7 +76,7 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
         setLoading(false);
       }
     }
-  }, [client, category, limit]);
+  }, [execute, category, limit]);
 
   useEffect(() => {
     const controller = new AbortController();

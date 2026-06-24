@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useInStoreCheckoutMutation } from './useInStoreCheckoutMutation';
 import { useAppStore } from '../../../store/useAppStore';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
 import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
@@ -12,8 +12,8 @@ jest.mock('../../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
-jest.mock('../../../providers/SovereignClientContext', () => ({
-  useSovereignClient: jest.fn(),
+jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
+  useAuthenticatedRequest: jest.fn(),
 }));
 
 jest.mock('../../../core/auth/tokenStore', () => ({
@@ -46,7 +46,7 @@ describe('useInStoreCheckoutMutation', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       return selector({ clearInStoreCart: mockClearCart });
     });
-    (useSovereignClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
+    (useAuthenticatedRequest as jest.Mock).mockReturnValue({ execute: mockExecuteRequest });
     (getAccessToken as jest.Mock).mockResolvedValue('mock-token');
     (buildTransactionLedger as jest.Mock).mockResolvedValue([{ hash: 'mock-ledger-hash' }]);
   });

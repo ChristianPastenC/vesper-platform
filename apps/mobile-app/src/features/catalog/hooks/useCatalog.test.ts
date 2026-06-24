@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor, act } from '@testing-library/react-native';
 import { useCatalog } from './useCatalog';
 import { useSovereignCatalog } from './useSovereignCatalog';
 import { useIsAuthenticated } from '../../../store/useAppStore';

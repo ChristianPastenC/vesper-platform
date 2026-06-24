@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAppStore } from '../../../store/useAppStore';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
 import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
@@ -26,7 +26,7 @@ interface SovereignCheckoutResponse {
 
 export const useOnlineCheckoutMutation = () => {
   const clearOnlineCart = useAppStore((state) => state.clearOnlineCart);
-  const client = useSovereignClient();
+  const { execute } = useAuthenticatedRequest();
 
   return useMutation<CheckoutResponse, Error, CheckoutPayload>({
     mutationFn: async (payload: CheckoutPayload) => {
@@ -50,7 +50,7 @@ export const useOnlineCheckoutMutation = () => {
         'X-Idempotency-Key': idempotencyKey,
       });
 
-      const response = await client.executeRequest<SovereignCheckoutResponse>(randomUUID(), {
+      const response = await execute<SovereignCheckoutResponse>(randomUUID(), {
         method: 'POST',
         url: `${API_URL}/api/v1/checkout/online`,
         headers,

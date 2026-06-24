@@ -9,15 +9,14 @@ jsi::Value SovereignSecureClient::get(jsi::Runtime& rt, const jsi::PropNameID& n
     auto propName = name.utf8(rt);
 
     if (propName == "verifyIntegrity") {
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "verifyIntegrity"), 0,
+        return jsi::Function::createFromHostFunction(rt, name, 0,
             [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
-                bool result = this->verifyIntegrity();
-                return jsi::Value(result);
+                return jsi::Value(this->verifyIntegrity());
             });
     }
 
     if (propName == "toggleNetworkSim") {
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "toggleNetworkSim"), 1,
+        return jsi::Function::createFromHostFunction(rt, name, 1,
             [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
                 if (count > 0 && args[0].isBool()) {
                     this->toggleNetworkSim(args[0].getBool());
@@ -27,9 +26,91 @@ jsi::Value SovereignSecureClient::get(jsi::Runtime& rt, const jsi::PropNameID& n
     }
 
     if (propName == "clearQueue") {
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "clearQueue"), 0,
+        return jsi::Function::createFromHostFunction(rt, name, 0,
             [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
                 this->clearQueue();
+                return jsi::Value::undefined();
+            });
+    }
+
+    if (propName == "executeTransaction") {
+        return jsi::Function::createFromHostFunction(rt, name, 3,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 2 && args[0].isString() && args[1].isObject() && args[2].isNumber()) {
+                    std::string id = args[0].getString(runtime).utf8(runtime);
+                    jsi::Object obj = args[1].getObject(runtime);
+                    if (obj.isArrayBuffer(runtime)) {
+                        jsi::ArrayBuffer jsiBuffer = obj.getArrayBuffer(runtime);
+                        auto buffer = ArrayBuffer::copy(jsiBuffer.data(runtime), jsiBuffer.size(runtime));
+                        double ttl = args[2].getNumber();
+                        bool result = this->executeTransaction(id, buffer, ttl);
+                        return jsi::Value(result);
+                    }
+                }
+                return jsi::Value(false);
+            });
+    }
+
+    if (propName == "getQueueStatus") {
+        return jsi::Function::createFromHostFunction(rt, name, 0,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                auto status = this->getQueueStatus();
+                jsi::Object obj(runtime);
+                obj.setProperty(runtime, "size", status.size);
+                obj.setProperty(runtime, "isLocked", status.isLocked);
+                obj.setProperty(runtime, "isIntegrityCompromised", status.isIntegrityCompromised);
+                return obj;
+            });
+    }
+
+    if (propName == "dequeueTransaction") {
+        return jsi::Function::createFromHostFunction(rt, name, 1,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 0 && args[0].isString()) {
+                    std::string id = args[0].getString(runtime).utf8(runtime);
+                    this->dequeueTransaction(id);
+                }
+                return jsi::Value::undefined();
+            });
+    }
+
+    if (propName == "zeroize") {
+        return jsi::Function::createFromHostFunction(rt, name, 1,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 0 && args[0].isString()) {
+                    std::string id = args[0].getString(runtime).utf8(runtime);
+                    this->zeroize(id);
+                }
+                return jsi::Value::undefined();
+            });
+    }
+
+    if (propName == "getQueueIds") {
+        return jsi::Function::createFromHostFunction(rt, name, 0,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                auto ids = this->getQueueIds();
+                jsi::Array result(runtime, ids.size());
+                for (size_t i = 0; i < ids.size(); ++i) {
+                    result.setValueAtIndex(runtime, i, jsi::String::createFromUtf8(runtime, ids[i]));
+                }
+                return result;
+            });
+    }
+
+    if (propName == "getTransactionPayload") {
+        return jsi::Function::createFromHostFunction(rt, name, 1,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 0 && args[0].isString()) {
+                    std::string id = args[0].getString(runtime).utf8(runtime);
+                    auto payload = this->getTransactionPayload(id);
+                    if (payload != nullptr) {
+                        jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
+                        jsi::Object jsiBufferObj = arrayBufferCtor.callAsConstructor(runtime, static_cast<double>(payload->size())).getObject(runtime);
+                        jsi::ArrayBuffer buf = jsiBufferObj.getArrayBuffer(runtime);
+                        std::memcpy(buf.data(runtime), payload->data(), payload->size());
+                        return jsiBufferObj;
+                    }
+                }
                 return jsi::Value::undefined();
             });
     }

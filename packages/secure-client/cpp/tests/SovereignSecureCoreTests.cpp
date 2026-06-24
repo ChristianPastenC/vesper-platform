@@ -132,4 +132,26 @@ TEST_F(SovereignSecureCoreTest, ConcurrentTransactionExecution) {
     EXPECT_TRUE(core.verifyIntegrity());
 }
 
+TEST_F(SovereignSecureCoreTest, GetQueueIdsReturnsCorrectIds) {
+    std::vector<uint8_t> payload = {0xAA};
+    
+    // Add multiple transactions
+    core.executeTransaction("txn_id_1", payload, 1000.0);
+    core.executeTransaction("txn_id_2", payload, 1000.0);
+    core.executeTransaction("txn_id_3", payload, 1000.0);
+    
+    // Dequeue middle to test order/tracking
+    core.dequeueTransaction("txn_id_2");
+    
+    auto ids = core.getQueueIds();
+    EXPECT_EQ(ids.size(), 2);
+    
+    // Check if the exact expected IDs are returned (order dependent or independent based on core logic, but we can verify presence)
+    bool hasTxn1 = std::find(ids.begin(), ids.end(), "txn_id_1") != ids.end();
+    bool hasTxn3 = std::find(ids.begin(), ids.end(), "txn_id_3") != ids.end();
+    
+    EXPECT_TRUE(hasTxn1);
+    EXPECT_TRUE(hasTxn3);
+}
+
 } // namespace sovereign::secure::test

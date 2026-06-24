@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"sovereign-core/backend-api/internal/domain"
 )
@@ -90,5 +91,28 @@ func TestFakeStoreGateway_GetProducts(t *testing.T) {
 
 		ctx := context.Background()
 		gw.GetProducts(ctx, domain.CatalogQuery{Category: "jewelery"})
+	})
+
+	t.Run("network timeout", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// To avoid the test hanging for 4 seconds, we will pass a context with a short timeout to GetProducts
+			time.Sleep(100 * time.Millisecond)
+		}))
+		defer ts.Close()
+
+		gw := NewFakeStoreGateway()
+		gw.baseURL = ts.URL
+
+		// We cancel earlier to simulate the internal 4s timeout without actually waiting 4s in unit tests
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		defer cancel()
+
+		_, err := gw.GetProducts(ctx, domain.CatalogQuery{})
+		if err == nil {
+			t.Fatalf("expected error for network timeout, got nil")
+		}
+		if err.Error() != "timeout" {
+			t.Errorf("expected timeout error, got: %v", err)
+		}
 	})
 }

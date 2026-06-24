@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,7 +43,7 @@ func NewFakeStoreGateway() *FakeStoreGateway {
 // GetProducts fetches product data from FakeStoreAPI, applying category and limit parameters,
 // and maps them into optimized domain Products with simulated EAN-13 barcodes.
 func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.CatalogQuery) ([]domain.Product, error) {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()
 
 	targetURL := f.baseURL
@@ -64,6 +65,9 @@ func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.Catalog
 
 	resp, err := f.client.Do(req)
 	if err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("timeout")
+		}
 		return nil, fmt.Errorf("fakestore_gateway: request failed: %w", err)
 	}
 	defer resp.Body.Close()

@@ -44,8 +44,8 @@ func TestStripeGateway_CreateCharge(t *testing.T) {
 		if err == nil {
 			t.Fatalf("expected error for timeout simulation")
 		}
-		if !strings.Contains(err.Error(), "mock request failed") {
-			t.Errorf("expected mock request failed error, got: %v", err)
+		if !strings.Contains(err.Error(), "timeout") {
+			t.Errorf("expected timeout error, got: %v", err)
 		}
 	})
 

@@ -5,6 +5,38 @@ namespace sovereign::secure {
 SovereignSecureClient::SovereignSecureClient()
     : HybridSovereignSecureClientSpec() {}
 
+jsi::Value SovereignSecureClient::get(jsi::Runtime& rt, const jsi::PropNameID& name) {
+    auto propName = name.utf8(rt);
+
+    if (propName == "verifyIntegrity") {
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "verifyIntegrity"), 0,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                bool result = this->verifyIntegrity();
+                return jsi::Value(result);
+            });
+    }
+
+    if (propName == "toggleNetworkSim") {
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "toggleNetworkSim"), 1,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 0 && args[0].isBool()) {
+                    this->toggleNetworkSim(args[0].getBool());
+                }
+                return jsi::Value::undefined();
+            });
+    }
+
+    if (propName == "clearQueue") {
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "clearQueue"), 0,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                this->clearQueue();
+                return jsi::Value::undefined();
+            });
+    }
+
+    return jsi::Value::undefined();
+}
+
 bool SovereignSecureClient::executeTransaction(
     const std::string& id,
     const std::shared_ptr<ArrayBuffer>& serializedRequest,

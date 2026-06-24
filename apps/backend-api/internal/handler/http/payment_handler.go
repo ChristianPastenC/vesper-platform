@@ -23,9 +23,10 @@ func NewPaymentHandler(interactor *usecase.PaymentInteractor) *PaymentHandler {
 
 // CheckoutRequest wraps the cart total and card details sent by the client.
 type CheckoutRequest struct {
-	Total  float64                   `json:"total"`
-	Card   domain.CardDetails        `json:"card"`
-	Ledger []domain.TransactionBlock `json:"ledger"`
+	Total   float64                   `json:"total"`
+	Card    domain.CardDetails        `json:"card"`
+	Ledger  []domain.TransactionBlock `json:"ledger"`
+	UseMock bool                      `json:"use_mock,omitempty"`
 }
 
 // ProcessPayment handles POST /api/v1/checkout/pay. It extracts the authenticated
@@ -72,6 +73,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 3. Invoke the business logic interactor
+	req.Card.Simulate = req.UseMock
 	resp, err := h.interactor.ProcessOrder(r.Context(), req.Total, req.Card)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())

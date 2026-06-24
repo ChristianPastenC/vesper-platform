@@ -7,56 +7,98 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/stripe/stripe-go/v79"
+	"github.com/stripe/stripe-go/v79/charge"
 
 	"sovereign-core/backend-api/internal/domain"
 )
 
-// StripeGateway implements domain.PaymentGateway by mocking Stripe API calls.
+// StripeGateway implements domain.PaymentGateway using the official Stripe SDK
+// or a mock transport fallback.
 type StripeGateway struct {
-	client *http.Client
+	mockClient *http.Client
 }
 
-// NewStripeGateway initializes a StripeGateway with an http.Client containing
-// a custom RoundTripper that intercepts HTTP requests and returns mock sandbox responses.
-func NewStripeGateway() *StripeGateway {
-	return &StripeGateway{
-		client: &http.Client{
+// NewStripeGateway initializes a StripeGateway.
+func NewStripeGateway() (*StripeGateway, error) {
+	gateway := &StripeGateway{
+		mockClient: &http.Client{
 			Timeout:   5 * time.Second,
 			Transport: NewResilientRoundTripper(&stripeMockTransport{}),
 		},
 	}
+
+	key := os.Getenv("STRIPE_SECRET_KEY")
+	if key == "" {
+		slog.Error("STRIPE_SECRET_KEY is absent")
+		return gateway, errors.New("stripe_gateway: missing STRIPE_SECRET_KEY")
+	}
+
+	stripe.Key = key
+	return gateway, nil
 }
 
-// CreateCharge executes a simulated Stripe charge request, enforcing a strict egress timeout.
+// CreateCharge executes a Stripe charge request. It uses the official SDK if configured,
+// otherwise falls back to the mock if simulated or if the key is missing.
 func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, currency string, card domain.CardDetails) (domain.TransactionResponse, error) {
-	// Enforce strict 3-second timeout for the egress boundary call
+	// Fallback to mock if simulated or if we don't have an API key configured.
+	if card.Simulate || stripe.Key == "" {
+		return s.mockCreateCharge(ctx, amount, currency, card)
+	}
+
+	// 3. Official SDK implementation for sandbox
+	params := &stripe.ChargeParams{
+		Amount:   stripe.Int64(int64(amount * 100)),
+		Currency: stripe.String(currency),
+		Source:   &stripe.PaymentSourceSourceParams{Token: stripe.String("tok_visa")}, // Sandbox token
+	}
+	params.Context = ctx
+
+	ch, err := charge.New(params)
+	if err != nil {
+		// 5. Handle stripeErr *stripe.Error and return typed errors
+		if stripeErr, ok := err.(*stripe.Error); ok {
+			return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: card declined: %s (code: %s)", stripeErr.Msg, stripeErr.Code)
+		}
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: request failed: %w", err)
+	}
+
+	// 4. Map the result stripe.Charge to domain.TransactionResponse
+	return domain.TransactionResponse{
+		TransactionID: ch.ID,
+		Status:        string(ch.Status),
+	}, nil
+}
+
+// mockCreateCharge executes a simulated Stripe charge using the mock transport.
+func (s *StripeGateway) mockCreateCharge(ctx context.Context, amount float64, currency string, card domain.CardDetails) (domain.TransactionResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	// Prepare URL and body to emulate a real Stripe integration
 	reqURL := "https://api.stripe.com/v1/charges"
-	
-	// Create post payload simulating form urlencoding
 	payload := fmt.Sprintf("amount=%d&currency=%s&card_number=%s", int(amount*100), currency, card.Number)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL, strings.NewReader(payload))
 	if err != nil {
-		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to create request: %w", err)
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to create mock request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", "Bearer sk_test_mock_secret_key")
 
-	resp, err := s.client.Do(req)
+	resp, err := s.mockClient.Do(req)
 	if err != nil {
-		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: request failed: %w", err)
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: mock request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024))
 	if err != nil {
-		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to read response: %w", err)
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to read mock response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -69,7 +111,7 @@ func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, curren
 		if err := json.Unmarshal(bodyBytes, &stripeErr); err == nil && stripeErr.Error.Message != "" {
 			return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: card declined: %s (code: %s)", stripeErr.Error.Message, stripeErr.Error.Code)
 		}
-		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: transaction failed with status %d", resp.StatusCode)
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: mock transaction failed with status %d", resp.StatusCode)
 	}
 
 	var stripeResp struct {
@@ -77,7 +119,7 @@ func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, curren
 		Status string `json:"status"`
 	}
 	if err := json.Unmarshal(bodyBytes, &stripeResp); err != nil {
-		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to parse stripe response: %w", err)
+		return domain.TransactionResponse{}, fmt.Errorf("stripe_gateway: failed to parse mock stripe response: %w", err)
 	}
 
 	return domain.TransactionResponse{
@@ -90,7 +132,6 @@ func (s *StripeGateway) CreateCharge(ctx context.Context, amount float64, curren
 type stripeMockTransport struct{}
 
 func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Parse request data to determine response
 	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, err
@@ -98,7 +139,6 @@ func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, erro
 	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	bodyStr := string(bodyBytes)
 
-	// Validate authorization header
 	authHeader := req.Header.Get("Authorization")
 	if !strings.HasPrefix(authHeader, "Bearer ") {
 		return makeJSONResponse(http.StatusUnauthorized, `{
@@ -109,7 +149,6 @@ func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, erro
 		}`), nil
 	}
 
-	// Extract card number from request body
 	cardNumber := ""
 	for _, part := range strings.Split(bodyStr, "&") {
 		if strings.HasPrefix(part, "card_number=") {
@@ -117,8 +156,6 @@ func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, erro
 		}
 	}
 
-	// Implement sandbox behavior based on card number
-	// 4242 is Stripe's standard successful test card.
 	if strings.Contains(cardNumber, "4242") || cardNumber == "" {
 		txID := fmt.Sprintf("ch_%d", time.Now().UnixNano())
 		successJSON := fmt.Sprintf(`{
@@ -132,7 +169,6 @@ func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, erro
 		return makeJSONResponse(http.StatusOK, successJSON), nil
 	}
 
-	// If card number contains "0000", simulate card decline
 	if strings.Contains(cardNumber, "0000") {
 		return makeJSONResponse(http.StatusPaymentRequired, `{
 			"error": {
@@ -143,8 +179,7 @@ func (t *stripeMockTransport) RoundTrip(req *http.Request) (*http.Response, erro
 		}`), nil
 	}
 
-	// Any other card returns standard generic failure
-	return nil, errors.New("stripe_gateway: network timeout simulation (no card match)")
+	return nil, errors.New("stripe_gateway: mock request failed (no card match)")
 }
 
 func makeJSONResponse(statusCode int, body string) *http.Response {

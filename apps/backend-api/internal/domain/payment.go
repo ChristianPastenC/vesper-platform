@@ -17,6 +17,7 @@ type CardDetails struct {
 	ExpMonth int    `json:"expMonth"`
 	ExpYear  int    `json:"expYear"`
 	CVC      string `json:"cvc"`
+	Simulate bool   `json:"simulate,omitempty"`
 }
 
 // TransactionBlock represents a cryptographically secure, immutable step in the local client ledger.

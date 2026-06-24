@@ -41,7 +41,7 @@ export const useAuthenticatedRequest = () => {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ refreshToken }),
+            body: JSON.stringify({ refresh_token: refreshToken }),
           });
 
           // Si el refresh también falla con 401 u otro error de auth, limpia la sesión

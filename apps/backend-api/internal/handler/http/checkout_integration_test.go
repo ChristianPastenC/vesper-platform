@@ -5,9 +5,11 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -56,6 +58,10 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 		PaymentHandler: paymentHandler,
 	}
 
+	secretKey := "test-secret-key"
+	os.Setenv("PAYLOAD_SECRET_KEY", secretKey)
+	defer os.Unsetenv("PAYLOAD_SECRET_KEY")
+
 	// Real router with all injected middlewares
 	router := apiHTTP.NewRouter(cfg)
 
@@ -97,6 +103,10 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-Idempotency-Key", "idemp-key-1")
 		req.Header.Set("DPoP", generateValidDPoP(http.MethodPost, "/api/v1/checkout/pay", "jti-1"))
+		
+		mac := hmac.New(sha256.New, []byte(secretKey))
+		mac.Write([]byte(validBody))
+		req.Header.Set("X-Sovereign-Hash", hex.EncodeToString(mac.Sum(nil)))
 
 		// 4. Use httptest.NewRecorder() and the injected router directly
 		w := httptest.NewRecorder()
@@ -142,6 +152,10 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-Idempotency-Key", "idemp-key-2")
 		req.Header.Set("DPoP", generateValidDPoP(http.MethodPost, "/api/v1/checkout/pay", "jti-2"))
+
+		mac := hmac.New(sha256.New, []byte(secretKey))
+		mac.Write([]byte(invalidBody))
+		req.Header.Set("X-Sovereign-Hash", hex.EncodeToString(mac.Sum(nil)))
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)

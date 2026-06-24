@@ -69,6 +69,8 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			r.Use(dpopValidator.Middleware)
 			// Apply idempotency interceptor
 			r.Use(idempotencyManager.Middleware)
+			// Validate payload integrity via HMAC-SHA256
+			r.Use(middleware.HashValidator)
 
 			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
 			r.Post("/checkout/online", cfg.PaymentHandler.ProcessPayment)

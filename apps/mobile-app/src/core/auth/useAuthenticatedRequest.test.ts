@@ -112,7 +112,7 @@ describe('useAuthenticatedRequest', () => {
     expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: 'old-refresh-token' }),
+      body: JSON.stringify({ refresh_token: 'old-refresh-token' }),
     });
     expect(saveTokens).toHaveBeenCalledWith('new-access-token', 'new-refresh-token');
     

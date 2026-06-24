@@ -125,7 +125,7 @@ func (e *EcdsaTokenService) ValidateToken(ctx context.Context, tokenStr string) 
 
 // ValidateRefreshToken checks if the refresh token is valid and returns the associated user.
 func (e *EcdsaTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
-	parts := strings.Split(refreshToken, "_")
+	parts := strings.SplitN(refreshToken, "_", 3)
 	if len(parts) != 3 || parts[0] != "ref" {
 		return domain.User{}, errors.New("token_service: invalid refresh token format")
 	}

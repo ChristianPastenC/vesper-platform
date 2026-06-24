@@ -70,3 +70,41 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 		t.Error("Expected validation to fail with a mismatched public key")
 	}
 }
+
+func TestTokenService_ValidateRefreshToken(t *testing.T) {
+	ctx := context.Background()
+
+	privKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	pubKey := &privKey.PublicKey
+
+	repo := auth.NewInMemoryUserRepository() // uses real repo mock to resolve the ID
+	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, repo)
+
+	user, _, _ := repo.GetUserByUsername(ctx, "admin")
+	
+	_, refreshToken, err := svc.GenerateTokenPair(ctx, user, "")
+	if err != nil {
+		t.Fatalf("Failed to generate tokens: %v", err)
+	}
+
+	validatedUser, err := svc.ValidateRefreshToken(ctx, refreshToken)
+	if err != nil {
+		t.Fatalf("Expected valid refresh token, got err: %v", err)
+	}
+
+	if validatedUser.ID != user.ID {
+		t.Errorf("Expected user ID %s, got %s", user.ID, validatedUser.ID)
+	}
+
+	_, err = svc.ValidateRefreshToken(ctx, "invalid_format")
+	if err == nil {
+		t.Errorf("Expected error for invalid format")
+	}
+
+	// Wait, the format is ref_<timestamp>_<userID>
+	// Let's test a non-existent user
+	_, err = svc.ValidateRefreshToken(ctx, "ref_123456_nonexistent")
+	if err == nil {
+		t.Errorf("Expected error for non-existent user")
+	}
+}

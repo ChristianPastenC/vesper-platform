@@ -29,8 +29,8 @@ func NewInMemoryUserRepository() *InMemoryUserRepository {
 	}
 
 	passwords := map[string]string{
-		"admin":    "sovereign_secret",
-		"operator": "secure_pass_123",
+		"admin":    "$2a$10$OddE2NClmoqtz3M/i0kGNeRlxKjKpkJySNUDUqb3Ucbb7YX6OTPJm",
+		"operator": "$2a$10$OddE2NClmoqtz3M/i0kGNeRlxKjKpkJySNUDUqb3Ucbb7YX6OTPJm",
 	}
 
 	return &InMemoryUserRepository{

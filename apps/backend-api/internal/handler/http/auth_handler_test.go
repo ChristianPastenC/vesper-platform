@@ -57,7 +57,7 @@ func (m *mockTokenService) ValidateRefreshToken(ctx context.Context, refreshToke
 }
 
 func TestAuthHandler_Login(t *testing.T) {
-	repo := &mockAuthRepo{user: domain.User{ID: "1", Username: "testuser"}, password: "password123"}
+	repo := &mockAuthRepo{user: domain.User{ID: "1", Username: "testuser"}, password: "$2a$10$OddE2NClmoqtz3M/i0kGNeRlxKjKpkJySNUDUqb3Ucbb7YX6OTPJm"}
 	svc := &mockTokenService{accessToken: "acc", refreshToken: "ref"}
 	interactor := usecase.NewAuthInteractor(repo, svc)
 	handler := apiHTTP.NewAuthHandler(interactor)

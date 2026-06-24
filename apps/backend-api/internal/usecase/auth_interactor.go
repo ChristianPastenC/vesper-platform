@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"sovereign-core/backend-api/internal/domain"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthInteractor manages user authentication and secure token issuance.
@@ -34,7 +35,7 @@ func (a *AuthInteractor) AuthenticateUser(ctx context.Context, username, passwor
 
 	// Simple password verification. In a real-world system, use bcrypt/argon2.
 	// For this baseline, we do a simple string comparison against the mock data.
-	if password != storedPassword {
+	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
 		return domain.User{}, errors.New("auth_interactor: invalid credentials")
 	}
 

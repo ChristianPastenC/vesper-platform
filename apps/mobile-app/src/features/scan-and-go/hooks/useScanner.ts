@@ -4,6 +4,9 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { randomUUID } from 'expo-crypto';
+import { encodeHeaders } from '@sovereign/secure-client';
+import { getAccessToken } from '../../../core/auth/tokenStore';
+import { BackendProduct } from '../../../features/catalog/hooks/useSovereignCatalog';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
 
@@ -33,10 +36,16 @@ export const useScanner = () => {
 
   const resolveProduct = async (barcode: string): Promise<ScannableProduct | null> => {
     try {
-      const response = await execute<any[]>(randomUUID(), {
+      const token = await getAccessToken();
+      const encodedHeaders = encodeHeaders({
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      });
+
+      const response = await execute<BackendProduct[]>(randomUUID(), {
         method: 'GET',
         url: `${API_URL}/api/v1/catalog?barcode=${encodeURIComponent(barcode)}`,
-        headers: { Accept: 'application/json' },
+        headers: encodedHeaders,
       });
 
       if (response && response.length > 0) {

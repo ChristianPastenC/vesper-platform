@@ -26,6 +26,14 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'mock-uuid'),
 }));
 
+jest.mock('../../../core/auth/tokenStore', () => ({
+  getAccessToken: jest.fn(() => Promise.resolve('mock-access-token')),
+}));
+
+jest.mock('@sovereign/secure-client', () => ({
+  encodeHeaders: jest.fn((headers) => headers),
+}));
+
 describe('useScanner', () => {
   const mockAddToInStoreCart = jest.fn();
   const mockExecuteRequest = jest.fn();

@@ -14,7 +14,8 @@ jest.mock('../../../core/theme/useTheme', () => ({
 
 describe('LoginScreen View', () => {
   const mockLogin = jest.fn();
-  const mockSetUsername = jest.fn();
+  const mockSetName = jest.fn();
+  const mockSetEmail = jest.fn();
   const mockSetPassword = jest.fn();
 
   beforeEach(() => {
@@ -34,8 +35,10 @@ describe('LoginScreen View', () => {
 
   it('renders form inputs correctly', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      username: '',
-      setUsername: mockSetUsername,
+      name: '',
+      setName: mockSetName,
+      email: '',
+      setEmail: mockSetEmail,
       password: '',
       setPassword: mockSetPassword,
       error: null,
@@ -47,14 +50,17 @@ describe('LoginScreen View', () => {
     const { getByTestId, getByText } = render(<LoginScreen />);
 
     expect(getByText('auth.title')).toBeTruthy();
-    expect(getByTestId('username-input')).toBeTruthy();
+    expect(getByTestId('name-input')).toBeTruthy();
+    expect(getByTestId('email-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
   });
 
-  it('triggers input and login submission callbacks', () => {
+  it('triggers login submission callback', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      username: 'johndoe',
-      setUsername: mockSetUsername,
+      name: 'John',
+      setName: mockSetName,
+      email: 'john@example.com',
+      setEmail: mockSetEmail,
       password: 'password123',
       setPassword: mockSetPassword,
       error: null,
@@ -72,8 +78,10 @@ describe('LoginScreen View', () => {
 
   it('displays error banner if validation fail error is returned', () => {
     (useSovereignLogin as jest.Mock).mockReturnValue({
-      username: '',
-      setUsername: mockSetUsername,
+      name: '',
+      setName: mockSetName,
+      email: '',
+      setEmail: mockSetEmail,
       password: '',
       setPassword: mockSetPassword,
       error: 'Please enter a valid username and password.',

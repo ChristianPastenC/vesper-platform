@@ -34,7 +34,7 @@ jest.mock('expo-crypto', () => ({
 }));
 
 describe('useSovereignLogin', () => {
-  const mockT = jest.fn((key) => key);
+  const mockT = jest.fn((key, defaultMsg) => defaultMsg || key);
   const mockGoBack = jest.fn();
   const mockCanGoBack = jest.fn();
   const mockExecuteRequest = jest.fn();
@@ -46,20 +46,52 @@ describe('useSovereignLogin', () => {
     (useSovereignClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
   });
 
-  it('validates fields and sets error', async () => {
+  it('validates empty fields and sets error', async () => {
     const { result } = renderHook(() => useSovereignLogin());
 
     await act(async () => {
       await result.current.handleLogin();
     });
 
-    expect(result.current.error).toBe('auth.invalidError');
+    expect(result.current.error).toBe('All fields are required.');
+  });
+
+  it('validates invalid email format', async () => {
+    const { result } = renderHook(() => useSovereignLogin());
+
+    act(() => {
+      result.current.setName('John');
+      result.current.setEmail('invalid-email');
+      result.current.setPassword('password123');
+    });
+
+    await act(async () => {
+      await result.current.handleLogin();
+    });
+
+    expect(result.current.error).toBe('Invalid email format.');
+  });
+
+  it('validates short password', async () => {
+    const { result } = renderHook(() => useSovereignLogin());
+
+    act(() => {
+      result.current.setName('John');
+      result.current.setEmail('john@example.com');
+      result.current.setPassword('123'); // 3 chars
+    });
+
+    await act(async () => {
+      await result.current.handleLogin();
+    });
+
+    expect(result.current.error).toBe('Password must be at least 4 characters long.');
   });
 
   it('calls executeRequest, saves tokens, and logins successfully', async () => {
     mockCanGoBack.mockReturnValue(true);
     mockExecuteRequest.mockResolvedValue({
-      user: { username: 'john_doe' },
+      user: { id: '1', username: 'john_doe', email: 'john@example.com' },
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     });
@@ -67,7 +99,8 @@ describe('useSovereignLogin', () => {
     const { result } = renderHook(() => useSovereignLogin());
 
     act(() => {
-      result.current.setUsername('john_doe');
+      result.current.setName('John');
+      result.current.setEmail('john@example.com');
       result.current.setPassword('password123');
     });
 
@@ -89,7 +122,8 @@ describe('useSovereignLogin', () => {
     const { result } = renderHook(() => useSovereignLogin());
 
     act(() => {
-      result.current.setUsername('john_doe');
+      result.current.setName('John');
+      result.current.setEmail('john@example.com');
       result.current.setPassword('password123');
     });
 

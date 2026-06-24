@@ -71,6 +71,8 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			r.Use(idempotencyManager.Middleware)
 
 			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
+			r.Post("/checkout/online", cfg.PaymentHandler.ProcessPayment)
+			r.Post("/checkout/instore", cfg.PaymentHandler.ProcessPayment)
 		})
 	})
 

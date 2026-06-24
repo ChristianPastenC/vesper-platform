@@ -24,6 +24,7 @@
     "@sovereign/secure-client": "link:../../packages/secure-client",
     "@tanstack/react-query": "^5.0.0",
     "expo": "~54.0.0",
+    "expo-camera": "~17.0.10",
     "expo-crypto": "~15.0.9",
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",

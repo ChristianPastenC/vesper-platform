@@ -11,6 +11,7 @@ import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
 import { stylesFactory } from './ScannerScreen.styles';
+import { CameraView } from 'expo-camera';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
@@ -19,7 +20,7 @@ export const ScannerScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
-  const { lastScanned, simulateScan, t } = useScanner();
+  const { lastScanned, simulateScan, onBarcodeScanned, hasPermission, requestPermission, t } = useScanner();
 
   const itemsCount = useAppStore((state) =>
     state.inStoreCart.reduce((acc, item) => acc + item.quantity, 0),
@@ -31,34 +32,48 @@ export const ScannerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.viewfinderContainer}>
-        <View style={styles.darkOverlay} />
-        <View style={styles.middleRow}>
-          <View style={styles.darkOverlay} />
-          <View style={styles.viewfinderFrame}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-            <View style={styles.laserLine} />
+        {!hasPermission ? (
+          <View style={[styles.viewfinderFrame, { justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: 'white', marginBottom: 16 }}>{t('scan_and_go.cameraPermission')}</Text>
+            <Button title={t('scan_and_go.requestPermission')} onPress={requestPermission} />
           </View>
-          <View style={styles.darkOverlay} />
-        </View>
-        <View style={styles.darkOverlay} />
-
-        <View style={styles.overlayTextContainer}>
-          <Text variant="bold" style={styles.scanHint}>
-            {t('scan_and_go.scanHint')}
-          </Text>
-          {lastScanned && (
-            <View style={styles.toast}>
-              <Text style={styles.toastText}>
-                {t('catalog.itemAdded')}: {lastScanned}
-              </Text>
+        ) : (
+          <CameraView
+            style={{ flex: 1 }}
+            facing="back"
+            onBarcodeScanned={onBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ['ean13', 'upc_a', 'ean8', 'qr'],
+            }}
+          >
+            <View style={styles.darkOverlay} />
+            <View style={styles.middleRow}>
+              <View style={styles.darkOverlay} />
+              <View style={styles.viewfinderFrame}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
+                <View style={styles.laserLine} />
+              </View>
+              <View style={styles.darkOverlay} />
             </View>
-          )}
-        </View>
-      </View>
+            <View style={styles.darkOverlay} />
+
+            <View style={styles.overlayTextContainer}>
+              <Text variant="bold" style={styles.scanHint}>
+                {t('scan_and_go.scanHint')}
+              </Text>
+              {lastScanned && (
+                <View style={styles.toast}>
+                  <Text style={styles.toastText}>
+                    {t('catalog.itemAdded')}: {lastScanned}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </CameraView>
+        )}
 
       <View style={styles.controls}>
         <Button

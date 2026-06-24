@@ -10,6 +10,14 @@ jest.mock('../hooks/useScanner', () => ({
   useScanner: jest.fn(),
 }));
 
+jest.mock('expo-camera', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    CameraView: ({ children }: any) => <View>{children}</View>,
+  };
+});
+
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -55,6 +63,9 @@ describe('ScannerScreen View', () => {
     (useScanner as jest.Mock).mockReturnValue({
       lastScanned: null,
       simulateScan: mockSimulate,
+      onBarcodeScanned: jest.fn(),
+      hasPermission: true,
+      requestPermission: jest.fn(),
       t: (key: string) => key,
     });
     (useAppStore as unknown as jest.Mock).mockReturnValue(3); // Mock cart itemsCount = 3

@@ -2,6 +2,9 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useScanner } from './useScanner';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../../store/useAppStore';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
+import { useCameraPermissions } from 'expo-camera';
+import { randomUUID } from 'expo-crypto';
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(),
@@ -11,8 +14,21 @@ jest.mock('../../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
+jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
+  useAuthenticatedRequest: jest.fn(),
+}));
+
+jest.mock('expo-camera', () => ({
+  useCameraPermissions: jest.fn(),
+}));
+
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'mock-uuid'),
+}));
+
 describe('useScanner', () => {
   const mockAddToInStoreCart = jest.fn();
+  const mockExecuteRequest = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,6 +41,8 @@ describe('useScanner', () => {
       };
       return selector(state);
     });
+    (useAuthenticatedRequest as jest.Mock).mockReturnValue({ execute: mockExecuteRequest });
+    (useCameraPermissions as jest.Mock).mockReturnValue([{ granted: true }, jest.fn()]);
   });
 
   afterEach(() => {
@@ -37,11 +55,14 @@ describe('useScanner', () => {
     expect(result.current.lastScanned).toBeNull();
   });
 
-  it('simulates scan and clears last scanned after timeout', () => {
+  it('simulates scan and clears last scanned after timeout', async () => {
+    mockExecuteRequest.mockResolvedValue([]); // Mock network failure/empty to trigger fallback
+
     const { result } = renderHook(() => useScanner());
 
-    act(() => {
+    await act(async () => {
       result.current.simulateScan();
+      await Promise.resolve(); // flush microtasks for resolveProduct
     });
 
     expect(mockAddToInStoreCart).toHaveBeenCalledWith(

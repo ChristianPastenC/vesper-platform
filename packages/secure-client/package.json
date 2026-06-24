@@ -30,7 +30,10 @@
     "rebuild": "rimraf dist && tsc",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "yarn test:js && yarn test:cpp",
+    "test:js": "jest",
+    "test:cpp": "cmake -S . -B build -DBUILD_TESTING=ON && cmake --build build && cd build && ctest -V"
   },
   "peerDependencies": {
     "react-native-nitro-modules": "*"
@@ -43,6 +46,9 @@
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.1",
     "react-native-nitro-modules": "*",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "@types/jest": "^29.5.12"
   }
 }

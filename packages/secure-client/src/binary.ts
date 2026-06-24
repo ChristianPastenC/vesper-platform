@@ -19,8 +19,8 @@ export const encodeTextBody = (text: string): Uint8Array => {
 
 export const encodeHeaders = (headers: Record<string, string>): Uint8Array => {
   const lines = Object.entries(headers)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join('\n');
+    .map(([key, value]) => `${key}: ${value}\n`)
+    .join('');
   return TEXT_ENCODER.encode(lines);
 };
 

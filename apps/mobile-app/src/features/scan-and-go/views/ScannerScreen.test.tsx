@@ -102,7 +102,7 @@ describe('ScannerScreen View', () => {
     });
 
     const { getByText, queryByText } = render(<ScannerScreen />);
-    
+
     expect(getByText('scan_and_go.cameraPermission')).toBeTruthy();
     expect(getByText('scan_and_go.requestPermission')).toBeTruthy();
     expect(queryByText('scan_and_go.scanHint')).toBeNull(); // Should not render camera view texts

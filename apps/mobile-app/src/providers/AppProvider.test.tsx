@@ -11,7 +11,10 @@ jest.mock('@tanstack/react-query', () => ({
 
 jest.mock('react-i18next', () => ({
   I18nextProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }),
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'en', changeLanguage: jest.fn() },
+  }),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -72,7 +75,7 @@ describe('AppProvider', () => {
     const { getByTestId } = render(
       <AppProvider>
         <Text testID="child">Child</Text>
-      </AppProvider>
+      </AppProvider>,
     );
 
     // Should render ActivityIndicator, child should not be visible
@@ -93,7 +96,7 @@ describe('AppProvider', () => {
     const { getByTestId } = render(
       <AppProvider>
         <Text testID="child">Child Content</Text>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(getByTestId('child')).toBeTruthy();
@@ -113,7 +116,7 @@ describe('AppProvider', () => {
     const { getByText } = render(
       <AppProvider>
         <Text testID="child">Child Content</Text>
-      </AppProvider>
+      </AppProvider>,
     );
 
     expect(getByText('system.pendingTransaction')).toBeTruthy();

@@ -8,8 +8,8 @@ import { randomUUID } from 'expo-crypto';
 import { useAppStore } from '../../../store/useAppStore';
 import { useSovereignClient } from '../../../providers/SovereignClientContext';
 
-// 1. Leer API_URL desde ../../../core/config o usar el placeholder
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+// 1. Leer API_URL desde ../../../core/config
+import { getApiUrl } from '../../../core/config';
 
 export interface AuthResponse {
   user: { id: string; username: string; email: string };
@@ -51,6 +51,7 @@ export const useSovereignLogin = () => {
     }
 
     try {
+      const API_URL = getApiUrl();
       setIsPending(true);
 
       // c. Serializar credenciales

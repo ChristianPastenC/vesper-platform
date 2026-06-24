@@ -27,7 +27,15 @@ describe('useSovereignCatalog', () => {
 
   it('fetches and returns products', async () => {
     mockExecuteRequest.mockResolvedValue([
-      { id: 1, title: 'Product 1', price: 10, barcode: '111', description: 'desc', category: 'cat', image: 'url' },
+      {
+        id: 1,
+        title: 'Product 1',
+        price: 10,
+        barcode: '111',
+        description: 'desc',
+        category: 'cat',
+        image: 'url',
+      },
     ]);
 
     const { result } = renderHook(() => useSovereignCatalog());

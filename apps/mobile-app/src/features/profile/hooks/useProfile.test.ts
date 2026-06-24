@@ -19,7 +19,7 @@ describe('useProfile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useTranslation as jest.Mock).mockReturnValue({ t: (key: string) => key });
-    
+
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = {
         isAuthenticated: true,
@@ -46,7 +46,9 @@ describe('useProfile', () => {
   it('toggles theme mode correctly', () => {
     const { result } = renderHook(() => useProfile());
 
-    act(() => { result.current.toggleThemeMode(); });
+    act(() => {
+      result.current.toggleThemeMode();
+    });
     expect(mockSetThemeMode).toHaveBeenCalledWith('dark');
   });
 
@@ -55,7 +57,9 @@ describe('useProfile', () => {
       return selector({ themeMode: 'dark', setThemeMode: mockSetThemeMode });
     });
     const { result } = renderHook(() => useProfile());
-    act(() => { result.current.toggleThemeMode(); });
+    act(() => {
+      result.current.toggleThemeMode();
+    });
     expect(mockSetThemeMode).toHaveBeenCalledWith('system');
   });
 
@@ -64,21 +68,27 @@ describe('useProfile', () => {
       return selector({ themeMode: 'system', setThemeMode: mockSetThemeMode });
     });
     const { result } = renderHook(() => useProfile());
-    act(() => { result.current.toggleThemeMode(); });
+    act(() => {
+      result.current.toggleThemeMode();
+    });
     expect(mockSetThemeMode).toHaveBeenCalledWith('light');
   });
 
   it('toggles language', () => {
     const { result } = renderHook(() => useProfile());
 
-    act(() => { result.current.toggleLanguage(); });
+    act(() => {
+      result.current.toggleLanguage();
+    });
     expect(mockSetLanguage).toHaveBeenCalledWith('es');
   });
 
   it('calls logout', () => {
     const { result } = renderHook(() => useProfile());
 
-    act(() => { result.current.handleLogout(); });
+    act(() => {
+      result.current.handleLogout();
+    });
     expect(mockLogout).toHaveBeenCalled();
   });
 });

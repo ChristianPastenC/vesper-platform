@@ -34,7 +34,7 @@ jest.mock('expo-crypto', () => ({
 }));
 
 const queryClient = new QueryClient();
-const wrapper = ({ children }: { children: React.ReactNode }) => 
+const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe('useInStoreCheckoutMutation', () => {

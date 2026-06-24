@@ -22,7 +22,7 @@ const MOCK_PRODUCTS: Product[] = [
 
 export const useCatalog = (category?: string, limit: number = 20) => {
   const isAuthenticated = useIsAuthenticated();
-  
+
   // Real catalog fetch
   const sovereignCatalog = useSovereignCatalog(category, limit);
 

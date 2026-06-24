@@ -42,7 +42,7 @@ describe('useScanner', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     (useTranslation as jest.Mock).mockReturnValue({ t: (key: string) => key });
-    
+
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = {
         addToInStoreCart: mockAddToInStoreCart,
@@ -79,7 +79,7 @@ describe('useScanner', () => {
         barcode: expect.any(String),
         name: expect.any(String),
         price: expect.any(Number),
-      })
+      }),
     );
 
     expect(result.current.lastScanned).toBeTruthy();

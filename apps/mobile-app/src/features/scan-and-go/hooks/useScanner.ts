@@ -7,8 +7,7 @@ import { randomUUID } from 'expo-crypto';
 import { encodeHeaders } from '@sovereign/secure-client';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { BackendProduct } from '../../../features/catalog/hooks/useSovereignCatalog';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+import { getApiUrl } from '../../../core/config';
 
 export interface ScannableProduct {
   id: string;
@@ -29,13 +28,14 @@ export const useScanner = () => {
   const { t } = useTranslation();
   const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
-  
+
   const [permission, requestPermission] = useCameraPermissions();
   const { execute } = useAuthenticatedRequest();
   const [isScanningActive, setIsScanningActive] = useState<boolean>(true);
 
   const resolveProduct = async (barcode: string): Promise<ScannableProduct | null> => {
     try {
+      const API_URL = getApiUrl();
       const token = await getAccessToken();
       const encodedHeaders = encodeHeaders({
         Accept: 'application/json',
@@ -62,36 +62,39 @@ export const useScanner = () => {
     }
 
     // Fallback local search
-    return SCANNABLE_PRODUCTS.find(p => p.barcode === barcode) || null;
+    return SCANNABLE_PRODUCTS.find((p) => p.barcode === barcode) || null;
   };
 
-  const onBarcodeScanned = useCallback(async (scanningResult: BarcodeScanningResult) => {
-    if (!isScanningActive) return;
-    
-    // Throttle duplicate scans temporarily
-    setIsScanningActive(false);
-    
-    const barcode = scanningResult.data;
-    const product = await resolveProduct(barcode);
+  const onBarcodeScanned = useCallback(
+    async (scanningResult: BarcodeScanningResult) => {
+      if (!isScanningActive) return;
 
-    if (product) {
-      addToInStoreCart({
-        id: product.id,
-        barcode: product.barcode,
-        name: product.name,
-        price: product.price,
-      });
+      // Throttle duplicate scans temporarily
+      setIsScanningActive(false);
 
-      setLastScanned(`${product.name} (${product.barcode})`);
-    } else {
-      setLastScanned(`Unknown Item (${barcode})`);
-    }
+      const barcode = scanningResult.data;
+      const product = await resolveProduct(barcode);
 
-    setTimeout(() => {
-      setLastScanned(null);
-      setIsScanningActive(true);
-    }, 2000);
-  }, [isScanningActive, addToInStoreCart, execute]);
+      if (product) {
+        addToInStoreCart({
+          id: product.id,
+          barcode: product.barcode,
+          name: product.name,
+          price: product.price,
+        });
+
+        setLastScanned(`${product.name} (${product.barcode})`);
+      } else {
+        setLastScanned(`Unknown Item (${barcode})`);
+      }
+
+      setTimeout(() => {
+        setLastScanned(null);
+        setIsScanningActive(true);
+      }, 2000);
+    },
+    [isScanningActive, addToInStoreCart, execute],
+  );
 
   const simulateScan = () => {
     const randomIndex = Math.floor(Math.random() * SCANNABLE_PRODUCTS.length);

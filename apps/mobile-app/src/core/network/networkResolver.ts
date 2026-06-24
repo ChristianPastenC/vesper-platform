@@ -11,11 +11,11 @@ let unsubscribe: (() => void) | null = null;
  */
 export const networkResolver: NetworkStatusResolver = async (): Promise<boolean> => {
   const state = await NetInfo.fetch();
-  
+
   if (state.type === 'none' || state.type === 'unknown') {
     return false;
   }
-  
+
   return state.isConnected ?? false;
 };
 
@@ -29,7 +29,7 @@ export const networkResolver: NetworkStatusResolver = async (): Promise<boolean>
  */
 export const startNetworkTransitionsListener = (
   client: SovereignClientCore,
-  handshakeValidator: () => Promise<boolean>
+  handshakeValidator: () => Promise<boolean>,
 ): void => {
   if (unsubscribe) {
     unsubscribe();
@@ -43,20 +43,21 @@ export const startNetworkTransitionsListener = (
 
   unsubscribe = NetInfo.addEventListener((state) => {
     const isOnlineNow =
-      state.type !== 'none' &&
-      state.type !== 'unknown' &&
-      state.isConnected === true;
+      state.type !== 'none' && state.type !== 'unknown' && state.isConnected === true;
 
     // Transition from Offline to Online
     if (!isCurrentlyOnline && isOnlineNow) {
       isCurrentlyOnline = true;
       useAppStore.getState().set({ isOnline: true });
-      
+
       // Trigger inactive queue synchronization (DPoP, Ledger, etc)
       client.processSynchronizedQueue(handshakeValidator).catch((err: unknown) => {
-        console.error('[NetworkResolver] Failed to process synchronized queue post-reconnection:', err);
+        console.error(
+          '[NetworkResolver] Failed to process synchronized queue post-reconnection:',
+          err,
+        );
       });
-    } 
+    }
     // Transition from Online to Offline
     else if (isCurrentlyOnline && !isOnlineNow) {
       isCurrentlyOnline = false;

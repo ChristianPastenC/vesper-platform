@@ -1,10 +1,11 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+import { getApiUrl } from '../config';
 
 const getChallenge = async (): Promise<string | null> => {
+  const API_URL = getApiUrl();
   const getRes = await fetch(`${API_URL}/api/handshake`, {
     method: 'GET',
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   });
 
@@ -15,6 +16,7 @@ const getChallenge = async (): Promise<string | null> => {
 };
 
 const verifyChallenge = async (challenge: unknown): Promise<boolean> => {
+  const API_URL = getApiUrl();
   const rawChallenge = typeof challenge === 'string' ? challenge : JSON.stringify(challenge);
 
   const postRes = await fetch(`${API_URL}/api/handshake`, {

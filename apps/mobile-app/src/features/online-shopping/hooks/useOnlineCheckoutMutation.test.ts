@@ -34,7 +34,7 @@ jest.mock('expo-crypto', () => ({
 }));
 
 const queryClient = new QueryClient();
-const wrapper = ({ children }: { children: React.ReactNode }) => 
+const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe('useOnlineCheckoutMutation', () => {
@@ -76,13 +76,18 @@ describe('useOnlineCheckoutMutation', () => {
     expect(buildTransactionLedger).toHaveBeenCalledWith([
       { id: 'item1', name: 'Shoes', price: 100, quantity: 2 },
     ]);
-    expect(encodeHeaders).toHaveBeenCalledWith(expect.objectContaining({
-      Authorization: 'Bearer mock-token',
-      'X-Idempotency-Key': 'mock-uuid',
-    }));
-    expect(mockExecuteRequest).toHaveBeenCalledWith('mock-uuid', expect.objectContaining({
-      method: 'POST',
-      url: expect.stringContaining('/api/v1/checkout/online'),
-    }));
+    expect(encodeHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        Authorization: 'Bearer mock-token',
+        'X-Idempotency-Key': 'mock-uuid',
+      }),
+    );
+    expect(mockExecuteRequest).toHaveBeenCalledWith(
+      'mock-uuid',
+      expect.objectContaining({
+        method: 'POST',
+        url: expect.stringContaining('/api/v1/checkout/online'),
+      }),
+    );
   });
 });

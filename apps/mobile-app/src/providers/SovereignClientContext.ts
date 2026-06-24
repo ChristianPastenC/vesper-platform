@@ -15,14 +15,14 @@ export const SovereignClientContext = createContext<SovereignContextType | null>
  */
 export const useSovereignClient = (): SovereignClientCore => {
   const context = useContext(SovereignClientContext);
-  
+
   if (!context) {
     throw new Error(
       '[SovereignClientContext] useSovereignClient must be used within a SovereignClientContext.Provider. ' +
-      'Please ensure your component is wrapped inside AppProvider before calling this hook.'
+        'Please ensure your component is wrapped inside AppProvider before calling this hook.',
     );
   }
-  
+
   return context.client;
 };
 
@@ -31,13 +31,13 @@ export const useSovereignClient = (): SovereignClientCore => {
  */
 export const useSovereignDPoPKey = (): JsonWebKey | null => {
   const context = useContext(SovereignClientContext);
-  
+
   if (!context) {
     throw new Error(
       '[SovereignClientContext] useSovereignDPoPKey must be used within a SovereignClientContext.Provider. ' +
-      'Please ensure your component is wrapped inside AppProvider.'
+        'Please ensure your component is wrapped inside AppProvider.',
     );
   }
-  
+
   return context.dpopPublicKey;
 };

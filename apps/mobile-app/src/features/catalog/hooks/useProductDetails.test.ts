@@ -16,7 +16,7 @@ describe('useProductDetails', () => {
   const mockGoBack = jest.fn();
   const mockAddToOnlineCart = jest.fn();
   const mockAddToInStoreCart = jest.fn();
-  
+
   const mockProduct = {
     id: '1',
     name: 'Test Product',
@@ -32,7 +32,7 @@ describe('useProductDetails', () => {
     (useNavigation as jest.Mock).mockReturnValue({
       goBack: mockGoBack,
     });
-    
+
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       return selector({
         addToOnlineCart: mockAddToOnlineCart,

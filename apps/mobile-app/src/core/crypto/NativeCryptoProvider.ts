@@ -3,7 +3,7 @@ import type { IDPoPCryptoProvider } from '@sovereign/secure-client';
 
 /**
  * NativeCryptoProvider
- * 
+ *
  * Provides cryptographic primitives using expo-crypto, ensuring compatibility
  * with the Hermes engine without relying on the global window.crypto object.
  * Implements IDPoPCryptoProvider which extends ISovereignCryptoProvider.

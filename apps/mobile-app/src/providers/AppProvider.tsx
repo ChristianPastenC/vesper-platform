@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-
 import i18n from '../core/i18n/i18n';
 import { useTheme } from '../core/theme/useTheme';
 import { ThemeColors } from '../core/theme/colors';
@@ -14,7 +13,10 @@ import { useSovereignInitializer } from './useSovereignInitializer';
 import { SovereignClientContext } from './SovereignClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
 import { validateHandshake } from '../core/network/handshakeValidator';
-import { startNetworkTransitionsListener, stopNetworkTransitionsListener } from '../core/network/networkResolver';
+import {
+  startNetworkTransitionsListener,
+  stopNetworkTransitionsListener,
+} from '../core/network/networkResolver';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,9 +87,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           <I18nextProvider i18n={i18n}>
             <ThemeContext.Provider value={theme}>
               {isFrozen && (
-                <View style={{ backgroundColor: theme.colors.primary, padding: 12, paddingTop: 40, alignItems: 'center' }}>
+                <View
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    padding: 12,
+                    paddingTop: 40,
+                    alignItems: 'center',
+                  }}
+                >
                   <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-                    {i18n.t('system.pendingTransaction') || 'Transacción pendiente de sincronización...'}
+                    {i18n.t('system.pendingTransaction') ||
+                      'Transacción pendiente de sincronización...'}
                   </Text>
                 </View>
               )}

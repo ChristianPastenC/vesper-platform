@@ -85,7 +85,8 @@ export const useAppStore = create<AppState>()(
         const token = await getAccessToken();
         set({ isAuthenticated: !!token });
       },
-      setIsAuthenticated: (auth, username) => set({ isAuthenticated: auth, userName: username || null }),
+      setIsAuthenticated: (auth, username) =>
+        set({ isAuthenticated: auth, userName: username || null }),
       toggleNetwork: () => set((state) => ({ isOnline: !state.isOnline })),
       setFrozen: (frozen) => set({ isFrozen: frozen }),
       setLanguage: (lang) => {
@@ -144,4 +145,3 @@ export const useAppStore = create<AppState>()(
 );
 
 export const useIsAuthenticated = () => useAppStore((state) => state.isAuthenticated);
-

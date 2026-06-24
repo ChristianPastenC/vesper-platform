@@ -5,8 +5,7 @@ import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
 import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
 import { randomUUID } from 'expo-crypto';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.sovereign.local';
+import { getApiUrl } from '../../../core/config';
 
 interface CheckoutPayload {
   items: Array<{ id: string; name: string; price: number; quantity: number }>;
@@ -30,9 +29,10 @@ export const useOnlineCheckoutMutation = () => {
 
   return useMutation<CheckoutResponse, Error, CheckoutPayload>({
     mutationFn: async (payload: CheckoutPayload) => {
+      const API_URL = getApiUrl();
       const token = await getAccessToken();
       const ledger = await buildTransactionLedger(payload.items);
-      
+
       const total = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       const requestBody = {

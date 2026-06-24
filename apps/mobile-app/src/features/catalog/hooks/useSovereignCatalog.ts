@@ -4,8 +4,7 @@ import { Product } from '../components/ProductCard';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { SovereignAdapterRequest } from '@sovereign/secure-client';
 import { randomUUID } from 'expo-crypto';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+import { getApiUrl } from '../../../core/config';
 
 export interface BackendProduct {
   id: number;
@@ -24,59 +23,63 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
 
   const { execute } = useAuthenticatedRequest();
 
-  const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchCatalog = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const API_URL = getApiUrl();
+        setLoading(true);
+        setError(null);
 
-      const token = await getAccessToken();
-      const headers: Record<string, string> = {
-        Accept: 'application/json',
-      };
+        const token = await getAccessToken();
+        const headers: Record<string, string> = {
+          Accept: 'application/json',
+        };
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
 
-      let url = `${API_URL}/api/v1/catalog?limit=${limit}`;
-      if (category) {
-        url += `&category=${encodeURIComponent(category)}`;
-      }
+        let url = `${API_URL}/api/v1/catalog?limit=${limit}`;
+        if (category) {
+          url += `&category=${encodeURIComponent(category)}`;
+        }
 
-      const request: SovereignAdapterRequest = {
-        method: 'GET',
-        url,
-        headers,
-        signal,
-      };
+        const request: SovereignAdapterRequest = {
+          method: 'GET',
+          url,
+          headers,
+          signal,
+        };
 
-      const requestId = randomUUID();
-      const response = await execute<BackendProduct[]>(requestId, request);
+        const requestId = randomUUID();
+        const response = await execute<BackendProduct[]>(requestId, request);
 
-      const mappedProducts: Product[] = response.map((p) => ({
-        id: String(p.id),
-        name: p.title,
-        price: p.price,
-        barcode: p.barcode,
-        image: p.image,
-      }));
+        const mappedProducts: Product[] = response.map((p) => ({
+          id: String(p.id),
+          name: p.title,
+          price: p.price,
+          barcode: p.barcode,
+          image: p.image,
+        }));
 
-      if (signal?.aborted) return;
+        if (signal?.aborted) return;
 
-      setProducts(mappedProducts);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        if (err.name === 'AbortError' || err.message === 'Canceled' || signal?.aborted) {
-          return;
+        setProducts(mappedProducts);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          if (err.name === 'AbortError' || err.message === 'Canceled' || signal?.aborted) {
+            return;
+          }
+        }
+        setError(err instanceof Error ? err : new Error('Failed to fetch catalog'));
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
         }
       }
-      setError(err instanceof Error ? err : new Error('Failed to fetch catalog'));
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  }, [execute, category, limit]);
+    },
+    [execute, category, limit],
+  );
 
   useEffect(() => {
     const controller = new AbortController();

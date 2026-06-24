@@ -37,7 +37,11 @@ describe('useSovereignCheckout', () => {
   });
 
   it('executes checkout successfully', async () => {
-    mockExecuteRequest.mockResolvedValue({ success: true, transactionId: 'txn-123', timestamp: 12345 });
+    mockExecuteRequest.mockResolvedValue({
+      success: true,
+      transactionId: 'txn-123',
+      timestamp: 12345,
+    });
 
     const { result } = renderHook(() => useSovereignCheckout());
 
@@ -57,7 +61,7 @@ describe('useSovereignCheckout', () => {
         headers: expect.objectContaining({
           Authorization: 'DPoP mock-token',
         }),
-      })
+      }),
     );
   });
 
@@ -66,6 +70,8 @@ describe('useSovereignCheckout', () => {
 
     const { result } = renderHook(() => useSovereignCheckout());
 
-    await expect(result.current.executeCheckout([{ id: '1' }])).rejects.toThrow('Checkout failed error');
+    await expect(result.current.executeCheckout([{ id: '1' }])).rejects.toThrow(
+      'Checkout failed error',
+    );
   });
 });

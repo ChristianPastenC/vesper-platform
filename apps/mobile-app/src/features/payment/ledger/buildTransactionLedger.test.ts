@@ -29,7 +29,7 @@ describe('buildTransactionLedger', () => {
 
   it('verifies the genesis block has precedingHash === "0"', async () => {
     const ledger = await buildTransactionLedger([mockItems[0]]);
-    
+
     expect(ledger).toHaveLength(1);
     expect(ledger[0].precedingHash).toBe('0');
     expect(ledger[0].index).toBe(0);
@@ -51,14 +51,14 @@ describe('buildTransactionLedger', () => {
 
     // To verify invalidity, we manually recompute the hash for the second block using an altered payload
     const alteredPayload = JSON.stringify({ id: 2, name: 'Hacked Item B', price: 0 });
-    
+
     const timestamp = ledger[1].timestamp;
     const precedingHash = ledger[1].precedingHash;
     const dataToHash = `${alteredPayload}${precedingHash}${timestamp}`;
-    
+
     const recomputedHashBuffer = crypto.createHash('sha256').update(dataToHash).digest();
     const recomputedHash = Array.from(new Uint8Array(recomputedHashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
 
     // The tampered payload produces a different hash than the one originally signed into the ledger

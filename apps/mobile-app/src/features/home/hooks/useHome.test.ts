@@ -24,7 +24,7 @@ describe('useHome', () => {
     jest.clearAllMocks();
     (useTranslation as jest.Mock).mockReturnValue({ t: (key: string) => key });
     (useNavigation as jest.Mock).mockReturnValue({ navigate: mockNavigate });
-    
+
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = {
         userName: 'Test User',
@@ -46,25 +46,33 @@ describe('useHome', () => {
 
   it('navigates to catalog', () => {
     const { result } = renderHook(() => useHome());
-    act(() => { result.current.navigateToCatalog(); });
+    act(() => {
+      result.current.navigateToCatalog();
+    });
     expect(mockNavigate).toHaveBeenCalledWith('CatalogTab');
   });
 
   it('navigates to online cart', () => {
     const { result } = renderHook(() => useHome());
-    act(() => { result.current.navigateToOnlineCart(); });
+    act(() => {
+      result.current.navigateToOnlineCart();
+    });
     expect(mockNavigate).toHaveBeenCalledWith('OnlineCart');
   });
 
   it('navigates to scanner', () => {
     const { result } = renderHook(() => useHome());
-    act(() => { result.current.navigateToScanner(); });
+    act(() => {
+      result.current.navigateToScanner();
+    });
     expect(mockNavigate).toHaveBeenCalledWith('ScanAndGoTab');
   });
 
   it('navigates to account', () => {
     const { result } = renderHook(() => useHome());
-    act(() => { result.current.navigateToAccount(); });
+    act(() => {
+      result.current.navigateToAccount();
+    });
     expect(mockNavigate).toHaveBeenCalledWith('ProfileTab');
   });
 });

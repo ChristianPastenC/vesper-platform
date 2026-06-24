@@ -24,10 +24,10 @@ export const useSovereignCheckout = () => {
     try {
       setIsProcessing(true);
       setError(null);
-      
+
       // 1) Build the ledger using buildTransactionLedger
       const ledger = await buildTransactionLedger(items);
-      
+
       const payload: CheckoutRequestPayload = { ledger };
       const token = await getAccessToken();
       const idempotencyKey = Crypto.randomUUID();
@@ -43,7 +43,7 @@ export const useSovereignCheckout = () => {
         url: '/api/v1/checkout/pay',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `DPoP ${token}`,
+          Authorization: `DPoP ${token}`,
           'X-Idempotency-Key': idempotencyKey,
         },
         body: encodedBody,

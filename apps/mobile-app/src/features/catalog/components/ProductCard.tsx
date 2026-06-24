@@ -39,14 +39,16 @@ const SkeletonPlaceholder = ({ color }: { color: string }) => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(animValue, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(animValue, { toValue: 0.5, duration: 800, useNativeDriver: true })
-      ])
+        Animated.timing(animValue, { toValue: 0.5, duration: 800, useNativeDriver: true }),
+      ]),
     ).start();
   }, [animValue]);
 
   return (
-    <Animated.View style={[styles.skeletonContainer, { opacity: animValue, backgroundColor: color }]}>
-       <Ionicons name="image-outline" size={32} color={color} style={styles.skeletonIcon} />
+    <Animated.View
+      style={[styles.skeletonContainer, { opacity: animValue, backgroundColor: color }]}
+    >
+      <Ionicons name="image-outline" size={32} color={color} style={styles.skeletonIcon} />
     </Animated.View>
   );
 };
@@ -73,9 +75,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   <SkeletonPlaceholder color={theme.colors.border} />
                 </View>
               )}
-              <Image 
-                source={{ uri: product.image }} 
-                style={styles.image} 
+              <Image
+                source={{ uri: product.image }}
+                style={styles.image}
                 onLoadStart={() => setImageLoading(true)}
                 onLoadEnd={() => setImageLoading(false)}
                 onError={() => setImageLoading(false)}

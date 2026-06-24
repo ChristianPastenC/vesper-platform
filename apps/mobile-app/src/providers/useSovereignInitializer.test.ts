@@ -30,6 +30,7 @@ jest.mock('@sovereign/secure-client', () => {
     SovereignClientCore: {
       getInstance: jest.fn(() => mockClient),
     },
+    FetchAdapter: jest.fn(),
   };
 });
 

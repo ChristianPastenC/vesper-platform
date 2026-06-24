@@ -26,12 +26,14 @@ describe('useLogin', () => {
     jest.clearAllMocks();
     (useTranslation as jest.Mock).mockReturnValue({ t: mockT });
     (useNavigation as jest.Mock).mockReturnValue({ goBack: mockGoBack, canGoBack: mockCanGoBack });
-    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => selector({ login: mockLoginAction }));
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ login: mockLoginAction }),
+    );
   });
 
   it('validates missing fields', async () => {
     const { result } = renderHook(() => useLogin());
-    
+
     await act(async () => {
       await result.current.handleLogin();
     });
@@ -42,7 +44,7 @@ describe('useLogin', () => {
 
   it('validates invalid email format', async () => {
     const { result } = renderHook(() => useLogin());
-    
+
     act(() => {
       result.current.setName('Test');
       result.current.setEmail('invalid-email');
@@ -62,7 +64,7 @@ describe('useLogin', () => {
     mockLoginAction.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => useLogin());
-    
+
     act(() => {
       result.current.setName('Test');
       result.current.setEmail('test@test.com');
@@ -82,7 +84,7 @@ describe('useLogin', () => {
     mockLoginAction.mockRejectedValue(new Error('Login failed'));
 
     const { result } = renderHook(() => useLogin());
-    
+
     act(() => {
       result.current.setName('Test');
       result.current.setEmail('test@test.com');

@@ -37,11 +37,11 @@ describe('useAuthenticatedRequest', () => {
 
   it('executes request and returns data if successful', async () => {
     mockExecuteRequest.mockResolvedValue('success-data');
-    
+
     const { result } = renderHook(() => useAuthenticatedRequest());
-    
+
     const response = await result.current.execute('req-1', { method: 'GET', url: '/api/test' });
-    
+
     expect(response).toBe('success-data');
     expect(mockExecuteRequest).toHaveBeenCalledTimes(1);
     expect(mockExecuteRequest).toHaveBeenCalledWith('req-1', { method: 'GET', url: '/api/test' });
@@ -55,9 +55,10 @@ describe('useAuthenticatedRequest', () => {
 
     const { result } = renderHook(() => useAuthenticatedRequest());
 
-    await expect(result.current.execute('req-2', { method: 'GET', url: '/api/test' }))
-      .rejects.toThrow('Server Error');
-      
+    await expect(
+      result.current.execute('req-2', { method: 'GET', url: '/api/test' }),
+    ).rejects.toThrow('Server Error');
+
     expect(global.fetch).not.toHaveBeenCalled();
     expect(mockLogout).not.toHaveBeenCalled();
   });
@@ -66,13 +67,14 @@ describe('useAuthenticatedRequest', () => {
     const authError = new Error('Unauthorized') as any;
     authError.status = 401;
     mockExecuteRequest.mockRejectedValue(authError);
-    
+
     (getRefreshToken as jest.Mock).mockResolvedValue(null);
 
     const { result } = renderHook(() => useAuthenticatedRequest());
 
-    await expect(result.current.execute('req-3', { method: 'GET', url: '/api/test' }))
-      .rejects.toThrow('Unauthorized');
+    await expect(
+      result.current.execute('req-3', { method: 'GET', url: '/api/test' }),
+    ).rejects.toThrow('Unauthorized');
 
     expect(getRefreshToken).toHaveBeenCalled();
     expect(mockLogout).toHaveBeenCalled();
@@ -82,12 +84,10 @@ describe('useAuthenticatedRequest', () => {
   it('refreshes token, saves it, and retries request on 401', async () => {
     const authError = new Error('Unauthorized') as any;
     authError.status = 401;
-    
+
     // First call fails with 401, second call succeeds
-    mockExecuteRequest
-      .mockRejectedValueOnce(authError)
-      .mockResolvedValueOnce('retry-success-data');
-      
+    mockExecuteRequest.mockRejectedValueOnce(authError).mockResolvedValueOnce('retry-success-data');
+
     (getRefreshToken as jest.Mock).mockResolvedValue('old-refresh-token');
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -101,10 +101,10 @@ describe('useAuthenticatedRequest', () => {
 
     const { result } = renderHook(() => useAuthenticatedRequest());
 
-    const response = await result.current.execute('req-4', { 
-      method: 'GET', 
+    const response = await result.current.execute('req-4', {
+      method: 'GET',
       url: '/api/test',
-      headers: { 'X-Custom': 'value' } 
+      headers: { 'X-Custom': 'value' },
     });
 
     expect(response).toBe('retry-success-data');
@@ -115,7 +115,7 @@ describe('useAuthenticatedRequest', () => {
       body: JSON.stringify({ refresh_token: 'old-refresh-token' }),
     });
     expect(saveTokens).toHaveBeenCalledWith('new-access-token', 'new-refresh-token');
-    
+
     // Expect retry to be called with updated header
     expect(mockExecuteRequest).toHaveBeenCalledTimes(2);
     expect(mockExecuteRequest).toHaveBeenNthCalledWith(2, 'req-4', {
@@ -133,7 +133,7 @@ describe('useAuthenticatedRequest', () => {
     const authError = new Error('Unauthorized') as any;
     authError.status = 401;
     mockExecuteRequest.mockRejectedValue(authError);
-    
+
     (getRefreshToken as jest.Mock).mockResolvedValue('invalid-refresh-token');
 
     // Refresh API fails with 401
@@ -145,8 +145,9 @@ describe('useAuthenticatedRequest', () => {
 
     const { result } = renderHook(() => useAuthenticatedRequest());
 
-    await expect(result.current.execute('req-5', { method: 'GET', url: '/api/test' }))
-      .rejects.toThrow('Token refresh failed');
+    await expect(
+      result.current.execute('req-5', { method: 'GET', url: '/api/test' }),
+    ).rejects.toThrow('Token refresh failed');
 
     expect(mockLogout).toHaveBeenCalled();
     // executeRequest should only be called once because it didn't retry

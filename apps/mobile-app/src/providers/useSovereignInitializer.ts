@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { SovereignClientCore, FetchAdapter } from '@sovereign/secure-client';
 import { nativeCryptoProvider } from '../core/crypto/NativeCryptoProvider';
-import { 
-  networkResolver, 
-  startNetworkTransitionsListener, 
-  stopNetworkTransitionsListener 
+import {
+  networkResolver,
+  startNetworkTransitionsListener,
+  stopNetworkTransitionsListener,
 } from '../core/network/networkResolver';
 import { validateHandshake } from '../core/network/handshakeValidator';
 
@@ -31,7 +31,7 @@ export const secureClient = SovereignClientCore.getInstance({
       console.log('[SovereignClient] Session Purged (Security breach or forced drop)');
       useAppStore.getState().setFrozen(false);
     },
-  }
+  },
 });
 
 export const useSovereignInitializer = () => {
@@ -50,9 +50,14 @@ export const useSovereignInitializer = () => {
 
         const jwk = await secureClient.bootstrap();
         setDpopPublicKey(jwk);
-        console.log('[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys.');
+        console.log(
+          '[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys.',
+        );
       } catch (error) {
-        console.error('[useSovereignInitializer] Failed to bootstrap SovereignClientCore DPoP keys:', error);
+        console.error(
+          '[useSovereignInitializer] Failed to bootstrap SovereignClientCore DPoP keys:',
+          error,
+        );
       } finally {
         setIsBootstrapped(true);
       }

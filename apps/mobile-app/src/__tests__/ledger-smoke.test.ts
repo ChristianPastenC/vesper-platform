@@ -36,7 +36,7 @@ describe('Sovereign Ledger Smoke Test (Mock Mode)', () => {
 
   it('validates the complete ledger lifecycle: enqueue, verifyLedgerIntegrity, and dequeue', async () => {
     const id = 'test-tx-smoke-123';
-    
+
     // 1) Enqueue a serialized SovereignAdapterRequest
     const request = {
       method: 'POST',
@@ -50,17 +50,11 @@ describe('Sovereign Ledger Smoke Test (Mock Mode)', () => {
     memoryQueue.toggleNetworkSim(false);
 
     // Execute enqueue. Internally, the fallback uses slice to copy the buffer.
-    await memoryQueue.enqueue(
-      mockCryptoProvider,
-      id,
-      binaryPayload,
-      60000,
-      () => {}
-    );
+    await memoryQueue.enqueue(mockCryptoProvider, id, binaryPayload, 60000, () => {});
 
     // Verify the transaction was enqueued successfully
     expect(memoryQueue.size).toBe(1);
-    
+
     const executionOrder = memoryQueue.getExecutionOrder();
     expect(executionOrder).toContain(id);
 

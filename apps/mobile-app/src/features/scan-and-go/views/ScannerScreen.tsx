@@ -20,7 +20,8 @@ export const ScannerScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp>();
-  const { lastScanned, simulateScan, onBarcodeScanned, hasPermission, requestPermission, t } = useScanner();
+  const { lastScanned, simulateScan, onBarcodeScanned, hasPermission, requestPermission, t } =
+    useScanner();
 
   const itemsCount = useAppStore((state) =>
     state.inStoreCart.reduce((acc, item) => acc + item.quantity, 0),
@@ -32,48 +33,50 @@ export const ScannerScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-        {!hasPermission ? (
-          <View style={[styles.viewfinderFrame, { justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: 'white', marginBottom: 16 }}>{t('scan_and_go.cameraPermission')}</Text>
-            <Button title={t('scan_and_go.requestPermission')} onPress={requestPermission} />
+      {!hasPermission ? (
+        <View style={[styles.viewfinderFrame, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: 'white', marginBottom: 16 }}>
+            {t('scan_and_go.cameraPermission')}
+          </Text>
+          <Button title={t('scan_and_go.requestPermission')} onPress={requestPermission} />
+        </View>
+      ) : (
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          onBarcodeScanned={onBarcodeScanned}
+          barcodeScannerSettings={{
+            barcodeTypes: ['ean13', 'ean8', 'code128', 'qr'],
+          }}
+        >
+          <View style={styles.darkOverlay} />
+          <View style={styles.middleRow}>
+            <View style={styles.darkOverlay} />
+            <View style={styles.viewfinderFrame}>
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
+              <View style={styles.laserLine} />
+            </View>
+            <View style={styles.darkOverlay} />
           </View>
-        ) : (
-          <CameraView
-            style={styles.camera}
-            facing="back"
-            onBarcodeScanned={onBarcodeScanned}
-            barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8', 'code128', 'qr'],
-            }}
-          >
-            <View style={styles.darkOverlay} />
-            <View style={styles.middleRow}>
-              <View style={styles.darkOverlay} />
-              <View style={styles.viewfinderFrame}>
-                <View style={[styles.corner, styles.topLeft]} />
-                <View style={[styles.corner, styles.topRight]} />
-                <View style={[styles.corner, styles.bottomLeft]} />
-                <View style={[styles.corner, styles.bottomRight]} />
-                <View style={styles.laserLine} />
-              </View>
-              <View style={styles.darkOverlay} />
-            </View>
-            <View style={styles.darkOverlay} />
+          <View style={styles.darkOverlay} />
 
-            <View style={styles.overlayTextContainer}>
-              <Text variant="bold" style={styles.scanHint}>
-                {t('scan_and_go.scanHint')}
-              </Text>
-              {lastScanned && (
-                <View style={styles.toast}>
-                  <Text style={styles.toastText}>
-                    {t('catalog.itemAdded')}: {lastScanned}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </CameraView>
-        )}
+          <View style={styles.overlayTextContainer}>
+            <Text variant="bold" style={styles.scanHint}>
+              {t('scan_and_go.scanHint')}
+            </Text>
+            {lastScanned && (
+              <View style={styles.toast}>
+                <Text style={styles.toastText}>
+                  {t('catalog.itemAdded')}: {lastScanned}
+                </Text>
+              </View>
+            )}
+          </View>
+        </CameraView>
+      )}
 
       <View style={styles.controls}>
         <Button

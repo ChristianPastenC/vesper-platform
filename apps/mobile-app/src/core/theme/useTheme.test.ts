@@ -18,7 +18,9 @@ describe('useTheme', () => {
   });
 
   it('returns dark theme when themeMode is dark', () => {
-    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => selector({ themeMode: 'dark' }));
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ themeMode: 'dark' }),
+    );
     (useColorScheme as jest.Mock).mockReturnValue('light');
 
     const { result } = renderHook(() => useTheme());
@@ -28,7 +30,9 @@ describe('useTheme', () => {
   });
 
   it('returns light theme when themeMode is light', () => {
-    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => selector({ themeMode: 'light' }));
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ themeMode: 'light' }),
+    );
     (useColorScheme as jest.Mock).mockReturnValue('dark');
 
     const { result } = renderHook(() => useTheme());
@@ -38,7 +42,9 @@ describe('useTheme', () => {
   });
 
   it('returns system theme when themeMode is system', () => {
-    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => selector({ themeMode: 'system' }));
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({ themeMode: 'system' }),
+    );
     (useColorScheme as jest.Mock).mockReturnValue('dark');
 
     const { result } = renderHook(() => useTheme());

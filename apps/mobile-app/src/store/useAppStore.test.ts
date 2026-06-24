@@ -27,7 +27,7 @@ describe('useAppStore', () => {
 
   it('adds item to online cart and calculates total', () => {
     const { result } = renderHook(() => useAppStore());
-    
+
     act(() => {
       result.current.addToOnlineCart({ id: '1', name: 'Item 1', price: 100 });
       result.current.addToOnlineCart({ id: '1', name: 'Item 1', price: 100 });
@@ -41,7 +41,7 @@ describe('useAppStore', () => {
 
   it('adds item to inStore cart and calculates total', () => {
     const { result } = renderHook(() => useAppStore());
-    
+
     act(() => {
       result.current.addToInStoreCart({ id: '1', barcode: '111', name: 'Item 1', price: 10 });
       result.current.addToInStoreCart({ id: '1', barcode: '111', name: 'Item 1', price: 10 });

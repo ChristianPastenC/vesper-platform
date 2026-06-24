@@ -116,22 +116,38 @@ export const CatalogScreen: React.FC = () => {
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
-              <TouchableOpacity 
-                key={cat.id} 
+              <TouchableOpacity
+                key={cat.id}
                 style={styles.categoryItem}
                 activeOpacity={0.7}
                 onPress={() => setSelectedCategory(isSelected ? undefined : cat.id)}
               >
-                <View style={[styles.categoryOuterRing, isSelected && { borderColor: theme.colors.primary }]}>
-                  <View style={[styles.categoryInnerCircle, isSelected && { backgroundColor: theme.colors.primary + '1A' }]}>
-                    <Ionicons 
-                      name={cat.icon as keyof typeof Ionicons.glyphMap} 
-                      size={22} 
-                      color={isSelected ? theme.colors.primary : theme.colors.text} 
+                <View
+                  style={[
+                    styles.categoryOuterRing,
+                    isSelected && { borderColor: theme.colors.primary },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.categoryInnerCircle,
+                      isSelected && { backgroundColor: theme.colors.primary + '1A' },
+                    ]}
+                  >
+                    <Ionicons
+                      name={cat.icon as keyof typeof Ionicons.glyphMap}
+                      size={22}
+                      color={isSelected ? theme.colors.primary : theme.colors.text}
                     />
                   </View>
                 </View>
-                <Text style={[styles.categoryText, isSelected && { color: theme.colors.primary, fontWeight: '600' }]} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.categoryText,
+                    isSelected && { color: theme.colors.primary, fontWeight: '600' },
+                  ]}
+                  numberOfLines={1}
+                >
                   {cat.name}
                 </Text>
               </TouchableOpacity>
@@ -187,21 +203,24 @@ export const CatalogScreen: React.FC = () => {
             </View>
           ) : error ? (
             <View style={styles.emptyStateContainer}>
-              <Ionicons name="cloud-offline-outline" size={48} color={theme.colors.error || '#ef4444'} style={styles.errorIcon} />
+              <Ionicons
+                name="cloud-offline-outline"
+                size={48}
+                color={theme.colors.error || '#ef4444'}
+                style={styles.errorIcon}
+              />
               <Text style={styles.errorText}>
                 {t('catalog.errorLoad') || 'Failed to load catalog. Please check your connection.'}
               </Text>
-              <Button 
-                title={t('catalog.retry') || 'Retry'} 
-                onPress={() => refetch()} 
+              <Button
+                title={t('catalog.retry') || 'Retry'}
+                onPress={() => refetch()}
                 variant="secondary"
               />
             </View>
           ) : isEmpty ? (
             <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyText}>
-                {t('catalog.empty') || 'No products found.'}
-              </Text>
+              <Text style={styles.emptyText}>{t('catalog.empty') || 'No products found.'}</Text>
             </View>
           ) : null
         }

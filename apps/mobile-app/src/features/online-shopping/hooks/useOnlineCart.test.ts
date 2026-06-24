@@ -24,7 +24,7 @@ describe('useOnlineCart', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useTranslation as jest.Mock).mockReturnValue({ t: (key: string) => key });
-    
+
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = {
         onlineCart: [{ id: '1', name: 'Test', price: 10, quantity: 1 }],
@@ -53,7 +53,9 @@ describe('useOnlineCart', () => {
 
   it('calls clearCart', () => {
     const { result } = renderHook(() => useOnlineCart());
-    act(() => { result.current.clearCart(); });
+    act(() => {
+      result.current.clearCart();
+    });
     expect(mockClearOnlineCart).toHaveBeenCalled();
   });
 
@@ -67,7 +69,7 @@ describe('useOnlineCart', () => {
 
     expect(mockMutate).toHaveBeenCalledWith(
       { items: result.current.cartItems, address: 'online_checkout.simulatedAddress' },
-      expect.any(Object)
+      expect.any(Object),
     );
 
     // simulate onSuccess callback

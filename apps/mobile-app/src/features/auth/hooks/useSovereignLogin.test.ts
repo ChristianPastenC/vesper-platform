@@ -110,7 +110,7 @@ describe('useSovereignLogin', () => {
 
     expect(mockExecuteRequest).toHaveBeenCalled();
     expect(saveTokens).toHaveBeenCalledWith('access-token', 'refresh-token');
-    
+
     const mockSetIsAuthenticated = useAppStore.getState().setIsAuthenticated;
     expect(mockSetIsAuthenticated).toHaveBeenCalledWith(true, 'john_doe');
     expect(mockGoBack).toHaveBeenCalled();
@@ -133,7 +133,7 @@ describe('useSovereignLogin', () => {
 
     expect(result.current.error).toBe('Network error');
     expect(saveTokens).not.toHaveBeenCalled();
-    
+
     const mockSetIsAuthenticated = useAppStore.getState().setIsAuthenticated;
     expect(mockSetIsAuthenticated).not.toHaveBeenCalled();
   });

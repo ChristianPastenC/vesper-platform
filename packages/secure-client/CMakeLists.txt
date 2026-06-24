@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Target 1: SovereignSecureCore (Pure C++ Standalone Static Library)
 # ---------------------------------------------------------------------------
 add_library(SovereignSecureCore STATIC
+    cpp/CryptoUtils.cpp
+    cpp/CryptoUtils.h
+    cpp/SovereignTypes.h
+    cpp/SovereignLedger.cpp
+    cpp/SovereignLedger.h
     cpp/SovereignSecureCore.cpp
     cpp/SovereignSecureCore.h
 )
@@ -80,6 +85,8 @@ if (BUILD_TESTING)
 
     add_executable(SovereignSecureCoreTests
         cpp/tests/SovereignSecureCoreTests.cpp
+        cpp/tests/SovereignLedgerTests.cpp
+        cpp/tests/CryptoUtilsTests.cpp
     )
 
     target_include_directories(SovereignSecureCoreTests PRIVATE cpp)

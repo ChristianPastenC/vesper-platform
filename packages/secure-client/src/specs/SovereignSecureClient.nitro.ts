@@ -57,4 +57,9 @@ export interface SovereignSecureClient extends HybridObject<{ ios: 'c++'; androi
    * Returns null if not found or if the block was zeroized.
    */
   getTransactionPayload(id: string): ArrayBuffer | null;
+
+  /**
+   * Encodes a given ArrayBuffer to a Base64Url string in native C++.
+   */
+  base64UrlEncode(data: ArrayBuffer): string;
 }

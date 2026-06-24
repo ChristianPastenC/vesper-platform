@@ -124,6 +124,17 @@ export class SovereignSecureClientFallback {
     ) as ArrayBuffer;
   }
 
+  public base64UrlEncode(data: ArrayBuffer): string {
+    const bytes = new Uint8Array(data);
+    let str = '';
+    for (let i = 0; i < bytes.length; i++) {
+      str += String.fromCharCode(bytes[i]!);
+    }
+    return typeof btoa !== 'undefined'
+      ? btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      : Buffer.from(bytes).toString('base64url');
+  }
+
   private zeroizeBlock(block: LedgerBlockInternal): void {
     block.serializedRequest.fill(0);
     block.previousHash.fill(0);

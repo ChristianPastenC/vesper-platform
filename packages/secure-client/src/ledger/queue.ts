@@ -23,7 +23,7 @@ export const configureQueueEngine = (options: { mock?: boolean | undefined }): v
   }
 };
 
-const getNativeClient = (): SovereignSecureClient => {
+export const getNativeClient = (): SovereignSecureClient => {
   if (nativeClient) return nativeClient;
 
   const isMockEnv =
@@ -63,7 +63,7 @@ export class SovereignMemoryQueue {
   private watchdogTimer?: unknown;
   private isWatchdogRunning = false;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): SovereignMemoryQueue {
     if (!SovereignMemoryQueue.instance) SovereignMemoryQueue.instance = new SovereignMemoryQueue();
@@ -77,7 +77,7 @@ export class SovereignMemoryQueue {
   public get isIntegrityCompromised(): boolean {
     return getNativeClient().getQueueStatus().isIntegrityCompromised;
   }
-  public set isIntegrityCompromised(value: boolean) {}
+  public set isIntegrityCompromised(value: boolean) { }
 
   public async enqueue(
     cryptoProvider: ISovereignCryptoProvider,
@@ -118,15 +118,15 @@ export class SovereignMemoryQueue {
     const rawPayload = getNativeClient().getTransactionPayload(id);
     return rawPayload
       ? {
-          id,
-          serializedRequest: new Uint8Array(rawPayload),
-          timestamp: 0,
-          ttl: 0,
-          expiryTimer: undefined,
-          previousHash: new Uint8Array(0),
-          currentHash: new Uint8Array(0),
-          isZeroized: false,
-        }
+        id,
+        serializedRequest: new Uint8Array(rawPayload),
+        timestamp: 0,
+        ttl: 0,
+        expiryTimer: undefined,
+        previousHash: new Uint8Array(0),
+        currentHash: new Uint8Array(0),
+        isZeroized: false,
+      }
       : undefined;
   }
 

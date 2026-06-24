@@ -1,4 +1,5 @@
 #include "SovereignSecureClient.h"
+#include "CryptoUtils.h"
 
 namespace sovereign::secure {
 
@@ -109,6 +110,24 @@ jsi::Value SovereignSecureClient::get(jsi::Runtime& rt, const jsi::PropNameID& n
                         jsi::ArrayBuffer buf = jsiBufferObj.getArrayBuffer(runtime);
                         std::memcpy(buf.data(runtime), payload->data(), payload->size());
                         return jsiBufferObj;
+                    }
+                }
+                return jsi::Value::undefined();
+            });
+    }
+
+    if (propName == "base64UrlEncode") {
+        return jsi::Function::createFromHostFunction(rt, name, 1,
+            [this](jsi::Runtime& runtime, const jsi::Value& thisVal, const jsi::Value* args, size_t count) -> jsi::Value {
+                if (count > 0 && args[0].isObject()) {
+                    jsi::Object obj = args[0].getObject(runtime);
+                    if (obj.isArrayBuffer(runtime)) {
+                        jsi::ArrayBuffer jsiBuffer = obj.getArrayBuffer(runtime);
+                        size_t size = jsiBuffer.size(runtime);
+                        uint8_t* data = jsiBuffer.data(runtime);
+                        std::vector<uint8_t> vec(data, data + size);
+                        std::string encoded = crypto::base64UrlEncode(vec);
+                        return jsi::String::createFromUtf8(runtime, encoded);
                     }
                 }
                 return jsi::Value::undefined();

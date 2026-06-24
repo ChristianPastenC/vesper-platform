@@ -149,13 +149,18 @@ describe('SovereignClientCore', () => {
     // Make it offline
     mockNetworkResolver.mockResolvedValue(false);
     let resolvedData: unknown;
+    let caughtError: Error | undefined;
     client.executeRequest('req-process', {
       method: 'GET',
       url: 'https://api.test.com'
-    }).then((d: unknown) => resolvedData = d).catch(() => { });
+    }).then((d: unknown) => resolvedData = d).catch((e) => caughtError = e);
 
     await new Promise(resolve => setTimeout(resolve, 50));
     expect(client.isFrozen).toBe(true);
+
+    if (caughtError) {
+      console.log('Caught Error:', caughtError.message);
+    }
 
     // Reconnect and process queue
     mockNetworkResolver.mockResolvedValue(true);
@@ -164,6 +169,7 @@ describe('SovereignClientCore', () => {
     await client.processSynchronizedQueue(async () => true);
 
     await new Promise(resolve => setTimeout(resolve, 50));
+    if (caughtError) console.log('Replay error:', caughtError);
     expect(resolvedData).toBe('replay-success');
     expect(client.isFrozen).toBe(false);
   });
@@ -245,5 +251,30 @@ describe('SovereignClientCore', () => {
     const jwk = await client.bootstrap();
     expect(jwk).toBeDefined();
     expect(client.getDPoPPublicKey()).toEqual(jwk);
+  });
+
+  it('should reject pending requests if they expire in RAM', async () => {
+    mockNetworkResolver.mockResolvedValue(false);
+
+    const client = SovereignClientCore.getInstance({
+      cryptoProvider: mockCryptoProvider,
+      networkResolver: mockNetworkResolver,
+      networkAdapter: mockNetworkAdapter,
+      mock: true
+    });
+
+    let caughtError: unknown;
+
+    // Very short TTL
+    client.executeRequest('req-expiry', {
+      method: 'GET',
+      url: 'https://api.test.com'
+    }, undefined, { ttl: 1 }).catch((e: unknown) => caughtError = e);
+
+    // Wait for the memory queue's internal setTimeout (which is 1ms) to fire
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(caughtError).toBeDefined();
+    expect((caughtError as Error).message).toMatch(/expired in RAM/);
   });
 });

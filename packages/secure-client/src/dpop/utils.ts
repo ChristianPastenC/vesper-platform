@@ -1,25 +1,15 @@
 import type { DPoPAlgorithm } from './types.js';
 
+import { getNativeClient } from '../ledger/queue.js';
+
 /**
  * Encodes a raw byte array as a base64url string (RFC 4648 §5, no padding).
+ * Offloaded to C++ core for optimal performance.
  */
 export const base64UrlEncode = (bytes: Uint8Array): string => {
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-  let result = '';
-  const len = bytes.length;
-
-  for (let i = 0; i < len; i += 3) {
-    const b0 = bytes[i] as number;
-    const b1 = (bytes[i + 1] as number) ?? 0;
-    const b2 = (bytes[i + 2] as number) ?? 0;
-
-    result += CHARS[b0 >> 2];
-    result += CHARS[((b0 & 0x03) << 4) | (b1 >> 4)];
-    if (i + 1 < len) result += CHARS[((b1 & 0x0f) << 2) | (b2 >> 6)];
-    if (i + 2 < len) result += CHARS[b2 & 0x3f];
-  }
-
-  return result;
+  // Use exact ArrayBuffer from view to avoid memory copies over JSI
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return getNativeClient().base64UrlEncode(buffer);
 };
 
 /**

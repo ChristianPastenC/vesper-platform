@@ -90,4 +90,21 @@ describe('ScannerScreen View', () => {
     fireEvent.press(getByText('scan_and_go.checkoutTitle (3)'));
     expect(mockNavigate).toHaveBeenCalledWith('InStoreCheckoutModal');
   });
+
+  it('renders permission request view when hasPermission is false', () => {
+    (useScanner as jest.Mock).mockReturnValue({
+      lastScanned: null,
+      simulateScan: mockSimulate,
+      onBarcodeScanned: jest.fn(),
+      hasPermission: false,
+      requestPermission: jest.fn(),
+      t: (key: string) => key,
+    });
+
+    const { getByText, queryByText } = render(<ScannerScreen />);
+    
+    expect(getByText('scan_and_go.cameraPermission')).toBeTruthy();
+    expect(getByText('scan_and_go.requestPermission')).toBeTruthy();
+    expect(queryByText('scan_and_go.scanHint')).toBeNull(); // Should not render camera view texts
+  });
 });

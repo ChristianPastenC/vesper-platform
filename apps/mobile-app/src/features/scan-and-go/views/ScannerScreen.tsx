@@ -39,11 +39,11 @@ export const ScannerScreen: React.FC = () => {
           </View>
         ) : (
           <CameraView
-            style={{ flex: 1 }}
+            style={styles.camera}
             facing="back"
             onBarcodeScanned={onBarcodeScanned}
             barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'upc_a', 'ean8', 'qr'],
+              barcodeTypes: ['ean13', 'ean8', 'code128', 'qr'],
             }}
           >
             <View style={styles.darkOverlay} />

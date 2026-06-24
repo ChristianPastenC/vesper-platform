@@ -106,4 +106,32 @@ describe('useAppStore', () => {
     const { result } = renderHook(() => useIsAuthenticated());
     expect(result.current).toBe(true);
   });
+
+  it('partialize correctly filters out sensitive data (PCI-DSS compliance)', () => {
+    // Retrieve partialize from the Zustand persist options.
+    const persistOptions = (useAppStore as any).persist?.getOptions();
+    if (persistOptions && persistOptions.partialize) {
+      const mockState = {
+        isAuthenticated: true,
+        userName: 'hacker',
+        isOnline: true,
+        isFrozen: false,
+        language: 'es',
+        themeMode: 'dark',
+        onlineCart: [{ id: '1', name: 'Item', price: 100, quantity: 1 }],
+        inStoreCart: [{ id: '2', barcode: '123', name: 'Item2', price: 50, quantity: 2 }],
+      };
+
+      const persistedState = persistOptions.partialize(mockState as any);
+
+      expect(persistedState).toEqual({
+        language: 'es',
+        themeMode: 'dark',
+      });
+
+      expect((persistedState as any).isAuthenticated).toBeUndefined();
+      expect((persistedState as any).onlineCart).toBeUndefined();
+      expect((persistedState as any).inStoreCart).toBeUndefined();
+    }
+  });
 });

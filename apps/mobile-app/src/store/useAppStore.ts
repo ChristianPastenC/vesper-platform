@@ -135,10 +135,11 @@ export const useAppStore = create<AppState>()(
       name: 'sovereign-app-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
+        // PCI-DSS / Zero-Disk Footprint Compliance:
+        // ONLY persist UX configurations (language, themeMode).
+        // Transactional and Auth payloads (cart, tokens, isAuth) are NOT persisted.
         language: state.language,
         themeMode: state.themeMode,
-        onlineCart: state.onlineCart,
-        inStoreCart: state.inStoreCart,
       }),
     },
   ),

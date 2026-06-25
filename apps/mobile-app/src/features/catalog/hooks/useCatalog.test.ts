@@ -60,4 +60,33 @@ describe('useCatalog', () => {
     expect(result.current.products[0].name).toBe('Sovereign Hoodie');
     jest.useRealTimers();
   });
+
+  it('handles mock refetch correctly', async () => {
+    jest.useFakeTimers();
+    (useIsAuthenticated as jest.Mock).mockReturnValue(false);
+
+    const { result } = renderHook(() => useCatalog());
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // Invoke refetch
+    act(() => {
+      result.current.refetch();
+    });
+
+    expect(result.current.loading).toBe(true);
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.products).toHaveLength(2);
+    jest.useRealTimers();
+  });
 });

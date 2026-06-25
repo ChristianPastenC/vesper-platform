@@ -4,19 +4,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import i18n from '../core/i18n/i18n';
-import { useTheme } from '../core/theme/useTheme';
-import { ThemeColors } from '../core/theme/colors';
-import { useAppStore } from '../store/useAppStore';
+import i18n from '../../core/i18n/i18n';
+import { useTheme } from '../../core/theme/useTheme';
+import { ThemeColors } from '../../core/theme/colors';
+import { useAppStore } from '../../store/useAppStore';
 
-import { useSovereignInitializer } from './useSovereignInitializer';
-import { SovereignClientContext } from './SovereignClientContext';
+import { useSovereignInitializer } from '../sovereign/useSovereignInitializer';
+import { SovereignClientContext } from '../sovereign/SovereignClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
-import { validateHandshake } from '../core/network/handshakeValidator';
+import { validateHandshake } from '../../core/network/handshakeValidator';
 import {
   startNetworkTransitionsListener,
   stopNetworkTransitionsListener,
-} from '../core/network/networkResolver';
+} from '../../core/network/networkResolver';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,7 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 >
                   <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
                     {i18n.t('system.pendingTransaction') ||
-                      'Transacción pendiente de sincronización...'}
+                      'Transaction pending synchronization...'}
                   </Text>
                 </View>
               )}

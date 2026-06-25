@@ -1,12 +1,12 @@
 import { buildTransactionLedger } from './buildTransactionLedger';
-import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
+
 import * as crypto from 'crypto';
 
 jest.mock('../../../core/crypto/NativeCryptoProvider', () => ({
   nativeCryptoProvider: {
     sha256: jest.fn(async (data: Uint8Array) => {
-      const mockCrypto = require('crypto');
-      return mockCrypto.createHash('sha256').update(data).digest();
+      const crypto = jest.requireActual('crypto');
+      return crypto.createHash('sha256').update(data).digest();
     }),
   },
 }));

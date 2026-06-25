@@ -6,9 +6,9 @@ import { encodeJsonBody } from '@sovereign/secure-client';
 import { randomUUID } from 'expo-crypto';
 
 import { useAppStore } from '../../../store/useAppStore';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 
-// 1. Leer API_URL desde ../../../core/config
+// 1. Read API_URL from ../../../core/config
 import { getApiUrl } from '../../../core/config';
 
 export interface AuthResponse {
@@ -22,7 +22,7 @@ export const useSovereignLogin = () => {
   const navigation = useNavigation();
   const client = useSovereignClient();
 
-  // 2. Declarar estados locales
+  // 2. Declare local states
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,13 +32,13 @@ export const useSovereignLogin = () => {
   const handleLogin = async () => {
     setError(null);
 
-    // a. Validar que name, email y password no estén vacíos
+    // a. Validate that name, email and password are not empty
     if (!name || !email || !password) {
       setError(t('auth.emptyFieldsError', 'All fields are required.'));
       return;
     }
 
-    // b. Validar formato de email con regex y password.length >= 4
+    // b. Validate email format with regex and password.length >= 4
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError(t('auth.invalidEmailError', 'Invalid email format.'));
@@ -54,10 +54,10 @@ export const useSovereignLogin = () => {
       const API_URL = getApiUrl();
       setIsPending(true);
 
-      // c. Serializar credenciales
+      // c. Serialize credentials
       const bodyBytes = encodeJsonBody({ username: email, password });
 
-      // d. Llamar executeRequest
+      // d. Call executeRequest
       const response = await client.executeRequest<AuthResponse>(randomUUID(), {
         method: 'POST',
         url: `${API_URL}/api/v1/auth/login`,
@@ -65,23 +65,24 @@ export const useSovereignLogin = () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      // e. En éxito: guardar tokens y actualizar estado
+      // e. On success: save tokens and update state
       await saveTokens(response.accessToken, response.refreshToken);
       useAppStore.getState().setIsAuthenticated(true, response.user.username);
 
-      // g. Si canGoBack, goBack
+      // g. If canGoBack, goBack
       if (navigation.canGoBack()) {
         navigation.goBack();
       }
-    } catch (err: any) {
-      // f. En error: mapear el mensaje
+    } catch (error: unknown) {
+      // f. On error: map the message
+      const err = error as { message?: string };
       setError(err.message || t('auth.invalidError', 'Login failed.'));
     } finally {
       setIsPending(false);
     }
   };
 
-  // 6. Retornar
+  // 6. Return
   return {
     name,
     setName,

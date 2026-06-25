@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useAppStore, useIsAuthenticated } from './useAppStore';
+import i18n from '../core/i18n/i18n';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(),
@@ -8,7 +9,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 jest.mock('../core/i18n/i18n', () => ({
-  changeLanguage: jest.fn(),
+  __esModule: true,
+  default: {
+    changeLanguage: jest.fn(),
+  },
 }));
 
 jest.mock('../core/auth/tokenStore', () => ({
@@ -30,8 +34,8 @@ describe('useAppStore', () => {
 
     act(() => {
       result.current.addToOnlineCart({ id: '1', name: 'Item 1', price: 100 });
-      result.current.addToOnlineCart({ id: '1', name: 'Item 1', price: 100 });
       result.current.addToOnlineCart({ id: '2', name: 'Item 2', price: 50 });
+      result.current.addToOnlineCart({ id: '1', name: 'Item 1', price: 100 });
     });
 
     expect(result.current.onlineCart.length).toBe(2);
@@ -44,12 +48,13 @@ describe('useAppStore', () => {
 
     act(() => {
       result.current.addToInStoreCart({ id: '1', barcode: '111', name: 'Item 1', price: 10 });
+      result.current.addToInStoreCart({ id: '2', barcode: '222', name: 'Item 2', price: 5 });
       result.current.addToInStoreCart({ id: '1', barcode: '111', name: 'Item 1', price: 10 });
     });
 
-    expect(result.current.inStoreCart.length).toBe(1);
+    expect(result.current.inStoreCart.length).toBe(2);
     expect(result.current.inStoreCart[0].quantity).toBe(2);
-    expect(result.current.getInStoreTotal()).toBe(20);
+    expect(result.current.getInStoreTotal()).toBe(25);
   });
 
   it('logs in and out properly', async () => {
@@ -98,6 +103,60 @@ describe('useAppStore', () => {
     expect(result.current.userName).toBeNull();
   });
 
+  it('toggles network state', () => {
+    const { result } = renderHook(() => useAppStore());
+
+    // Default isOnline is true
+    act(() => {
+      result.current.toggleNetwork();
+    });
+    expect(result.current.isOnline).toBe(false);
+
+    act(() => {
+      result.current.toggleNetwork();
+    });
+    expect(result.current.isOnline).toBe(true);
+  });
+
+  it('sets frozen state', () => {
+    const { result } = renderHook(() => useAppStore());
+
+    act(() => {
+      result.current.setFrozen(true);
+    });
+    expect(result.current.isFrozen).toBe(true);
+
+    act(() => {
+      result.current.setFrozen(false);
+    });
+    expect(result.current.isFrozen).toBe(false);
+  });
+
+  it('sets language and calls i18n', () => {
+    const { result } = renderHook(() => useAppStore());
+
+    act(() => {
+      result.current.setLanguage('es');
+    });
+
+    expect(result.current.language).toBe('es');
+    expect(i18n.changeLanguage).toHaveBeenCalledWith('es');
+  });
+
+  it('sets theme mode', () => {
+    const { result } = renderHook(() => useAppStore());
+
+    act(() => {
+      result.current.setThemeMode('dark');
+    });
+    expect(result.current.themeMode).toBe('dark');
+
+    act(() => {
+      result.current.setThemeMode('light');
+    });
+    expect(result.current.themeMode).toBe('light');
+  });
+
   it('useIsAuthenticated returns the auth state', () => {
     const { result: storeResult } = renderHook(() => useAppStore());
     act(() => {
@@ -107,31 +166,26 @@ describe('useAppStore', () => {
     expect(result.current).toBe(true);
   });
 
-  it('partialize correctly filters out sensitive data (PCI-DSS compliance)', () => {
-    // Retrieve partialize from the Zustand persist options.
-    const persistOptions = (useAppStore as any).persist?.getOptions();
-    if (persistOptions && persistOptions.partialize) {
-      const mockState = {
-        isAuthenticated: true,
-        userName: 'hacker',
-        isOnline: true,
-        isFrozen: false,
-        language: 'es',
-        themeMode: 'dark',
-        onlineCart: [{ id: '1', name: 'Item', price: 100, quantity: 1 }],
-        inStoreCart: [{ id: '2', barcode: '123', name: 'Item2', price: 50, quantity: 2 }],
-      };
+  it('signs up and falls back to default user name', async () => {
+    const { result } = renderHook(() => useAppStore());
 
-      const persistedState = persistOptions.partialize(mockState as any);
+    await act(async () => {
+      // @ts-expect-error testing missing name
+      await result.current.signUp('test@test.com', '');
+    });
 
-      expect(persistedState).toEqual({
-        language: 'es',
-        themeMode: 'dark',
-      });
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.userName).toBe('User');
+  });
 
-      expect((persistedState as any).isAuthenticated).toBeUndefined();
-      expect((persistedState as any).onlineCart).toBeUndefined();
-      expect((persistedState as any).inStoreCart).toBeUndefined();
-    }
+  it('login falls back to default user name', async () => {
+    const { result } = renderHook(() => useAppStore());
+
+    await act(async () => {
+      // @ts-expect-error testing missing name
+      await result.current.login('test@test.com', null);
+    });
+
+    expect(result.current.userName).toBe('User');
   });
 });

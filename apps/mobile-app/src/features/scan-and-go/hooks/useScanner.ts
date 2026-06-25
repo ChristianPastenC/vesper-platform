@@ -33,37 +33,40 @@ export const useScanner = () => {
   const { execute } = useAuthenticatedRequest();
   const [isScanningActive, setIsScanningActive] = useState<boolean>(true);
 
-  const resolveProduct = async (barcode: string): Promise<ScannableProduct | null> => {
-    try {
-      const API_URL = getApiUrl();
-      const token = await getAccessToken();
-      const encodedHeaders = encodeHeaders({
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      });
+  const resolveProduct = useCallback(
+    async (barcode: string): Promise<ScannableProduct | null> => {
+      try {
+        const API_URL = getApiUrl();
+        const token = await getAccessToken();
+        const encodedHeaders = encodeHeaders({
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        });
 
-      const response = await execute<BackendProduct[]>(randomUUID(), {
-        method: 'GET',
-        url: `${API_URL}/api/v1/catalog?barcode=${encodeURIComponent(barcode)}`,
-        headers: encodedHeaders,
-      });
+        const response = await execute<BackendProduct[]>(randomUUID(), {
+          method: 'GET',
+          url: `${API_URL}/api/v1/catalog?barcode=${encodeURIComponent(barcode)}`,
+          headers: encodedHeaders,
+        });
 
-      if (response && response.length > 0) {
-        const product = response[0];
-        return {
-          id: String(product.id),
-          barcode: product.barcode,
-          name: product.title,
-          price: product.price,
-        };
+        if (response && response.length > 0) {
+          const product = response[0];
+          return {
+            id: String(product.id),
+            barcode: product.barcode,
+            name: product.title,
+            price: product.price,
+          };
+        }
+      } catch (e) {
+        console.warn('Network resolve failed, falling back to local catalog', e);
       }
-    } catch (e) {
-      console.warn('Network resolve failed, falling back to local catalog', e);
-    }
 
-    // Fallback local search
-    return SCANNABLE_PRODUCTS.find((p) => p.barcode === barcode) || null;
-  };
+      // Fallback local search
+      return SCANNABLE_PRODUCTS.find((p) => p.barcode === barcode) || null;
+    },
+    [execute],
+  );
 
   const onBarcodeScanned = useCallback(
     async (scanningResult: BarcodeScanningResult) => {
@@ -93,7 +96,7 @@ export const useScanner = () => {
         setIsScanningActive(true);
       }, 2000);
     },
-    [isScanningActive, addToInStoreCart, execute],
+    [isScanningActive, addToInStoreCart, resolveProduct],
   );
 
   const simulateScan = () => {

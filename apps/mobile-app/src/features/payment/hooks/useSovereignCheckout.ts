@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as Crypto from 'expo-crypto';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 import { SovereignAdapterRequest, encodeJsonBody } from '@sovereign/secure-client';
 import { buildTransactionLedger, TransactionBlock } from '../ledger/buildTransactionLedger';
 import { getAccessToken } from '../../../core/auth/tokenStore';

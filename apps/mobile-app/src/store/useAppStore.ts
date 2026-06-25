@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../core/i18n/i18n';
+import { clearTokens, getAccessToken } from '../core/auth/tokenStore';
 
 export interface OnlineCartItem {
   id: string;
@@ -71,7 +72,6 @@ export const useAppStore = create<AppState>()(
         set({ isAuthenticated: true, userName: name || 'User' });
       },
       logout: async () => {
-        const { clearTokens } = require('../core/auth/tokenStore');
         await clearTokens();
         set({
           isAuthenticated: false,
@@ -81,7 +81,6 @@ export const useAppStore = create<AppState>()(
         });
       },
       initAuth: async () => {
-        const { getAccessToken } = require('../core/auth/tokenStore');
         const token = await getAccessToken();
         set({ isAuthenticated: !!token });
       },

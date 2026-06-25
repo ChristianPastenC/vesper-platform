@@ -4,7 +4,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
-import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
+import { encodeHeaders } from '@sovereign/secure-client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 

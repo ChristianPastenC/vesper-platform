@@ -103,4 +103,40 @@ describe('ProductDetailsScreen View', () => {
     fireEvent.press(button);
     expect(mockHandleAddToInStore).toHaveBeenCalled();
   });
+
+  describe('getProductIcon branches', () => {
+    const testIcon = (name: string) => {
+      (useProductDetails as jest.Mock).mockReturnValue({
+        product: { id: '1', name, price: 10, barcode: '123' },
+        handleAddToOnline: mockHandleAddToOnline,
+        handleAddToInStore: mockHandleAddToInStore,
+        specifications: [],
+      });
+      render(<ProductDetailsScreen />);
+    };
+
+    it('handles keyboard', () => {
+      testIcon('Mechanical Keyboard');
+    });
+
+    it('handles mouse', () => {
+      testIcon('Gaming Mouse');
+    });
+
+    it('handles watch', () => {
+      testIcon('Smart Watch');
+    });
+
+    it('handles hub', () => {
+      testIcon('USB-C Hub');
+    });
+
+    it('handles adapter', () => {
+      testIcon('Power Adapter');
+    });
+
+    it('handles unknown (fallback to cube)', () => {
+      testIcon('Random Item');
+    });
+  });
 });

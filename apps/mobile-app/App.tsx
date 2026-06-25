@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { AppProvider } from './src/providers/AppProvider';
+import { AppProvider } from './src/providers/app/AppProvider';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useTheme } from './src/core/theme/useTheme';
 

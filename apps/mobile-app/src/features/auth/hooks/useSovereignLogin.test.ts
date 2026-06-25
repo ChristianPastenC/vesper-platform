@@ -3,7 +3,7 @@ import { useSovereignLogin } from './useSovereignLogin';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { useAppStore } from '../../../store/useAppStore';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 import { saveTokens } from '../../../core/auth/tokenStore';
 
 jest.mock('react-i18next', () => ({
@@ -16,12 +16,12 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('../../../store/useAppStore', () => {
   const mockSetIsAuthenticated = jest.fn();
-  const store = jest.fn() as any;
+  const store = jest.fn() as unknown as { getState: () => { setIsAuthenticated: jest.Mock } };
   store.getState = jest.fn(() => ({ setIsAuthenticated: mockSetIsAuthenticated }));
   return { useAppStore: store };
 });
 
-jest.mock('../../../providers/SovereignClientContext', () => ({
+jest.mock('../../../providers/sovereign/SovereignClientContext', () => ({
   useSovereignClient: jest.fn(),
 }));
 

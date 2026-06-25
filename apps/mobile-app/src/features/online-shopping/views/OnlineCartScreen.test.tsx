@@ -82,4 +82,19 @@ describe('OnlineCartScreen View', () => {
     fireEvent.press(getByText('shared_ui.close'));
     expect(mockClear).toHaveBeenCalledTimes(1);
   });
+
+  it('navigates to Login if not authenticated when checkout is pressed', () => {
+    (useOnlineCart as jest.Mock).mockReturnValue({
+      cartItems: [{ id: '1', name: 'Item A', price: 10.0, quantity: 2 }],
+      total: 20.0,
+      address: '123 Sovereign Way',
+      clearCart: jest.fn(),
+      isAuthenticated: false,
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<OnlineCartScreen />);
+    fireEvent.press(getByText('online_checkout.checkoutButton'));
+    expect(mockNavigate).toHaveBeenCalledWith('Login');
+  });
 });

@@ -24,21 +24,25 @@ export const usePaymentClearing = () => {
         return;
       }
 
-      console.log(`[PaymentClearing] Network restored. Processing ${queueIds.length} in-memory transactions...`);
+      console.log(
+        `[PaymentClearing] Network restored. Processing ${queueIds.length} in-memory transactions...`,
+      );
 
       for (const id of queueIds) {
         // Read binary payload from C++ memory
         const payload = client.getTransactionPayload(id);
-        
+
         if (!payload) {
-          console.warn(`[PaymentClearing] Payload for transaction ${id} not found or already zeroized.`);
+          console.warn(
+            `[PaymentClearing] Payload for transaction ${id} not found or already zeroized.`,
+          );
           continue;
         }
 
         try {
           // Encode binary buffer to securely transmit it to the backend for verification
           const base64Payload = client.base64UrlEncode(payload);
-          
+
           const response = await fetch('https://api.sovereigncore.internal/v1/checkout/sync', {
             method: 'POST',
             headers: {
@@ -48,7 +52,9 @@ export const usePaymentClearing = () => {
           });
 
           if (response.ok) {
-            console.log(`[PaymentClearing] Transaction ${id} processed successfully. Dequeuing (zeroizing)...`);
+            console.log(
+              `[PaymentClearing] Transaction ${id} processed successfully. Dequeuing (zeroizing)...`,
+            );
             // Release and destroy RAM buffer
             client.dequeueTransaction(id);
           } else {
@@ -63,7 +69,10 @@ export const usePaymentClearing = () => {
         }
       }
     } catch (error) {
-      console.error('[PaymentClearing] Critical error while accessing SovereignSecureClient:', error);
+      console.error(
+        '[PaymentClearing] Critical error while accessing SovereignSecureClient:',
+        error,
+      );
     } finally {
       isProcessing.current = false;
     }

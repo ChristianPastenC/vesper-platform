@@ -48,4 +48,20 @@ describe('AppNavigator', () => {
     );
     expect(toJSON()).toBeTruthy();
   });
+
+  it('renders PaymentSuccessScreen options correctly', () => {
+    // Call AppNavigator as a function to inspect its returned JSX tree
+    const element = AppNavigator({});
+    const children = element.props.children;
+    // Find the PaymentSuccessScreen
+    const successScreen = (Array.isArray(children) ? children : []).find(
+      (child: React.ReactElement) =>
+        child && child.props && child.props.name === 'PaymentSuccessScreen',
+    );
+
+    expect(successScreen).toBeDefined();
+    if (successScreen?.props?.options?.headerLeft) {
+      expect(successScreen.props.options.headerLeft()).toBeNull();
+    }
+  });
 });

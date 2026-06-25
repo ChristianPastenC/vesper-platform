@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useSovereignCheckout } from './useSovereignCheckout';
-import { useSovereignClient } from '../../../providers/SovereignClientContext';
+import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 import { buildTransactionLedger } from '../ledger/buildTransactionLedger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import * as Crypto from 'expo-crypto';
 
-jest.mock('../../../providers/SovereignClientContext', () => ({
+jest.mock('../../../providers/sovereign/SovereignClientContext', () => ({
   useSovereignClient: jest.fn(),
 }));
 

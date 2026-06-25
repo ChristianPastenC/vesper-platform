@@ -38,7 +38,7 @@ export const startNetworkTransitionsListener = (
   // Establish baseline state before listening to events
   networkResolver().then((online) => {
     isCurrentlyOnline = online;
-    useAppStore.getState().set({ isOnline: online });
+    useAppStore.setState({ isOnline: online });
   });
 
   unsubscribe = NetInfo.addEventListener((state) => {
@@ -48,7 +48,7 @@ export const startNetworkTransitionsListener = (
     // Transition from Offline to Online
     if (!isCurrentlyOnline && isOnlineNow) {
       isCurrentlyOnline = true;
-      useAppStore.getState().set({ isOnline: true });
+      useAppStore.setState({ isOnline: true });
 
       // Trigger inactive queue synchronization (DPoP, Ledger, etc)
       client.processSynchronizedQueue(handshakeValidator).catch((err: unknown) => {
@@ -61,7 +61,7 @@ export const startNetworkTransitionsListener = (
     // Transition from Online to Offline
     else if (isCurrentlyOnline && !isOnlineNow) {
       isCurrentlyOnline = false;
-      useAppStore.getState().set({ isOnline: false });
+      useAppStore.setState({ isOnline: false });
     }
   });
 };

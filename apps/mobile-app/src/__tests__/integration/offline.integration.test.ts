@@ -1,11 +1,15 @@
-import { SovereignMemoryQueue, SovereignClientCore, serializeAdapterRequest } from '@sovereign/secure-client';
+import {
+  SovereignMemoryQueue,
+  SovereignClientCore,
+  serializeAdapterRequest,
+} from '@sovereign/secure-client';
 
 describe('Integration: Offline Queue', () => {
   let queue: SovereignMemoryQueue;
   let client: SovereignClientCore;
 
   beforeEach(() => {
-    (globalThis as any).__SOVEREIGN_MOCK__ = true;
+    (globalThis as unknown as { __SOVEREIGN_MOCK__: boolean }).__SOVEREIGN_MOCK__ = true;
     queue = SovereignMemoryQueue.getInstance();
     queue.clearAll();
 
@@ -19,11 +23,10 @@ describe('Integration: Offline Queue', () => {
         encryptAesGcm: jest.fn(),
         decryptAesGcm: jest.fn(),
         wrapKeyRsaOaep: jest.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      } as unknown as import('@sovereign/secure-client').IDPoPCryptoProvider,
       networkResolver: async () => true,
       networkAdapter: { request: jest.fn().mockResolvedValue({ status: 200, data: {} }) },
-      errorTrapping: { enabled: false }
+      errorTrapping: { freezeOn503_504: false, freezeOn401: false },
     });
   });
 
@@ -35,28 +38,21 @@ describe('Integration: Offline Queue', () => {
       method: 'POST',
       url: 'https://api.test/sync',
       headers: {},
-      body: new Uint8Array([1, 2, 3])
+      body: new Uint8Array([1, 2, 3]),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cryptoMock = (client as any).cryptoProvider;
-    
+    const cryptoMock = (client as unknown as { cryptoProvider: import('@sovereign/secure-client').IDPoPCryptoProvider }).cryptoProvider;
+
     // Enqueue a serialized SovereignAdapterRequest
     const binaryReq = serializeAdapterRequest(request);
-    await queue.enqueue(
-      cryptoMock,
-      'test-req-1',
-      binaryReq,
-      60000,
-      jest.fn()
-    );
+    await queue.enqueue(cryptoMock, 'test-req-1', binaryReq, 60000, jest.fn());
 
     // Verify queue size is 1
     expect(queue.size).toBe(1);
 
     // Call toggleNetworkSim(true)
     queue.toggleNetworkSim(true);
-    
+
     // Call processSynchronizedQueue(mockHandshake)
     const mockHandshake = jest.fn().mockResolvedValue(true);
     await client.processSynchronizedQueue(mockHandshake);

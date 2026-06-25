@@ -2,13 +2,13 @@ import { renderHook, act } from '@testing-library/react-native';
 import { buildTransactionLedger } from '../../features/payment/ledger/buildTransactionLedger';
 import { useOnlineCheckoutMutation } from '../../features/online-shopping/hooks/useOnlineCheckoutMutation';
 import { useAppStore } from '../../store/useAppStore';
-import * as tokenStore from '../../core/auth/tokenStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { decodeHeaders, decodeBody } from '@sovereign/secure-client';
+import { decodeHeaders } from '@sovereign/secure-client';
+import crypto from 'crypto';
 
 const mockExecuteRequest = jest.fn();
-jest.mock('../../providers/SovereignClientContext', () => ({
+jest.mock('../../providers/sovereign/SovereignClientContext', () => ({
   useSovereignClient: () => ({
     executeRequest: mockExecuteRequest,
   }),
@@ -19,21 +19,21 @@ jest.mock('../../core/auth/tokenStore', () => ({
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
 jest.mock('../../core/crypto/NativeCryptoProvider', () => ({
   nativeCryptoProvider: {
     sha256: jest.fn(async (data: Uint8Array) => {
-      const crypto = require('crypto');
+      const crypto = jest.requireActual('crypto');
       const hash = crypto.createHash('sha256').update(data).digest();
       return new Uint8Array(hash);
     }),
-  }
+  },
 }));
 
 jest.mock('../../core/config', () => ({
-  getApiUrl: () => 'https://api.test'
+  getApiUrl: () => 'https://api.test',
 }));
 
 describe('Integration: Checkout Flow', () => {
@@ -51,7 +51,7 @@ describe('Integration: Checkout Flow', () => {
 
     const ledger = await buildTransactionLedger(items);
     expect(ledger).toHaveLength(3);
-    
+
     // Verify precedingHash
     expect(ledger[0].precedingHash).toBe('0');
     expect(ledger[1].precedingHash).toBe(ledger[0].hash);
@@ -59,7 +59,6 @@ describe('Integration: Checkout Flow', () => {
 
     // Verify that altering the payload breaks the chain
     const dataToHash = `${JSON.stringify({ altered: true })}${ledger[1].precedingHash}${ledger[1].timestamp}`;
-    const crypto = require('crypto');
     const newHash = crypto.createHash('sha256').update(Buffer.from(dataToHash)).digest('hex');
     expect(newHash).not.toBe(ledger[1].hash);
   });
@@ -67,11 +66,11 @@ describe('Integration: Checkout Flow', () => {
   it('submits checkout correctly with valid headers and body', async () => {
     mockExecuteRequest.mockResolvedValueOnce({
       status: 'success',
-      transactionId: 'txn-123'
+      transactionId: 'txn-123',
     });
 
     const queryClient = new QueryClient();
-    const wrapper = ({ children }: { children: React.ReactNode }) => 
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
       React.createElement(QueryClientProvider, { client: queryClient }, children);
 
     const { result } = renderHook(() => useOnlineCheckoutMutation(), { wrapper });
@@ -79,7 +78,7 @@ describe('Integration: Checkout Flow', () => {
     await act(async () => {
       await result.current.mutateAsync({
         items: [{ id: '1', name: 'Item 1', price: 100, quantity: 1 }],
-        address: '123 Test St'
+        address: '123 Test St',
       });
     });
 
@@ -94,10 +93,10 @@ describe('Integration: Checkout Flow', () => {
     } else {
       decodedHeaders = requestArgs.headers;
     }
-    
+
     // a. Header X-Idempotency-Key presente
     expect(decodedHeaders['X-Idempotency-Key']).toBeDefined();
-    
+
     // c. Header Authorization: Bearer presente
     expect(decodedHeaders['Authorization']).toMatch(/^Bearer /);
 

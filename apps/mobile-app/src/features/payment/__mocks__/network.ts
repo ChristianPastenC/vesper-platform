@@ -1,4 +1,4 @@
-import { NetInfoState, NetInfoChangeHandler } from '@react-native-community/netinfo';
+import { NetInfoState } from '@react-native-community/netinfo';
 
 type NetworkListener = (state: NetInfoState) => void;
 

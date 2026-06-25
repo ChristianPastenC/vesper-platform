@@ -116,4 +116,41 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
     expect(errorBanner).toBeTruthy();
     expect(getByText('scan_and_go.error503')).toBeTruthy();
   });
+
+  it('displays generic error when offline checkout fails', () => {
+    (useInStoreCheckout as jest.Mock).mockReturnValue({
+      cartItems: [{ id: 'scan-1', barcode: '75010001', name: 'Bananas', price: 2.5, quantity: 2 }],
+      total: 5.0,
+      isOnline: false,
+      toggleNetwork: mockToggleNetwork,
+      isProcessing: false,
+      error: new Error('Network timeout'),
+      handleCheckout: mockHandleCheckout,
+      isAuthenticated: true,
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<InStoreCheckoutScreen />);
+    expect(getByText('scan_and_go.error503')).toBeTruthy();
+  });
+
+  it('renders empty cart and can navigate back', () => {
+    (useInStoreCheckout as jest.Mock).mockReturnValue({
+      cartItems: [],
+      total: 0.0,
+      isOnline: true,
+      toggleNetwork: mockToggleNetwork,
+      isProcessing: false,
+      error: null,
+      handleCheckout: mockHandleCheckout,
+      isAuthenticated: true,
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<InStoreCheckoutScreen />);
+    expect(getByText('scan_and_go.empty')).toBeTruthy();
+
+    fireEvent.press(getByText('shared_ui.close'));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
 });

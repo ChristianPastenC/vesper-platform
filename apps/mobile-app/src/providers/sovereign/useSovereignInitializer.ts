@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { SovereignClientCore, FetchAdapter } from '@sovereign/secure-client';
-import { nativeCryptoProvider } from '../core/crypto/NativeCryptoProvider';
+import { nativeCryptoProvider } from '../../core/crypto/NativeCryptoProvider';
 import {
   networkResolver,
   startNetworkTransitionsListener,
   stopNetworkTransitionsListener,
-} from '../core/network/networkResolver';
-import { validateHandshake } from '../core/network/handshakeValidator';
+} from '../../core/network/networkResolver';
+import { validateHandshake } from '../../core/network/handshakeValidator';
 
 // Import useAppStore correctly at runtime to avoid circular dependency issues at boot
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore } from '../../store/useAppStore';
 
 // 1. Initialize the real SovereignClientCore instance
 export const secureClient = SovereignClientCore.getInstance({
@@ -45,8 +45,7 @@ export const useSovereignInitializer = () => {
     // Bootstrap DPoP keys asynchronously before the first protected render
     const initSovereignClient = async () => {
       try {
-        const useAppStoreMod = require('../store/useAppStore');
-        await useAppStoreMod.useAppStore.getState().initAuth();
+        await useAppStore.getState().initAuth();
 
         const jwk = await secureClient.bootstrap();
         setDpopPublicKey(jwk);

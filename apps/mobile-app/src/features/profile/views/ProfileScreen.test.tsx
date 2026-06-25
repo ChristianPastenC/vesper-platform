@@ -124,4 +124,23 @@ describe('ProfileScreen View Settings Redesign', () => {
     fireEvent.press(getByTestId('profile-lang-row'));
     expect(mockToggleLanguage).toHaveBeenCalledTimes(1);
   });
+
+  it('uses fallback strings when translations are missing', () => {
+    (useProfile as jest.Mock).mockReturnValue({
+      isAuthenticated: true,
+      userName: 'Alice',
+      themeMode: 'light',
+      toggleThemeMode: jest.fn(),
+      language: 'en',
+      toggleLanguage: jest.fn(),
+      handleLogout: jest.fn(),
+      t: () => undefined, // Return undefined for missing translation
+    });
+
+    const { getByText } = render(<ProfileScreen />);
+
+    expect(getByText('Welcome, Alice!')).toBeTruthy();
+    expect(getByText('Light')).toBeTruthy();
+    expect(getByText('Preferences')).toBeTruthy();
+  });
 });

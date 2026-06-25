@@ -31,8 +31,7 @@
         "no-restricted-syntax": [
           "error",
           {
-            "selector": "CallExpression[callee.object.name='StyleSheet'][callee.property.name='create']",
-            "message": "Do not call StyleSheet.create inside components, views, or hooks. Place all styles in a separate filename.styles.ts stylesheet file."
+            "selector": "CallExpression[callee.object.name='StyleSheet'][callee.property.name='create']"
           }
         ]
       }

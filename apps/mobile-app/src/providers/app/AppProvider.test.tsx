@@ -21,12 +21,12 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('../core/i18n/i18n', () => ({
+jest.mock('../../core/i18n/i18n', () => ({
   changeLanguage: jest.fn(),
-  t: (k: string) => k,
+  t: jest.fn((k: string) => k),
 }));
 
-jest.mock('../core/theme/useTheme', () => ({
+jest.mock('../../core/theme/useTheme', () => ({
   useTheme: () => ({
     colors: {
       primary: '#000000',
@@ -36,25 +36,26 @@ jest.mock('../core/theme/useTheme', () => ({
   }),
 }));
 
-jest.mock('../store/useAppStore', () => ({
+jest.mock('../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
-jest.mock('./useSovereignInitializer', () => ({
+jest.mock('../sovereign/useSovereignInitializer', () => ({
   useSovereignInitializer: jest.fn(),
 }));
 
-jest.mock('../core/network/networkResolver', () => ({
+jest.mock('../../core/network/networkResolver', () => ({
   startNetworkTransitionsListener: jest.fn(),
   stopNetworkTransitionsListener: jest.fn(),
 }));
 
-jest.mock('../core/network/handshakeValidator', () => ({
+jest.mock('../../core/network/handshakeValidator', () => ({
   validateHandshake: jest.fn(),
 }));
 
-import { useAppStore } from '../store/useAppStore';
-import { useSovereignInitializer } from './useSovereignInitializer';
+import { useAppStore } from '../../store/useAppStore';
+import { useSovereignInitializer } from '../sovereign/useSovereignInitializer';
+import { changeLanguage, t } from '../../core/i18n/i18n';
 
 describe('AppProvider', () => {
   beforeEach(() => {
@@ -62,7 +63,7 @@ describe('AppProvider', () => {
   });
 
   it('renders loading state when not bootstrapped', () => {
-    (useAppStore as jest.Mock).mockImplementation((selector) => {
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = { language: 'en', isFrozen: false };
       return selector(state);
     });
@@ -83,7 +84,7 @@ describe('AppProvider', () => {
   });
 
   it('renders children when bootstrapped', () => {
-    (useAppStore as jest.Mock).mockImplementation((selector) => {
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = { language: 'en', isFrozen: false };
       return selector(state);
     });
@@ -103,7 +104,7 @@ describe('AppProvider', () => {
   });
 
   it('renders frozen warning when isFrozen is true', () => {
-    (useAppStore as jest.Mock).mockImplementation((selector) => {
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = { language: 'en', isFrozen: true };
       return selector(state);
     });
@@ -120,5 +121,48 @@ describe('AppProvider', () => {
     );
 
     expect(getByText('system.pendingTransaction')).toBeTruthy();
+  });
+
+  it('handles null language without changing i18n language', () => {
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { language: null, isFrozen: false };
+      return selector(state);
+    });
+    (useSovereignInitializer as jest.Mock).mockReturnValue({
+      client: {},
+      isBootstrapped: true,
+      dpopPublicKey: 'mockedKey',
+    });
+
+    render(
+      <AppProvider>
+        <Text testID="child">Child Content</Text>
+      </AppProvider>,
+    );
+
+    expect(changeLanguage).not.toHaveBeenCalled();
+  });
+
+  it('renders frozen warning fallback text when translation is missing', () => {
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { language: 'en', isFrozen: true };
+      return selector(state);
+    });
+    (useSovereignInitializer as jest.Mock).mockReturnValue({
+      client: {},
+      isBootstrapped: true,
+      dpopPublicKey: 'mockedKey',
+    });
+
+    // Mock i18n to return empty for translation
+    (t as jest.Mock).mockReturnValue(null);
+
+    const { getByText } = render(
+      <AppProvider>
+        <Text testID="child">Child Content</Text>
+      </AppProvider>,
+    );
+
+    expect(getByText('Transaction pending synchronization...')).toBeTruthy();
   });
 });

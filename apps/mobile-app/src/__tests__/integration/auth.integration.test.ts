@@ -10,16 +10,16 @@ jest.mock('../../core/auth/tokenStore', () => ({
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: jest.fn().mockReturnValue(true), goBack: jest.fn() })
+  useNavigation: () => ({ canGoBack: jest.fn().mockReturnValue(true), goBack: jest.fn() }),
 }));
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string, fb: string) => fb }),
-  initReactI18next: { type: '3rdParty', init: jest.fn() }
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
 }));
 
 jest.mock('../../core/i18n/i18n', () => ({
@@ -42,19 +42,18 @@ const mockClient = SovereignClientCore.getInstance({
     encryptAesGcm: jest.fn(),
     decryptAesGcm: jest.fn(),
     wrapKeyRsaOaep: jest.fn(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any,
+  } as unknown as import('@sovereign/secure-client').IDPoPCryptoProvider,
   networkResolver: async () => true,
   networkAdapter: mockAdapter,
-  errorTrapping: { enabled: false }
+  errorTrapping: { freezeOn503_504: false, freezeOn401: false },
 });
 
-jest.mock('../../providers/SovereignClientContext', () => ({
+jest.mock('../../providers/sovereign/SovereignClientContext', () => ({
   useSovereignClient: () => mockClient,
 }));
 
 jest.mock('../../core/config', () => ({
-  getApiUrl: () => 'https://api.test'
+  getApiUrl: () => 'https://api.test',
 }));
 
 describe('Integration: Auth Flow', () => {
@@ -71,8 +70,8 @@ describe('Integration: Auth Flow', () => {
       data: {
         user: { id: '1', username: 'testuser', email: 'test@example.com' },
         accessToken: 'valid-jwt',
-        refreshToken: 'valid-refresh'
-      }
+        refreshToken: 'valid-refresh',
+      },
     });
 
     act(() => {
@@ -94,7 +93,7 @@ describe('Integration: Auth Flow', () => {
 
     // c. Verify a second login with invalid credentials sets error state
     mockRequest.mockRejectedValueOnce(new Error('Invalid credentials'));
-    
+
     await act(async () => {
       await result.current.handleLogin();
     });

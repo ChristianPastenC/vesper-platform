@@ -15,7 +15,8 @@ jest.mock('../../store/useAppStore', () => {
   const mockSet = jest.fn();
   return {
     useAppStore: {
-      getState: jest.fn(() => ({ set: mockSet })),
+      setState: mockSet,
+      getState: jest.fn(),
     },
   };
 });
@@ -25,7 +26,7 @@ describe('networkResolver', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSet = useAppStore.getState().set as jest.Mock;
+    mockSet = useAppStore.setState as jest.Mock;
     stopNetworkTransitionsListener();
   });
 
@@ -46,7 +47,7 @@ describe('networkResolver', () => {
   describe('startNetworkTransitionsListener()', () => {
     const mockClient = {
       processSynchronizedQueue: jest.fn().mockResolvedValue(true),
-    } as any;
+    } as unknown as import('@sovereign/secure-client').SovereignClientCore;
     const mockValidator = jest.fn().mockResolvedValue(true);
 
     it('establishes baseline state and sets store to online when network is true', async () => {
@@ -63,7 +64,7 @@ describe('networkResolver', () => {
     it('listens for network transitions and sets store to offline when network drops', async () => {
       (NetInfo.fetch as jest.Mock).mockResolvedValue({ type: 'wifi', isConnected: true });
 
-      let listenerCallback: any;
+      let listenerCallback: (state: { type: string; isConnected: boolean }) => void;
       (NetInfo.addEventListener as jest.Mock).mockImplementation((cb) => {
         listenerCallback = cb;
         return jest.fn(); // return unsubscribe fn
@@ -82,7 +83,7 @@ describe('networkResolver', () => {
     it('listens for network transitions, sets store to online, and calls processSynchronizedQueue', async () => {
       (NetInfo.fetch as jest.Mock).mockResolvedValue({ type: 'none', isConnected: false });
 
-      let listenerCallback: any;
+      let listenerCallback: (state: { type: string; isConnected: boolean }) => void;
       (NetInfo.addEventListener as jest.Mock).mockImplementation((cb) => {
         listenerCallback = cb;
         return jest.fn(); // return unsubscribe fn

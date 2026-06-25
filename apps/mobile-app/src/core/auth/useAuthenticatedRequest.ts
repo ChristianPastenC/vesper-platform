@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useSovereignClient } from '../../providers/SovereignClientContext';
+import { useSovereignClient } from '../../providers/sovereign/SovereignClientContext';
 import { getRefreshToken, saveTokens } from './tokenStore';
 import { useAppStore } from '../../store/useAppStore';
 import type { SovereignAdapterRequest } from '@sovereign/secure-client';
@@ -20,11 +20,12 @@ export const useAuthenticatedRequest = () => {
     async <T>(requestId: string, request: SovereignAdapterRequest): Promise<T> => {
       const API_URL = getApiUrl();
       try {
-        // 1. Ejecuta la petición original
+        // 1. Execute original request
         return await client.executeRequest<T>(requestId, request);
-      } catch (error: any) {
-        // 2. Si recibe error (por ej. SovereignHttpError) con status === 401
-        if (error && error.status === 401) {
+      } catch (error: unknown) {
+        // 2. If it fails (e.g. SovereignHttpError) with status === 401
+        const err = error as { status?: number; message?: string };
+        if (err && err.status === 401) {
           const refreshToken = await getRefreshToken();
 
           if (!refreshToken) {
@@ -33,7 +34,7 @@ export const useAuthenticatedRequest = () => {
           }
 
           try {
-            // 3. Llama POST /api/v1/auth/refresh con el refresh token (fetch directo sin pasar por la queue)
+            // 3. Call POST /api/v1/auth/refresh with refresh token (direct fetch without queuing)
             const response = await fetch(`${API_URL}/api/v1/auth/refresh`, {
               method: 'POST',
               headers: {
@@ -42,7 +43,7 @@ export const useAuthenticatedRequest = () => {
               body: JSON.stringify({ refresh_token: refreshToken }),
             });
 
-            // Si el refresh también falla con 401 u otro error de auth, limpia la sesión
+            // If refresh also fails with 401 or other auth error, clear session
             if (response.status === 401 || !response.ok) {
               logout();
               throw new Error('Token refresh failed');
@@ -51,10 +52,10 @@ export const useAuthenticatedRequest = () => {
             const data = await response.json();
             const { accessToken: newAccess, refreshToken: newRefresh } = data;
 
-            // 4. Guarda los nuevos tokens
+            // 4. Save new tokens
             await saveTokens(newAccess, newRefresh);
 
-            // Prepara el reintento con el nuevo accessToken en el header Authorization
+            // Prepare retry with new accessToken in Authorization header
             const updatedRequest = {
               ...request,
               headers: {
@@ -63,7 +64,7 @@ export const useAuthenticatedRequest = () => {
               },
             };
 
-            // 5. Reintenta la petición original exactamente una vez con el nuevo accessToken
+            // 5. Retry the original request exactly once with the new accessToken
             return await client.executeRequest<T>(requestId, updatedRequest);
           } catch (refreshError) {
             logout();
@@ -71,7 +72,7 @@ export const useAuthenticatedRequest = () => {
           }
         }
 
-        // Lanza el error original si no era 401
+        // Throw original error if not 401
         throw error;
       }
     },

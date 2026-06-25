@@ -95,4 +95,33 @@ describe('ProductCard Component', () => {
     fireEvent.press(getByTestId('product-card-press'));
     expect(mockPress).toHaveBeenCalled();
   });
+
+  it('renders image and handles load events', () => {
+    const productWithImage = { ...mockProduct, image: 'https://example.com/img.jpg' };
+    const { getByText } = render(
+      <ProductCard
+        product={productWithImage}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
+      />,
+    );
+    // Since we mock Image, we can just trigger onLoadEnd to simulate hiding the skeleton
+    // However, Image might not have a testID. We can just test that the placeholder logic doesn't crash
+    expect(getByText('Premium Coffee Beans')).toBeTruthy();
+  });
+
+  it('formats EAN-13 barcode correctly', () => {
+    const ean13Product = { ...mockProduct, barcode: '1234567890123' };
+    const { getByText } = render(
+      <ProductCard
+        product={ean13Product}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(getByText('Barcode: 1 234567 890123')).toBeTruthy();
+  });
 });

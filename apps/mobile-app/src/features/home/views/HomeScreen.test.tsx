@@ -4,6 +4,7 @@ import { HomeScreen } from './HomeScreen';
 import { useHome } from '../hooks/useHome';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useAppStore } from '../../../store/useAppStore';
+import { useNavigation } from '@react-navigation/native';
 
 jest.mock('../hooks/useHome', () => ({
   useHome: jest.fn(),
@@ -14,10 +15,10 @@ jest.mock('../../../core/theme/useTheme', () => ({
 }));
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
+  useNavigation: jest.fn(() => ({
     setOptions: jest.fn(),
     navigate: jest.fn(),
-  }),
+  })),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -80,5 +81,54 @@ describe('HomeScreen Component', () => {
 
     fireEvent.press(getByTestId('home-network-toggle'));
     expect(mockToggleNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders guest mode and offline state correctly', () => {
+    (useHome as jest.Mock).mockReturnValue({
+      t: (key: string) => key,
+      userName: null,
+      isAuthenticated: false,
+      isOnline: false,
+      toggleNetwork: mockToggleNetwork,
+      navigateToCatalog: jest.fn(),
+      navigateToScanner: jest.fn(),
+      navigateToAccount: jest.fn(),
+    });
+
+    const { getByText } = render(<HomeScreen />);
+
+    expect(getByText('Hello, Guest!')).toBeTruthy();
+    expect(getByText('scan_and_go.offlineLabel')).toBeTruthy();
+  });
+
+  it('renders header cart badge when items exist', () => {
+    (useAppStore as unknown as jest.Mock).mockReturnValue([{ quantity: 2 }]);
+    const mockSetOptions = jest.fn();
+    (useNavigation as jest.Mock).mockReturnValue({
+      setOptions: mockSetOptions,
+      navigate: jest.fn(),
+    });
+
+    (useHome as jest.Mock).mockReturnValue({
+      t: (key: string) => key,
+      userName: 'Alice',
+      isAuthenticated: true,
+      isOnline: true,
+      toggleNetwork: jest.fn(),
+      navigateToCatalog: jest.fn(),
+      navigateToScanner: jest.fn(),
+      navigateToAccount: jest.fn(),
+    });
+
+    render(<HomeScreen />);
+
+    expect(mockSetOptions).toHaveBeenCalled();
+    const optionsObj = mockSetOptions.mock.calls[0][0];
+
+    // Evaluate headerRight function
+    const HeaderRight = optionsObj.headerRight;
+    const { getByTestId, getByText } = render(<HeaderRight />);
+    expect(getByTestId('header-cart-badge')).toBeTruthy();
+    expect(getByText('2')).toBeTruthy();
   });
 });

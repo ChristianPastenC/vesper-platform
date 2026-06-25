@@ -3,8 +3,8 @@ import { useScanner } from './useScanner';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../../store/useAppStore';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
-import { useCameraPermissions } from 'expo-camera';
-import { randomUUID } from 'expo-crypto';
+import { getAccessToken } from '../../../core/auth/tokenStore';
+import { useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(),
@@ -89,5 +89,83 @@ describe('useScanner', () => {
     });
 
     expect(result.current.lastScanned).toBeNull();
+  });
+
+  it('resolves product from network if token exists and API returns data', async () => {
+    mockExecuteRequest.mockResolvedValue([
+      { id: 99, barcode: 'net123', title: 'Net Product', price: 9.99 },
+    ]);
+    const { result } = renderHook(() => useScanner());
+
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: 'net123' } as BarcodeScanningResult);
+      await Promise.resolve();
+    });
+
+    expect(mockAddToInStoreCart).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Net Product' }),
+    );
+  });
+
+  it('handles unknown product barcode', async () => {
+    mockExecuteRequest.mockResolvedValue([]);
+    const { result } = renderHook(() => useScanner());
+
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: 'invalid_barcode' } as BarcodeScanningResult);
+      await Promise.resolve();
+    });
+
+    expect(result.current.lastScanned).toContain('Unknown Item');
+  });
+
+  it('returns early if scanning is not active', async () => {
+    const { result } = renderHook(() => useScanner());
+
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: '75010001' } as BarcodeScanningResult);
+    });
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: '75010002' } as BarcodeScanningResult);
+    });
+
+    expect(mockAddToInStoreCart).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles network error gracefully', async () => {
+    mockExecuteRequest.mockRejectedValue(new Error('Network Error'));
+    const { result } = renderHook(() => useScanner());
+
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: '75010001' } as BarcodeScanningResult);
+      await Promise.resolve();
+    });
+
+    expect(mockAddToInStoreCart).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Organic Bananas 1kg' }),
+    );
+  });
+
+  it('resolves product without token', async () => {
+    (getAccessToken as jest.Mock).mockResolvedValueOnce(null);
+    mockExecuteRequest.mockResolvedValue([
+      { id: 99, barcode: 'net123', title: 'Net Product', price: 9.99 },
+    ]);
+    const { result } = renderHook(() => useScanner());
+
+    await act(async () => {
+      await result.current.onBarcodeScanned({ data: 'net123' } as BarcodeScanningResult);
+      await Promise.resolve();
+    });
+
+    expect(mockAddToInStoreCart).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Net Product' }),
+    );
+  });
+
+  it('handles permission undefined or not granted', () => {
+    (useCameraPermissions as jest.Mock).mockReturnValue([null, jest.fn()]);
+    const { result } = renderHook(() => useScanner());
+    expect(result.current.hasPermission).toBe(false);
   });
 });

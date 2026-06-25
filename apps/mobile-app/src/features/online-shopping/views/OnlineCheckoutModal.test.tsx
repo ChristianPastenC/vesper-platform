@@ -60,4 +60,31 @@ describe('OnlineCheckoutModal View', () => {
       type: 'online',
     });
   });
+
+  it('renders loading state when processing', () => {
+    (useOnlineCart as jest.Mock).mockReturnValue({
+      total: 50.0,
+      address: '123 Sovereign Way',
+      isProcessing: true,
+      handleCheckout: jest.fn(),
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<OnlineCheckoutModal />);
+    expect(getByText('online_checkout.processing')).toBeTruthy();
+  });
+
+  it('navigates back when close button is pressed', () => {
+    (useOnlineCart as jest.Mock).mockReturnValue({
+      total: 50.0,
+      address: '123 Sovereign Way',
+      isProcessing: false,
+      handleCheckout: jest.fn(),
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<OnlineCheckoutModal />);
+    fireEvent.press(getByText('shared_ui.close'));
+    expect(mockGoBack).toHaveBeenCalled();
+  });
 });

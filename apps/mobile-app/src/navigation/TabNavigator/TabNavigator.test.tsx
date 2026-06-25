@@ -47,7 +47,12 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
       screenOptions?: (props: { route: { name: string } }) => unknown;
     }) => {
       if (typeof screenOptions === 'function') {
-        screenOptions({ route: { name: 'CatalogTab' } });
+        const optionsObj = screenOptions({ route: { name: 'CatalogTab' } }) as unknown as {
+          tabBarIcon: (props: { focused: boolean; color: string; size: number }) => void;
+        };
+        if (optionsObj && optionsObj.tabBarIcon) {
+          optionsObj.tabBarIcon({ focused: true, color: 'red', size: 24 });
+        }
       }
       return <>{children}</>;
     },

@@ -19,6 +19,9 @@ const resources = {
       },
       catalog: {
         title: 'Product Catalog',
+        productListTitle: 'All Products',
+        addToCart: 'Add to Cart',
+        ean: 'EAN',
         addToOnline: 'Buy Online',
         addToInStore: 'Scan & Go (Store)',
         itemAdded: 'Added to cart',
@@ -128,6 +131,9 @@ const resources = {
       },
       catalog: {
         title: 'Catálogo de Productos',
+        productListTitle: 'Todos los Productos',
+        addToCart: 'Añadir al Carrito',
+        ean: 'EAN',
         addToOnline: 'Comprar Online',
         addToInStore: 'Scan & Go (Tienda)',
         itemAdded: 'Agregado al carrito',

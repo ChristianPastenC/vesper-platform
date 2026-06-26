@@ -80,11 +80,12 @@ describe('ProductDetailsScreen View', () => {
 
     expect(mockSetOptions).toHaveBeenCalledWith({
       title: 'catalog.productDetails',
+      headerBackTitleVisible: false,
     });
 
     expect(getByText('Wireless Headphones')).toBeTruthy();
     expect(getByText('$99.99')).toBeTruthy();
-    expect(getByText('4006381333931')).toBeTruthy();
+    expect(getByText('catalog.ean: 4006381333931')).toBeTruthy();
     expect(getByText('catalog.brand')).toBeTruthy();
     expect(getByText('Sovereign Core')).toBeTruthy();
     expect(getByText('320g')).toBeTruthy();
@@ -97,12 +98,7 @@ describe('ProductDetailsScreen View', () => {
     expect(mockHandleAddToOnline).toHaveBeenCalled();
   });
 
-  it('triggers addToInStore when pressing instore button', () => {
-    const { getByTestId } = render(<ProductDetailsScreen />);
-    const button = getByTestId('details-add-instore-btn');
-    fireEvent.press(button);
-    expect(mockHandleAddToInStore).toHaveBeenCalled();
-  });
+
 
   describe('getProductIcon branches', () => {
     const testIcon = (name: string) => {

@@ -9,14 +9,6 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    listContent: {
-      paddingHorizontal: scale(20),
-      paddingTop: verticalScale(12),
-      paddingBottom: insets ? insets.bottom + verticalScale(20) : verticalScale(20),
-    },
-    columnWrapper: {
-      justifyContent: 'space-between',
-    },
     // 1. Brand Header Row Styles
     headerContainer: {
       flexDirection: 'row',
@@ -25,12 +17,9 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       marginTop: insets ? insets.top + verticalScale(4) : verticalScale(16),
       marginBottom: verticalScale(20),
     },
-    brandName: {
-      fontSize: scaleFont(24),
-      fontWeight: '300',
-      color: colors.text,
-      letterSpacing: 2.5,
-      textTransform: 'uppercase',
+    profileButton: {
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     headerActions: {
       flexDirection: 'row',
@@ -67,42 +56,6 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       fontWeight: '700',
       lineHeight: scaleFont(11),
       textAlign: 'center',
-    },
-    // 2. Search & Scan Bar Styles
-    searchBarContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: scale(14),
-      height: verticalScale(48),
-      paddingHorizontal: scale(14),
-      marginBottom: verticalScale(24),
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.01,
-      shadowRadius: 4,
-      elevation: 1,
-    },
-    searchIcon: {
-      marginRight: scale(10),
-    },
-    searchPlaceholderText: {
-      color: colors.text + '70',
-      fontSize: scaleFont(14),
-      flex: 1,
-    },
-    searchSeparator: {
-      width: 1,
-      height: verticalScale(20),
-      backgroundColor: colors.border,
-      marginHorizontal: scale(12),
-    },
-    scanTriggerButton: {
-      padding: scale(4),
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     // 3. Category Stories Carousel Styles
     categoriesContainer: {
@@ -142,45 +95,6 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       textAlign: 'center',
       letterSpacing: -0.1,
     },
-    // 4. Hero Promotional Banner Styles
-    heroBanner: {
-      borderRadius: scale(20),
-      padding: scale(20),
-      marginBottom: verticalScale(28),
-      backgroundColor: colors.primary === '#F8FAFC' ? '#18181B' : '#0F172A',
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.05,
-      shadowRadius: 12,
-      elevation: 4,
-    },
-    heroMicroCapsule: {
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      paddingHorizontal: scale(10),
-      paddingVertical: scale(3),
-      borderRadius: scale(12),
-      alignSelf: 'flex-start',
-      marginBottom: verticalScale(8),
-    },
-    heroMicroText: {
-      color: '#FFFFFF',
-      fontSize: scaleFont(10),
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    heroTitle: {
-      color: '#FFFFFF',
-      fontSize: scaleFont(22),
-      lineHeight: verticalScale(28),
-      fontWeight: '700',
-      marginBottom: verticalScale(6),
-    },
-    heroSubText: {
-      color: 'rgba(255, 255, 255, 0.8)',
-      fontSize: scaleFont(13),
-      lineHeight: verticalScale(18),
-    },
     // 5. Seamless Transition Title Styles
     sectionHeaderRow: {
       flexDirection: 'row',
@@ -203,37 +117,5 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       fontSize: scaleFont(13),
       fontWeight: '600',
       color: colors.primary,
-    },
-    // 6. State views (Loading/Empty/Error)
-    emptyStateContainer: {
-      padding: scale(40),
-      alignItems: 'center',
-    },
-    errorIcon: {
-      marginBottom: verticalScale(16),
-    },
-    errorText: {
-      color: colors.text,
-      textAlign: 'center',
-      marginBottom: verticalScale(16),
-      fontSize: scaleFont(14),
-    },
-    emptyText: {
-      color: colors.text,
-      textAlign: 'center',
-      fontSize: scaleFont(14),
-    },
-    skeletonGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      padding: scale(8),
-    },
-    skeletonCard: {
-      width: '45%',
-      margin: '2.5%',
-      height: verticalScale(220),
-      backgroundColor: colors.surface,
-      borderRadius: scale(16),
-      opacity: 0.6,
     },
   });

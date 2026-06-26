@@ -70,7 +70,7 @@ describe('HomeScreen Component', () => {
       navigateToAccount: jest.fn(),
     });
 
-    const { getByText, getByTestId } = render(<HomeScreen />);
+    const { getByText } = render(<HomeScreen />);
     // Since `t` returns the key, we assert on the translation keys combined with the variables
     expect(getByText('home.promoTitle')).toBeTruthy();
     expect(getByText('home.shopOnline')).toBeTruthy();

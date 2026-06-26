@@ -5,12 +5,11 @@ import { stylesFactory } from './HeroBanner.styles';
 
 interface HeroBannerProps {
   isAuthenticated: boolean;
-  userName: string | null;
   navigateToAccount: () => void;
   t: (key: string) => string;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ isAuthenticated, userName, navigateToAccount, t }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({ isAuthenticated, navigateToAccount, t }) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 

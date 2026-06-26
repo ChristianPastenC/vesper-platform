@@ -8,6 +8,7 @@ export type TabParamList = {
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
+  ProductList: { category?: string } | undefined;
   ProductDetails: {
     product: {
       id: string;

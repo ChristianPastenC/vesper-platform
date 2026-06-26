@@ -4,6 +4,10 @@ import { render } from '@testing-library/react-native';
 import { AppNavigator } from './AppNavigator';
 import { NavigationContainer } from '@react-navigation/native';
 
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 // Mock dependencies
 jest.mock('../core/theme/useTheme', () => ({
   useTheme: () => ({

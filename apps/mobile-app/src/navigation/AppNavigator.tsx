@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { LoginScreen } from '../features/auth/views/LoginScreen';
+import { ProductListScreen } from '../features/catalog/views/ProductListScreen';
 import { ProductDetailsScreen } from '../features/catalog/views/ProductDetailsScreen';
 import { OnlineCartScreen } from '../features/online-shopping/views/OnlineCartScreen';
 import { OnlineCheckoutModal } from '../features/online-shopping/views/OnlineCheckoutModal';
@@ -39,6 +40,7 @@ export const AppNavigator: React.FC = () => {
           title: 'Sign In',
         }}
       />
+      <Stack.Screen name="ProductList" component={ProductListScreen} />
       <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
       <Stack.Screen
         name="OnlineCart"

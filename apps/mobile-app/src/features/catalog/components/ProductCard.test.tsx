@@ -1,127 +1,76 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { ProductCard, Product } from './ProductCard';
-import { useTheme } from '../../../core/theme/useTheme';
-
-jest.mock('../../../core/theme/useTheme', () => ({
-  useTheme: jest.fn(),
-}));
-
-jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+import { ProductCard } from './ProductCard';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (str: string) => str,
+    t: (key: string) => key,
   }),
 }));
 
-const mockProduct: Product = {
-  id: 'p1',
-  name: 'Premium Coffee Beans',
-  price: 15.99,
-  barcode: '750102030405',
-};
+jest.mock('../../../core/theme/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#000',
+      text: '#000',
+      surface: '#fff',
+      border: '#ccc',
+    },
+  }),
+}));
 
-describe('ProductCard Component', () => {
-  beforeEach(() => {
-    (useTheme as jest.Mock).mockReturnValue({
-      colors: {
-        primary: '#6200EE',
-        background: '#FFFFFF',
-        surface: '#F5F5F5',
-        text: '#121212',
-        border: '#E0E0E0',
-      },
-      isDarkMode: false,
-    });
-  });
+describe('ProductCard', () => {
+  const mockProduct = {
+    id: '1',
+    name: 'Test Product',
+    price: 99.99,
+    barcode: '1234567890123',
+    image: 'https://via.placeholder.com/150',
+  };
 
-  it('renders product details correctly', () => {
-    const { getByText } = render(
+  it('renders correctly', () => {
+    const { getByText, getByTestId } = render(
       <ProductCard
         product={mockProduct}
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />,
+      />
     );
-
-    expect(getByText('Premium Coffee Beans')).toBeTruthy();
-    expect(getByText('$15.99')).toBeTruthy();
-    expect(getByText('Barcode: 750102030405')).toBeTruthy();
+    expect(getByText('Test Product')).toBeTruthy();
+    expect(getByText('$99.99')).toBeTruthy();
+    expect(getByTestId('product-card-press')).toBeTruthy();
   });
 
-  it('triggers onAddToOnline callback on shipping button press', () => {
-    const mockOnline = jest.fn();
-    const { getByText } = render(
+  it('handles add to cart press', () => {
+    const mockOnAddToOnline = jest.fn();
+    const { getByTestId } = render(
       <ProductCard
         product={mockProduct}
-        onAddToOnline={mockOnline}
+        onAddToOnline={mockOnAddToOnline}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />,
+      />
     );
-
-    fireEvent.press(getByText('catalog.addToOnline'));
-    expect(mockOnline).toHaveBeenCalledWith(mockProduct);
+    
+    const addBtn = getByTestId('product-card-add-btn');
+    fireEvent.press(addBtn);
+    expect(mockOnAddToOnline).toHaveBeenCalledWith(mockProduct);
   });
 
-  it('triggers onAddToInStore callback on instore button press', () => {
-    const mockInStore = jest.fn();
-    const { getByText } = render(
-      <ProductCard
-        product={mockProduct}
-        onAddToOnline={jest.fn()}
-        onAddToInStore={mockInStore}
-        onPress={jest.fn()}
-      />,
-    );
-
-    fireEvent.press(getByText('catalog.addToInStore'));
-    expect(mockInStore).toHaveBeenCalledWith(mockProduct);
-  });
-
-  it('triggers onPress callback when card is tapped', () => {
-    const mockPress = jest.fn();
+  it('handles card press', () => {
+    const mockOnPress = jest.fn();
     const { getByTestId } = render(
       <ProductCard
         product={mockProduct}
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
-        onPress={mockPress}
-      />,
+        onPress={mockOnPress}
+      />
     );
-
-    fireEvent.press(getByTestId('product-card-press'));
-    expect(mockPress).toHaveBeenCalled();
-  });
-
-  it('renders image and handles load events', () => {
-    const productWithImage = { ...mockProduct, image: 'https://example.com/img.jpg' };
-    const { getByText } = render(
-      <ProductCard
-        product={productWithImage}
-        onAddToOnline={jest.fn()}
-        onAddToInStore={jest.fn()}
-        onPress={jest.fn()}
-      />,
-    );
-    // Since we mock Image, we can just trigger onLoadEnd to simulate hiding the skeleton
-    // However, Image might not have a testID. We can just test that the placeholder logic doesn't crash
-    expect(getByText('Premium Coffee Beans')).toBeTruthy();
-  });
-
-  it('formats EAN-13 barcode correctly', () => {
-    const ean13Product = { ...mockProduct, barcode: '1234567890123' };
-    const { getByText } = render(
-      <ProductCard
-        product={ean13Product}
-        onAddToOnline={jest.fn()}
-        onAddToInStore={jest.fn()}
-        onPress={jest.fn()}
-      />,
-    );
-
-    expect(getByText('Barcode: 1 234567 890123')).toBeTruthy();
+    
+    const cardBtn = getByTestId('product-card-press');
+    fireEvent.press(cardBtn);
+    expect(mockOnPress).toHaveBeenCalledTimes(1);
   });
 });

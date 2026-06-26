@@ -1,6 +1,5 @@
 import React from 'react';
-/* eslint-disable complexity */
-import { FlatList, View, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -8,11 +7,12 @@ import { useTheme } from '../../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useCatalog } from '../hooks/useCatalog';
-import { ProductCard, Product } from '../components/ProductCard';
 import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
-import { Button } from '../../../components/Button';
 import { stylesFactory } from './CatalogScreen.styles';
+import { CatalogHeader } from '../components/CatalogHeader/CatalogHeader';
+import { PromoCarousel } from '../components/PromoCarousel/PromoCarousel';
+import { ProductGrid } from '../components/ProductGrid/ProductGrid';
 
 type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
 
@@ -28,25 +28,6 @@ export const CatalogScreen: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = React.useState<string | undefined>(undefined);
   const { products, loading, error, isEmpty, refetch } = useCatalog(selectedCategory, 20);
-  const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
-  const addToInStoreCart = useAppStore((state) => state.addToInStoreCart);
-
-  const handleAddToOnline = (product: Product) => {
-    addToOnlineCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-    });
-  };
-
-  const handleAddToInStore = (product: Product) => {
-    addToInStoreCart({
-      id: product.id,
-      barcode: product.barcode,
-      name: product.name,
-      price: product.price,
-    });
-  };
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,7 +47,9 @@ export const CatalogScreen: React.FC = () => {
     <View>
       {/* 1. PRESTIGIOUS HEADER ROW */}
       <View style={styles.headerContainer}>
-        <Text style={styles.brandName}>Sovereign</Text>
+        <TouchableOpacity style={styles.profileButton} activeOpacity={0.7}>
+          <Ionicons name="person-circle-outline" size={32} color={theme.colors.text} />
+        </TouchableOpacity>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconCircleButton} activeOpacity={0.7}>
             <Ionicons name="notifications-outline" size={20} color={theme.colors.text} />
@@ -88,23 +71,7 @@ export const CatalogScreen: React.FC = () => {
       </View>
 
       {/* 2. SEARCH & SCAN INTEGRATION BAR */}
-      <View style={styles.searchBarContainer}>
-        <Ionicons
-          name="search-outline"
-          size={18}
-          color={theme.colors.text + '80'}
-          style={styles.searchIcon}
-        />
-        <Text style={styles.searchPlaceholderText}>{t('catalog.searchPlaceholder')}</Text>
-        <View style={styles.searchSeparator} />
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ScanAndGoTab')}
-          style={styles.scanTriggerButton}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="barcode-outline" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
+      <CatalogHeader />
 
       {/* 3. COUTURIER STORIES / ROUND CATEGORIES */}
       <View style={styles.categoriesContainer}>
@@ -157,74 +124,32 @@ export const CatalogScreen: React.FC = () => {
       </View>
 
       {/* 4. HERO PROMOTIONAL BANNER */}
-      <View style={styles.heroBanner}>
-        <View style={styles.heroMicroCapsule}>
-          <Text style={styles.heroMicroText}>{t('catalog.heroTag')}</Text>
-        </View>
-        <Text style={styles.heroTitle}>{t('catalog.heroTitle')}</Text>
-        <Text style={styles.heroSubText}>{t('catalog.heroSubText')}</Text>
-      </View>
+      <PromoCarousel />
 
       {/* 5. SEAMLESS TRANSITION TO THE GRID */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionHeaderTitle}>{t('catalog.trendingTitle')}</Text>
-        <TouchableOpacity style={styles.seeAllButton} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.seeAllButton} 
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('ProductList', { category: selectedCategory })}
+          testID="see-all-button"
+        >
           <Text style={styles.seeAllText}>{t('catalog.seeAll')}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderItem = ({ item }: { item: Product }) => (
-    <ProductCard
-      product={item}
-      onAddToOnline={handleAddToOnline}
-      onAddToInStore={handleAddToInStore}
-      onPress={() => navigation.navigate('ProductDetails', { product: item })}
-    />
-  );
-
   return (
     <View style={styles.container}>
-      <FlatList
-        data={products}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
+      <ProductGrid
+        products={products}
+        loading={loading}
+        error={error}
+        isEmpty={isEmpty}
+        refetch={refetch}
         ListHeaderComponent={renderListHeader}
-        ListEmptyComponent={
-          loading ? (
-            <View style={styles.skeletonGrid}>
-              {[1, 2, 3, 4].map((key) => (
-                <View key={key} style={styles.skeletonCard} />
-              ))}
-            </View>
-          ) : error ? (
-            <View style={styles.emptyStateContainer}>
-              <Ionicons
-                name="cloud-offline-outline"
-                size={48}
-                color={theme.colors.error || '#ef4444'}
-                style={styles.errorIcon}
-              />
-              <Text style={styles.errorText}>
-                {t('catalog.errorLoad') || 'Failed to load catalog. Please check your connection.'}
-              </Text>
-              <Button
-                title={t('catalog.retry') || 'Retry'}
-                onPress={() => refetch()}
-                variant="secondary"
-              />
-            </View>
-          ) : isEmpty ? (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyText}>{t('catalog.empty') || 'No products found.'}</Text>
-            </View>
-          ) : null
-        }
-        showsVerticalScrollIndicator={false}
       />
     </View>
   );

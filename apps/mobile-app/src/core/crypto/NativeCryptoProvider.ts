@@ -1,22 +1,22 @@
-import * as Crypto from 'expo-crypto';
+import { subtle, randomBytes } from 'react-native-quick-crypto';
 import type { IDPoPCryptoProvider } from '@sovereign/secure-client';
 
 /**
  * NativeCryptoProvider
  *
- * Provides cryptographic primitives using expo-crypto, ensuring compatibility
- * with the Hermes engine without relying on the global window.crypto object.
+ * Provides cryptographic primitives using react-native-quick-crypto, ensuring compatibility
+ * with JSI and WebCrypto APIs in React Native Bare workflow.
  * Implements IDPoPCryptoProvider which extends ISovereignCryptoProvider.
  */
 export class NativeCryptoProvider implements IDPoPCryptoProvider {
-  // Expose the SubtleCrypto implementation from expo-crypto
-  public readonly subtle: SubtleCrypto = Crypto.subtle;
+  // Expose the SubtleCrypto implementation from react-native-quick-crypto
+  public readonly subtle: SubtleCrypto = subtle as SubtleCrypto;
 
   /**
    * Returns a freshly allocated Uint8Array of cryptographically random bytes.
    */
   public getRandomBytes(byteLength: number): Uint8Array {
-    return Crypto.getRandomBytes(byteLength);
+    return new Uint8Array(randomBytes(byteLength));
   }
 
   /**
@@ -24,8 +24,8 @@ export class NativeCryptoProvider implements IDPoPCryptoProvider {
    * Returns exactly 32 bytes.
    */
   public async sha256(data: Uint8Array): Promise<Uint8Array> {
-    // Utilize the standard Web Crypto API exposed by expo-crypto
-    const hashBuffer = await this.subtle.digest('SHA-256', data);
+    // Use data.buffer as ArrayBuffer for full compatibility
+    const hashBuffer = await this.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
     return new Uint8Array(hashBuffer);
   }
 }

@@ -4,7 +4,7 @@ import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequ
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
 import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
-import { randomUUID } from 'expo-crypto';
+import { randomUUID } from 'react-native-quick-crypto';
 import { getApiUrl } from '../../../core/config';
 
 interface CheckoutPayload {

@@ -29,7 +29,7 @@ jest.mock('../../../core/auth/tokenStore', () => ({
   saveTokens: jest.fn(),
 }));
 
-jest.mock('expo-crypto', () => ({
+jest.mock('react-native-quick-crypto', () => ({
   randomUUID: jest.fn(() => 'mock-uuid'),
 }));
 

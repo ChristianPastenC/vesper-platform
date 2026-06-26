@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as Crypto from 'expo-crypto';
+import * as Crypto from 'react-native-quick-crypto';
 import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 import { SovereignAdapterRequest, encodeJsonBody } from '@sovereign/secure-client';
 import { buildTransactionLedger, TransactionBlock } from '../ledger/buildTransactionLedger';

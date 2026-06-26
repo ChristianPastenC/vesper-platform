@@ -3,7 +3,7 @@ import { useSovereignCheckout } from './useSovereignCheckout';
 import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
 import { buildTransactionLedger } from '../ledger/buildTransactionLedger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
-import * as Crypto from 'expo-crypto';
+import * as Crypto from 'react-native-quick-crypto';
 
 jest.mock('../../../providers/sovereign/SovereignClientContext', () => ({
   useSovereignClient: jest.fn(),
@@ -17,7 +17,7 @@ jest.mock('../../../core/auth/tokenStore', () => ({
   getAccessToken: jest.fn(),
 }));
 
-jest.mock('expo-crypto', () => ({
+jest.mock('react-native-quick-crypto', () => ({
   randomUUID: jest.fn(),
 }));
 

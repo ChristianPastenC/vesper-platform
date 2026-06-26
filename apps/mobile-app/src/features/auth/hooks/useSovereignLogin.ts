@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { saveTokens } from '../../../core/auth/tokenStore';
 import { encodeJsonBody } from '@sovereign/secure-client';
-import { randomUUID } from 'expo-crypto';
+import { randomUUID } from 'react-native-quick-crypto';
 
 import { useAppStore } from '../../../store/useAppStore';
 import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';

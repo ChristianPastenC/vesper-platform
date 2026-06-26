@@ -29,7 +29,7 @@ jest.mock('@sovereign/secure-client', () => ({
   encodeHeaders: jest.fn((headers) => headers),
 }));
 
-jest.mock('expo-crypto', () => ({
+jest.mock('react-native-quick-crypto', () => ({
   randomUUID: jest.fn(() => 'mock-uuid'),
 }));
 

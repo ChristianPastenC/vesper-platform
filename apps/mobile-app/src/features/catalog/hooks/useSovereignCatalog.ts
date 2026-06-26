@@ -3,7 +3,7 @@ import { getAccessToken } from '../../../core/auth/tokenStore';
 import { Product } from '../components/ProductCard';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { SovereignAdapterRequest } from '@sovereign/secure-client';
-import { randomUUID } from 'expo-crypto';
+import { randomUUID } from 'react-native-quick-crypto';
 import { getApiUrl } from '../../../core/config';
 
 export interface BackendProduct {

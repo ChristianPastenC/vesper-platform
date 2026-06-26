@@ -1,22 +1,19 @@
 import React from 'react';
-import { View, FlatList } from 'react-native';
+import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from '../../../core/theme/useTheme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOnlineCart } from '../hooks/useOnlineCart';
-import { OnlineRow } from '../components/OnlineRow';
-import { Text } from '../../../components/Text';
-import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
+import { OnlineCartList } from '../components/OnlineCartList';
+import { CartFooter } from '../components/CartFooter';
 import { stylesFactory } from './OnlineCartScreen.styles';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export const OnlineCartScreen: React.FC = () => {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const styles = stylesFactory(theme.colors, insets);
+  const styles = stylesFactory(theme.colors);
   const navigation = useNavigation<NavigationProp>();
   const { cartItems, total, address, clearCart, isAuthenticated, t } = useOnlineCart();
 
@@ -28,45 +25,24 @@ export const OnlineCartScreen: React.FC = () => {
     }
   };
 
-  if (cartItems.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>{t('online_checkout.empty')}</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <FlatList
-        data={cartItems}
-        renderItem={({ item }) => <OnlineRow item={item} />}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+      <OnlineCartList
+        cartItems={cartItems}
+        emptyMessage={t('online_checkout.empty')}
       />
-      <View style={styles.footer}>
-        <View style={styles.addressSection}>
-          <Text variant="bold">{t('online_checkout.deliveryAddress')}</Text>
-          <Text style={styles.addressText}>{address}</Text>
-        </View>
-        <View style={styles.totalSection}>
-          <Text variant="bold">{t('online_checkout.total')}:</Text>
-          <Text variant="title" style={styles.totalText}>
-            ${total.toFixed(2)}
-          </Text>
-        </View>
-        <Button
-          title={t('online_checkout.checkoutButton')}
-          onPress={handleCheckoutPress}
-          style={styles.checkoutBtn}
+      {cartItems.length > 0 && (
+        <CartFooter
+          address={address}
+          total={total}
+          onCheckout={handleCheckoutPress}
+          onClear={clearCart}
+          checkoutText={t('online_checkout.checkoutButton')}
+          clearText={t('shared_ui.close')}
+          totalLabel={t('online_checkout.total')}
+          addressLabel={t('online_checkout.deliveryAddress')}
         />
-        <Button
-          title={t('shared_ui.close')}
-          variant="secondary"
-          onPress={clearCart}
-          style={styles.clearBtn}
-        />
-      </View>
+      )}
     </View>
   );
 };

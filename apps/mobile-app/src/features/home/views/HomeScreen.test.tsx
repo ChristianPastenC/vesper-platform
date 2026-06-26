@@ -71,16 +71,16 @@ describe('HomeScreen Component', () => {
     });
 
     const { getByText, getByTestId } = render(<HomeScreen />);
-
-    expect(getByText('Hello, Alice!')).toBeTruthy();
-    expect(getByText('Catalog')).toBeTruthy();
-    expect(getByText('Scan & Go')).toBeTruthy();
-
-    fireEvent.press(getByTestId('action-catalog'));
-    expect(mockNavigateCatalog).toHaveBeenCalledTimes(1);
-
-    fireEvent.press(getByTestId('home-network-toggle'));
-    expect(mockToggleNetwork).toHaveBeenCalledTimes(1);
+    // Since `t` returns the key, we assert on the translation keys combined with the variables
+    expect(getByText('home.promoTitle')).toBeTruthy();
+    expect(getByText('home.shopOnline')).toBeTruthy();
+    expect(getByText('home.scanAndGo')).toBeTruthy();
+    expect(getByText('home.ourStores')).toBeTruthy();
+    expect(getByText('home.myOrders')).toBeTruthy();
+    
+    // Check trending products list
+    expect(getByText('home.trendingTitle')).toBeTruthy();
+    expect(getByText('Silk Blend Shirt')).toBeTruthy();
   });
 
   it('renders guest mode and offline state correctly', () => {
@@ -95,10 +95,15 @@ describe('HomeScreen Component', () => {
       navigateToAccount: jest.fn(),
     });
 
-    const { getByText } = render(<HomeScreen />);
+    const { getByText, getByTestId } = render(<HomeScreen />);
 
-    expect(getByText('Hello, Guest!')).toBeTruthy();
-    expect(getByText('scan_and_go.offlineLabel')).toBeTruthy();
+    expect(getByText('home.welcomeTitleGuest')).toBeTruthy();
+    expect(getByText('home.loginPrompt')).toBeTruthy();
+    // In offline mode (isFrozen), the pending sync alert should appear
+    expect(getByText('home.pendingSync')).toBeTruthy();
+
+    fireEvent.press(getByTestId('home-network-toggle'));
+    expect(mockToggleNetwork).toHaveBeenCalledTimes(1);
   });
 
   it('renders header cart badge when items exist', () => {

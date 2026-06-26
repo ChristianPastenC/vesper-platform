@@ -3,27 +3,30 @@ export interface ThemeColors {
   background: string;
   surface: string;
   text: string;
+  textSecondary: string;
   error: string;
   success: string;
   border: string;
 }
 
 export const LIGHT_COLORS: ThemeColors = {
-  primary: '#0F172A',
-  background: '#F8FAFC',
+  primary: '#2A66F6',
+  background: '#F5F7FB',
   surface: '#FFFFFF',
-  text: '#0F172A',
+  text: '#1A1A1A',
+  textSecondary: '#7E8494',
   error: '#EF4444',
   success: '#10B981',
   border: '#E2E8F0',
 };
 
 export const DARK_COLORS: ThemeColors = {
-  primary: '#F8FAFC',
-  background: '#09090B',
-  surface: '#18181B',
-  text: '#F4F4F5',
+  primary: '#2A66F6',
+  background: '#111827',
+  surface: '#1F2937',
+  text: '#F9FAFB',
+  textSecondary: '#9CA3AF',
   error: '#F87171',
   success: '#34D399',
-  border: '#27272A',
+  border: '#374151',
 };

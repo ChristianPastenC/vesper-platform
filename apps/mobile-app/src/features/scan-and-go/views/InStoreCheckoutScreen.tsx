@@ -1,16 +1,17 @@
 import React from 'react';
-import { View, FlatList, Switch } from 'react-native';
+import { View, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInStoreCheckout } from '../hooks/useInStoreCheckout';
 import { InStoreRow } from '../components/InStoreRow';
 import { Text } from '../../../components/Text';
-import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
 import { stylesFactory } from './InStoreCheckoutScreen.styles';
+import { NetworkDiagnosticsCard } from '../components/NetworkDiagnosticsCard';
+import { ErrorBanner } from '../components/ErrorBanner';
+import { CheckoutFooter } from '../components/CheckoutFooter';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'InStoreCheckoutModal'>;
 
@@ -46,39 +47,12 @@ export const InStoreCheckoutScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.networkToggleCard}>
-        <Ionicons
-          name={isOnline ? 'wifi' : 'wifi-outline'}
-          size={24}
-          color={isOnline ? theme.colors.success : theme.colors.error}
-          style={styles.networkIcon}
-        />
-        <View style={styles.networkInfo}>
-          <Text variant="bold">{t('scan_and_go.networkStatus')}</Text>
-          <Text style={styles.networkStatusLabel}>
-            {isOnline ? t('scan_and_go.onlineLabel') : t('scan_and_go.offlineLabel')}
-          </Text>
-        </View>
-        <Switch
-          value={isOnline}
-          onValueChange={toggleNetwork}
-          trackColor={{ false: '#767577', true: theme.colors.primary + '80' }}
-          thumbColor={isOnline ? theme.colors.primary : '#f4f3f4'}
-          testID="network-switch"
-        />
-      </View>
+      <NetworkDiagnosticsCard
+        isOnline={isOnline}
+        onToggleNetwork={toggleNetwork}
+      />
 
-      {error && (
-        <View style={styles.errorBanner} testID="error-banner">
-          <Ionicons
-            name="alert-circle-outline"
-            size={20}
-            color={theme.colors.error}
-            style={styles.errorIcon}
-          />
-          <Text style={styles.errorText}>{t('scan_and_go.error503')}</Text>
-        </View>
-      )}
+      <ErrorBanner error={error} />
 
       {cartItems.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -93,26 +67,13 @@ export const InStoreCheckoutScreen: React.FC = () => {
         />
       )}
 
-      <View style={styles.footer}>
-        <View style={styles.totalSection}>
-          <Text variant="bold">{t('scan_and_go.total')}:</Text>
-          <Text variant="title" style={styles.totalText}>
-            ${total.toFixed(2)}
-          </Text>
-        </View>
-        <Button
-          title={t('scan_and_go.payButton')}
-          status={isProcessing ? 'loading' : cartItems.length === 0 ? 'disabled' : 'idle'}
-          onPress={handlePayPress}
-          style={styles.payBtn}
-        />
-        <Button
-          title={t('shared_ui.close')}
-          variant="secondary"
-          disabled={isProcessing}
-          onPress={() => navigation.goBack()}
-        />
-      </View>
+      <CheckoutFooter
+        total={total}
+        isProcessing={isProcessing}
+        cartIsEmpty={cartItems.length === 0}
+        onPayPress={handlePayPress}
+        onClose={() => navigation.goBack()}
+      />
     </View>
   );
 };

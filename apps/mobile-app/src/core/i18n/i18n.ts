@@ -57,6 +57,8 @@ const resources = {
       scan_and_go: {
         title: 'Scan & Go',
         scannerTitle: 'In-Store Scanner',
+        cameraPermission: 'Camera access is required to scan items.',
+        requestPermission: 'Allow Camera Access',
         scanHint: 'Position barcode inside the box to scan',
         simulateScan: 'Simulate Scanning Item',
         networkStatus: 'Network Signal Status',
@@ -169,6 +171,8 @@ const resources = {
       scan_and_go: {
         title: 'Scan & Go',
         scannerTitle: 'Escáner en Sucursal',
+        cameraPermission: 'Se requiere acceso a la cámara para escanear.',
+        requestPermission: 'Permitir Acceso',
         scanHint: 'Coloque el código de barras dentro del recuadro',
         simulateScan: 'Simular Escaneo de Artículo',
         networkStatus: 'Estado de Señal de Red',

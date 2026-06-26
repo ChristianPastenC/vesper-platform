@@ -1,17 +1,9 @@
 import { StyleSheet } from 'react-native';
-import { EdgeInsets } from 'react-native-safe-area-context';
-import { ThemeColors } from '../../../core/theme/colors';
-import { scale, verticalScale, scaleFont } from '../../../core/theme/responsive';
+import { ThemeColors } from '../../../../core/theme/colors';
+import { scale, scaleFont, verticalScale } from '../../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
+export const stylesFactory = (colors: ThemeColors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingTop: insets ? insets.top + verticalScale(10) : verticalScale(20),
-      paddingBottom: insets ? insets.bottom + verticalScale(20) : verticalScale(20),
-      paddingHorizontal: scale(16),
-    },
     section: {
       marginBottom: verticalScale(24),
     },
@@ -38,10 +30,10 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
     },
     rowLast: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: scale(20),
+      justifyContent: 'space-between',
       paddingVertical: verticalScale(18),
+      paddingHorizontal: scale(20),
     },
     rowLeft: {
       flexDirection: 'row',
@@ -50,13 +42,6 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
     rowText: {
       fontSize: scaleFont(16),
       marginLeft: scale(14),
-      color: colors.text,
       fontWeight: '600',
-    },
-    rowValueText: {
-      fontSize: scaleFont(14),
-      color: colors.text + '99',
-      textTransform: 'capitalize',
-      fontWeight: '500',
     },
   });

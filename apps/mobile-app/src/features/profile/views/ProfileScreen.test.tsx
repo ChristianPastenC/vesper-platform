@@ -5,6 +5,12 @@ import { useProfile } from '../hooks/useProfile';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useNavigation } from '@react-navigation/native';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultText: string) => defaultText || key,
+  }),
+}));
+
 jest.mock('../hooks/useProfile', () => ({
   useProfile: jest.fn(),
 }));
@@ -61,7 +67,6 @@ describe('ProfileScreen View Settings Redesign', () => {
       language: 'en',
       toggleLanguage: mockToggleLanguage,
       handleLogout: mockLogout,
-      t: (key: string) => key,
     });
 
     const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen />);
@@ -84,12 +89,11 @@ describe('ProfileScreen View Settings Redesign', () => {
       language: 'en',
       toggleLanguage: mockToggleLanguage,
       handleLogout: mockLogout,
-      t: (key: string) => key,
     });
 
     const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen />);
 
-    expect(getByText('auth.title, John Doe!')).toBeTruthy();
+    expect(getByText('Welcome, John Doe!')).toBeTruthy();
     expect(getByText('Session Active')).toBeTruthy();
     expect(getByTestId('profile-logout-row')).toBeTruthy();
     expect(queryByTestId('profile-login-row')).toBeNull();
@@ -107,40 +111,18 @@ describe('ProfileScreen View Settings Redesign', () => {
       language: 'es',
       toggleLanguage: mockToggleLanguage,
       handleLogout: mockLogout,
-      t: (key: string) => key,
     });
 
     const { getByTestId, getByText } = render(<ProfileScreen />);
 
-    // Verify version and values
     expect(getByText('1.0.0')).toBeTruthy();
     expect(getByText('Español')).toBeTruthy();
-    expect(getByText('shared_ui.themeSystem')).toBeTruthy();
+    expect(getByText('System')).toBeTruthy();
 
-    // Trigger toggles
     fireEvent.press(getByTestId('profile-theme-row'));
     expect(mockToggleTheme).toHaveBeenCalledTimes(1);
 
     fireEvent.press(getByTestId('profile-lang-row'));
     expect(mockToggleLanguage).toHaveBeenCalledTimes(1);
-  });
-
-  it('uses fallback strings when translations are missing', () => {
-    (useProfile as jest.Mock).mockReturnValue({
-      isAuthenticated: true,
-      userName: 'Alice',
-      themeMode: 'light',
-      toggleThemeMode: jest.fn(),
-      language: 'en',
-      toggleLanguage: jest.fn(),
-      handleLogout: jest.fn(),
-      t: () => undefined, // Return undefined for missing translation
-    });
-
-    const { getByText } = render(<ProfileScreen />);
-
-    expect(getByText('Welcome, Alice!')).toBeTruthy();
-    expect(getByText('Light')).toBeTruthy();
-    expect(getByText('Preferences')).toBeTruthy();
   });
 });

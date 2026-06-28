@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text as RNText } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { OrderTimelineEvent } from '../../hooks/orders.mock';
+import { OrderTimelineEvent } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderTimeline.styles';
 
 interface OrderTimelineProps {

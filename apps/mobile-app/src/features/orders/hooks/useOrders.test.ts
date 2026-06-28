@@ -1,45 +1,115 @@
-import { renderHook } from '@testing-library/react-native';
-import { useOrders } from './useOrders';
-import { MOCK_ORDERS } from './orders.mock';
+import { renderHook, waitFor } from '@testing-library/react-native';
+import { useOrders, Order } from './useOrders';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
+import { useAppStore } from '../../../store/useAppStore';
+
+jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
+  useAuthenticatedRequest: jest.fn(),
+}));
+
+jest.mock('../../../store/useAppStore', () => ({
+  useAppStore: jest.fn(),
+}));
+
+const mockOrders: Order[] = [
+  {
+    id: 'ORD-1',
+    status: 'processing',
+    date: '2023-11-20T08:45:00Z',
+    total: 100,
+    items: [],
+    timeline: [],
+  },
+  {
+    id: 'ORD-2',
+    status: 'delivered',
+    date: '2023-10-15T14:30:00Z',
+    total: 200,
+    items: [],
+    timeline: [],
+  },
+];
 
 describe('useOrders', () => {
-  it('should return all orders', () => {
-    const { result } = renderHook(() => useOrders());
-    expect(result.current.orders).toEqual(MOCK_ORDERS);
-  });
+  const mockExecute = jest.fn();
 
-  it('should return active orders (processing or shipped)', () => {
-    const { result } = renderHook(() => useOrders());
-    const activeOrders = result.current.activeOrders;
-
-    expect(activeOrders.length).toBeGreaterThan(0);
-    activeOrders.forEach((order) => {
-      expect(['processing', 'shipped']).toContain(order.status);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useAuthenticatedRequest as jest.Mock).mockReturnValue({
+      execute: mockExecute,
+    });
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = { isAuthenticated: true };
+      return selector(state);
     });
   });
 
-  it('should return past orders (delivered or cancelled)', () => {
-    const { result } = renderHook(() => useOrders());
-    const pastOrders = result.current.pastOrders;
+  it('fetches orders when authenticated', async () => {
+    mockExecute.mockResolvedValueOnce(mockOrders);
 
-    expect(pastOrders.length).toBeGreaterThan(0);
-    pastOrders.forEach((order) => {
-      expect(['delivered', 'cancelled']).toContain(order.status);
+    const { result } = renderHook(() => useOrders());
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.orders).toEqual(mockOrders);
+    expect(mockExecute).toHaveBeenCalledWith('fetch-orders', {
+      method: 'GET',
+      path: '/api/v1/orders',
     });
   });
 
-  it('should get an order by id', () => {
-    const { result } = renderHook(() => useOrders());
-    const orderToFind = MOCK_ORDERS[0];
+  it('filters active and past orders correctly', async () => {
+    mockExecute.mockResolvedValueOnce(mockOrders);
 
-    const foundOrder = result.current.getOrderById(orderToFind.id);
-    expect(foundOrder).toEqual(orderToFind);
+    const { result } = renderHook(() => useOrders());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.activeOrders).toHaveLength(1);
+    expect(result.current.activeOrders[0].id).toBe('ORD-1');
+
+    expect(result.current.pastOrders).toHaveLength(1);
+    expect(result.current.pastOrders[0].id).toBe('ORD-2');
   });
 
-  it('should return undefined for non-existent order id', () => {
-    const { result } = renderHook(() => useOrders());
+  it('finds an order by id', async () => {
+    mockExecute.mockResolvedValueOnce(mockOrders);
 
-    const foundOrder = result.current.getOrderById('non-existent-id');
+    const { result } = renderHook(() => useOrders());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const foundOrder = result.current.getOrderById('ORD-1');
+    expect(foundOrder).toEqual(mockOrders[0]);
+  });
+
+  it('returns undefined for non-existent order', async () => {
+    mockExecute.mockResolvedValueOnce(mockOrders);
+
+    const { result } = renderHook(() => useOrders());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const foundOrder = result.current.getOrderById('non-existent');
     expect(foundOrder).toBeUndefined();
+  });
+
+  it('handles fetch error', async () => {
+    mockExecute.mockRejectedValueOnce(new Error('Fetch failed'));
+
+    const { result } = renderHook(() => useOrders());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBe('Fetch failed');
+    expect(result.current.orders).toEqual([]);
   });
 });

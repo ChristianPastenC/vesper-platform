@@ -2,7 +2,6 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { OrdersScreen } from './OrdersScreen';
 
-
 const mockNavigate = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({

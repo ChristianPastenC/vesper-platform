@@ -2,7 +2,6 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { OrderDetailsScreen } from './OrderDetailsScreen';
 
-
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({
     params: { orderId: 'ORD-1' },

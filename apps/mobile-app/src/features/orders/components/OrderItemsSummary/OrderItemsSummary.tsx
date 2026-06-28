@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text as RNText } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { OrderItem } from '../../hooks/orders.mock';
+import { OrderItem } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderItemsSummary.styles';
 
 interface OrderItemsSummaryProps {

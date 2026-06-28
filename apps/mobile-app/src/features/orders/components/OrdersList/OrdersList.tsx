@@ -3,7 +3,7 @@ import { FlatList, View, Text as RNText } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { Order } from '../../hooks/orders.mock';
+import { Order } from '../../hooks/useOrders';
 import { OrderListItem } from '../OrderListItem/OrderListItem';
 import { stylesFactory } from './OrdersList.styles';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { OrderListItem } from './OrderListItem';
-import { Order } from '../../hooks/orders.mock';
+import { Order } from '../../hooks/useOrders';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({

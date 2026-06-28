@@ -22,6 +22,7 @@ type RouterConfig struct {
 	CatalogHandler  *CatalogHandler
 	PaymentHandler  *PaymentHandler
 	ProfileHandler  *ProfileHandler
+	OrdersHandler   *OrdersHandler
 }
 
 // NewRouter constructs a configured chi.Mux handler with security interceptors.
@@ -79,6 +80,11 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 			if cfg.ProfileHandler != nil {
 				r.Get("/profile/me", cfg.ProfileHandler.GetProfile)
+			}
+
+			if cfg.OrdersHandler != nil {
+				r.Get("/orders", cfg.OrdersHandler.GetOrders)
+				r.Get("/orders/{id}", cfg.OrdersHandler.GetOrder)
 			}
 		})
 	})

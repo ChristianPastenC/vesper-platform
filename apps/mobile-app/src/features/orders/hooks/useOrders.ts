@@ -1,8 +1,57 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Order, MOCK_ORDERS } from './orders.mock';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
+import { useAppStore } from '../../../store/useAppStore';
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  qty: number;
+  price: number;
+}
+
+export interface OrderTimelineEvent {
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  timestamp: string;
+  description: string;
+}
+
+export interface Order {
+  id: string;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  date: string;
+  total: number;
+  items: OrderItem[];
+  timeline: OrderTimelineEvent[];
+}
 
 export const useOrders = () => {
-  const [orders] = useState<Order[]>(MOCK_ORDERS);
+  const { execute } = useAuthenticatedRequest();
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchOrders = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await execute<Order[]>('fetch-orders', {
+        method: 'GET',
+        path: '/api/v1/orders',
+      });
+      setOrders(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [execute, isAuthenticated]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const activeOrders = useMemo(() => {
     return orders.filter((o) => o.status === 'processing' || o.status === 'shipped');
@@ -24,5 +73,8 @@ export const useOrders = () => {
     activeOrders,
     pastOrders,
     getOrderById,
+    isLoading,
+    error,
+    refetch: fetchOrders,
   };
 };

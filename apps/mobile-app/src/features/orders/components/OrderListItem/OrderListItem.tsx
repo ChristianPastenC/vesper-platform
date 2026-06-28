@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text as RNText } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { Order } from '../../hooks/orders.mock';
+import { Order } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderListItem.styles';
 
 interface OrderListItemProps {

@@ -114,7 +114,11 @@ describe('useProfile', () => {
 
   it('toggles theme mode from system to light', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
-      return selector({ isAuthenticated: true, themeMode: 'system', setThemeMode: mockSetThemeMode });
+      return selector({
+        isAuthenticated: true,
+        themeMode: 'system',
+        setThemeMode: mockSetThemeMode,
+      });
     });
     const { result } = renderHook(() => useProfile());
     act(() => {

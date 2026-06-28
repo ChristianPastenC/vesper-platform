@@ -74,7 +74,7 @@ func (rw *responseRecorder) Write(b []byte) (int, error) {
 func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idempotencyKey := r.Header.Get("X-Idempotency-Key")
-		
+
 		// Only intercept POST /api/v1/checkout/pay with an idempotency key
 		if r.Method != http.MethodPost || r.URL.Path != "/api/v1/checkout/pay" || idempotencyKey == "" {
 			next.ServeHTTP(w, r)
@@ -83,14 +83,14 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 
 		// Enforce strict memory boundary (e.g., 1MB max) BEFORE reading the payload in the middleware layer
 		r.Body = http.MaxBytesReader(w, r.Body, 1024*1024)
-		
+
 		// Read and parse the request body to extract the mobile client's unique block hash
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			writeErrorJSON(w, http.StatusRequestEntityTooLarge, "payload_too_large", "Failed to read request payload or payload exceeds strict memory limits")
 			return
 		}
-		
+
 		// Restore body buffer for subsequent HTTP handlers
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
@@ -100,7 +100,7 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 				Hash string `json:"hash"`
 			} `json:"ledger"`
 		}
-		
+
 		var blockHash string
 		if err := json.Unmarshal(bodyBytes, &payload); err == nil && len(payload.Ledger) > 0 {
 			// Retrieve the most recent block's hash representing the offline mutation

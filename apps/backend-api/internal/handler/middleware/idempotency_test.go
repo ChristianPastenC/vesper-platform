@@ -13,7 +13,7 @@ import (
 
 func TestIdempotencyMiddleware(t *testing.T) {
 	manager := middleware.NewIdempotencyManager()
-	
+
 	// Create a slow handler to simulate processing and allow conflict testing
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(50 * time.Millisecond)
@@ -21,7 +21,7 @@ func TestIdempotencyMiddleware(t *testing.T) {
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
-	
+
 	handler := manager.Middleware(nextHandler)
 
 	t.Run("skips if not target path or missing key", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestIdempotencyMiddleware(t *testing.T) {
 
 	t.Run("successful processing and replay", func(t *testing.T) {
 		body := []byte(`{"ledger":[{"hash":"hash_1"}]}`)
-		
+
 		// First request (Processing)
 		req1 := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/pay", bytes.NewBuffer(body))
 		req1.Header.Set("X-Idempotency-Key", "idemp_abc")

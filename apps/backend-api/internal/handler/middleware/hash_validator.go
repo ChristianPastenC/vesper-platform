@@ -37,7 +37,7 @@ func HashValidator(next http.Handler) http.Handler {
 			http.Error(w, "Internal Server Error: Unable to read request body", http.StatusInternalServerError)
 			return
 		}
-		
+
 		// Restore the body so downstream handlers and middlewares can read it
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 

@@ -1,7 +1,8 @@
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useProfile } from './useProfile';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../../store/useAppStore';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(),
@@ -11,10 +12,15 @@ jest.mock('../../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
+jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
+  useAuthenticatedRequest: jest.fn(),
+}));
+
 describe('useProfile', () => {
   const mockLogout = jest.fn();
   const mockSetThemeMode = jest.fn();
   const mockSetLanguage = jest.fn();
+  const mockExecute = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -23,7 +29,6 @@ describe('useProfile', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       const state = {
         isAuthenticated: true,
-        userName: 'Test User',
         themeMode: 'light',
         setThemeMode: mockSetThemeMode,
         language: 'en',
@@ -32,13 +37,57 @@ describe('useProfile', () => {
       };
       return selector(state);
     });
+
+    (useAuthenticatedRequest as jest.Mock).mockReturnValue({
+      execute: mockExecute,
+    });
+  });
+
+  it('fetches profile data when authenticated', async () => {
+    mockExecute.mockResolvedValueOnce({
+      id: 1,
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@example.com',
+    });
+
+    const { result } = renderHook(() => useProfile());
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profileData).toEqual({
+      id: 1,
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@example.com',
+    });
+    expect(result.current.userName).toBe('Test User');
+    expect(mockExecute).toHaveBeenCalledWith('fetch-profile', {
+      method: 'GET',
+      path: '/api/v1/profile/me',
+    });
+  });
+
+  it('handles fetch error', async () => {
+    mockExecute.mockRejectedValueOnce(new Error('Fetch failed'));
+
+    const { result } = renderHook(() => useProfile());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBe('Fetch failed');
   });
 
   it('returns state from store', () => {
     const { result } = renderHook(() => useProfile());
-
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.userName).toBe('Test User');
     expect(result.current.themeMode).toBe('light');
     expect(result.current.language).toBe('en');
   });
@@ -54,7 +103,7 @@ describe('useProfile', () => {
 
   it('toggles theme mode from dark to system', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
-      return selector({ themeMode: 'dark', setThemeMode: mockSetThemeMode });
+      return selector({ isAuthenticated: true, themeMode: 'dark', setThemeMode: mockSetThemeMode });
     });
     const { result } = renderHook(() => useProfile());
     act(() => {
@@ -65,7 +114,7 @@ describe('useProfile', () => {
 
   it('toggles theme mode from system to light', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
-      return selector({ themeMode: 'system', setThemeMode: mockSetThemeMode });
+      return selector({ isAuthenticated: true, themeMode: 'system', setThemeMode: mockSetThemeMode });
     });
     const { result } = renderHook(() => useProfile());
     act(() => {

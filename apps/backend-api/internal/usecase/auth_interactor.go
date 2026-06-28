@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"sovereign-core/backend-api/internal/domain"
 	"golang.org/x/crypto/bcrypt"
+	"sovereign-core/backend-api/internal/domain"
 )
 
 // AuthInteractor manages user authentication and secure token issuance.

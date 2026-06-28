@@ -97,13 +97,13 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 	// 2. Send POST /api/v1/checkout/pay with a valid 2-block ledger and verify 200 OK
 	t.Run("Valid Ledger", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/pay", bytes.NewBufferString(validBody))
-		
+
 		// Setup Headers required by middleware
 		req.Header.Set("Authorization", "Bearer valid-token")
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-Idempotency-Key", "idemp-key-1")
 		req.Header.Set("DPoP", generateValidDPoP(http.MethodPost, "/api/v1/checkout/pay", "jti-1"))
-		
+
 		mac := hmac.New(sha256.New, []byte(secretKey))
 		mac.Write([]byte(validBody))
 		req.Header.Set("X-Sovereign-Hash", hex.EncodeToString(mac.Sum(nil)))

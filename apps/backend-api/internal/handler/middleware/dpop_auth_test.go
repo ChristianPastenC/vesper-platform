@@ -91,7 +91,7 @@ func TestDPoPValidator(t *testing.T) {
 		if w.Code != http.StatusOK {
 			t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
 		}
-		
+
 		// Ensure JKT is set in context
 		// (We test this indirectly because if it wasn't, the response might not be 200 if nextHandler relied on it.
 		// However, our nextHandler doesn't. We just want to ensure it passes through successfully).
@@ -143,7 +143,7 @@ func TestDPoPValidator(t *testing.T) {
 	t.Run("replay protection", func(t *testing.T) {
 		// Create proof with same JTI as first test ("unique_jti_123")
 		proof, _ := generateTestDPoP(http.MethodGet, "/api/test", 0)
-		
+
 		req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
 		req.Header.Set("DPoP", proof)
 		w := httptest.NewRecorder()

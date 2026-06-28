@@ -29,8 +29,8 @@ type HandshakeResponse struct {
 
 // HandshakeVerifyResponse is the JSON body returned by a successful verification.
 type HandshakeVerifyResponse struct {
-	Status    string `json:"status"`
-	Message   string `json:"message"`
+	Status     string `json:"status"`
+	Message    string `json:"message"`
 	VerifiedAt string `json:"verified_at"`
 }
 
@@ -134,8 +134,8 @@ func verifyChallenge(w http.ResponseWriter, r *http.Request, iss *challenge.Issu
 	)
 
 	writeJSON(w, http.StatusOK, HandshakeVerifyResponse{
-		Status:    "channel_verified",
-		Message:   "Cryptographic re-handshake successful. Transport channel is authenticated.",
+		Status:     "channel_verified",
+		Message:    "Cryptographic re-handshake successful. Transport channel is authenticated.",
 		VerifiedAt: time.Now().UTC().Format(time.RFC3339),
 	})
 }

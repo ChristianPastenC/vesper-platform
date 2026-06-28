@@ -81,7 +81,7 @@ func TestTokenService_ValidateRefreshToken(t *testing.T) {
 	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, repo)
 
 	user, _, _ := repo.GetUserByUsername(ctx, "admin")
-	
+
 	_, refreshToken, err := svc.GenerateTokenPair(ctx, user, "")
 	if err != nil {
 		t.Fatalf("Failed to generate tokens: %v", err)

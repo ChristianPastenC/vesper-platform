@@ -30,10 +30,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var creds domain.UserCredentials
-	
+
 	// Enforce strict memory boundary (e.g., 64KB max) to prevent OOM Denial of Service attacks
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body or payload too large")
 		return
@@ -67,10 +67,10 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req domain.RefreshRequest
-	
+
 	// Enforce strict memory boundary (e.g., 64KB max) to prevent OOM Denial of Service attacks
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body or payload too large")
 		return

@@ -31,14 +31,14 @@ func (c *CatalogInteractor) ExecuteCatalogQuery(ctx context.Context, query domai
 	// Enrich metadata concurrently utilizing the Scatter-Gather pattern to maximize throughput
 	// and prevent thread-blocking on large upstream catalog arrays.
 	var wg sync.WaitGroup
-	
+
 	for i := range products {
 		wg.Add(1)
-		
+
 		// Spawn a lightweight Goroutine per item to execute the mapping logic in parallel
 		go func(index int) {
 			defer wg.Done()
-			
+
 			category := strings.ToLower(products[index].Category)
 			switch {
 			case strings.Contains(category, "electronics"):
@@ -54,7 +54,7 @@ func (c *CatalogInteractor) ExecuteCatalogQuery(ctx context.Context, query domai
 			}
 		}(i)
 	}
-	
+
 	// Block the primary thread until all concurrent scatter operations converge
 	wg.Wait()
 

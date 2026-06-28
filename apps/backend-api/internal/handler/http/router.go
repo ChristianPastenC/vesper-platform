@@ -21,6 +21,7 @@ type RouterConfig struct {
 	AuthHandler     *AuthHandler
 	CatalogHandler  *CatalogHandler
 	PaymentHandler  *PaymentHandler
+	ProfileHandler  *ProfileHandler
 }
 
 // NewRouter constructs a configured chi.Mux handler with security interceptors.
@@ -48,7 +49,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public Login
 		r.Post("/auth/login", cfg.AuthHandler.Login)
-		
+
 		// Public Refresh
 		r.Post("/auth/refresh", cfg.AuthHandler.Refresh)
 
@@ -75,6 +76,10 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
 			r.Post("/checkout/online", cfg.PaymentHandler.ProcessPayment)
 			r.Post("/checkout/instore", cfg.PaymentHandler.ProcessPayment)
+
+			if cfg.ProfileHandler != nil {
+				r.Get("/profile/me", cfg.ProfileHandler.GetProfile)
+			}
 		})
 	})
 

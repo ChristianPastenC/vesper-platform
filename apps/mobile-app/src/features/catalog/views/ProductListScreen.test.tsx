@@ -66,9 +66,8 @@ describe('ProductListScreen', () => {
 
   it('renders correctly without category', () => {
     // Override useRoute mock for this test
-    const { useRoute } = require('@react-navigation/native');
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { useSovereignCatalog } = require('../../hooks/useSovereignCatalog');
+    const { useRoute } = require('@react-navigation/native');
     useRoute.mockReturnValueOnce({ params: undefined });
 
     const { getByTestId } = render(<ProductListScreen />);

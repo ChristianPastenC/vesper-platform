@@ -39,7 +39,7 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, total float64, car
 	if _, err := rand.Read(nonce); err != nil {
 		return domain.TransactionResponse{}, fmt.Errorf("payment_interactor: failed to generate cryptographic nonce: %w", err)
 	}
-	
+
 	hashInput := fmt.Sprintf("%s:%.2f:%d:%x", resp.TransactionID, total, time.Now().UnixNano(), nonce)
 	hash := sha256.Sum256([]byte(hashInput))
 	resp.ReceiptHash = fmt.Sprintf("%x", hash)

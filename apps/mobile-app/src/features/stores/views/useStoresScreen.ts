@@ -3,7 +3,7 @@ import { useStores } from '../hooks/useStores';
 
 export const useStoresScreen = () => {
   const { t } = useTranslation();
-  const { stores } = useStores();
+  const { stores, isLoading, error } = useStores();
 
   const handleRoutePress = (id: string) => {
     // Navigate to route or open maps
@@ -13,6 +13,8 @@ export const useStoresScreen = () => {
   return {
     t,
     stores,
+    isLoading,
+    error,
     handleRoutePress,
   };
 };

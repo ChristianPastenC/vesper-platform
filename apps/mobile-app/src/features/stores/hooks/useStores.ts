@@ -1,33 +1,5 @@
-import { useState, useEffect } from 'react';
-
-// GeoJSON format for the stores mock data
-const storesGeoJSON = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [-122.4324, 37.78825] },
-      properties: {
-        id: '1',
-        name: 'Sovereign Downtown',
-        distance: '1.2 km',
-        hours: '09:00 - 21:00',
-        address: '123 Main St, Downtown',
-      },
-    },
-    {
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [-122.4224, 37.79825] },
-      properties: {
-        id: '2',
-        name: 'Sovereign Uptown',
-        distance: '3.4 km',
-        hours: '10:00 - 20:00',
-        address: '456 High St, Uptown',
-      },
-    },
-  ],
-};
+import { useState, useEffect, useCallback } from 'react';
+import { getApiUrl } from '../../../core/config';
 
 export interface StoreFeature {
   id: string;
@@ -43,22 +15,53 @@ export interface StoreFeature {
 
 export const useStores = () => {
   const [stores, setStores] = useState<StoreFeature[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchStores = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const API_URL = getApiUrl();
+      const response = await fetch(`${API_URL}/api/v1/stores`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch stores');
+      }
+      const data = await response.json();
+
+      interface RawStoreFeature {
+        geometry: { coordinates: number[] };
+        properties: {
+          id: string;
+          name: string;
+          distance: string;
+          hours: string;
+          address: string;
+        };
+      }
+
+      const parsedStores = data.features.map((feature: RawStoreFeature) => ({
+        id: feature.properties.id,
+        name: feature.properties.name,
+        distance: feature.properties.distance,
+        hours: feature.properties.hours,
+        address: feature.properties.address,
+        coordinate: {
+          latitude: feature.geometry.coordinates[1],
+          longitude: feature.geometry.coordinates[0],
+        },
+      }));
+      setStores(parsedStores);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Parse GeoJSON into friendly format for map and list
-    const parsedStores = storesGeoJSON.features.map((feature) => ({
-      id: feature.properties.id,
-      name: feature.properties.name,
-      distance: feature.properties.distance,
-      hours: feature.properties.hours,
-      address: feature.properties.address,
-      coordinate: {
-        latitude: feature.geometry.coordinates[1],
-        longitude: feature.geometry.coordinates[0],
-      },
-    }));
-    setStores(parsedStores);
-  }, []);
+    fetchStores();
+  }, [fetchStores]);
 
   const getRegion = () => ({
     latitude: 37.78825,
@@ -70,5 +73,8 @@ export const useStores = () => {
   return {
     stores,
     getRegion,
+    isLoading,
+    error,
+    refetch: fetchStores,
   };
 };

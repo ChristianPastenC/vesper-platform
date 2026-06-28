@@ -23,6 +23,7 @@ type RouterConfig struct {
 	PaymentHandler  *PaymentHandler
 	ProfileHandler  *ProfileHandler
 	OrdersHandler   *OrdersHandler
+	StoresHandler   *StoresHandler
 }
 
 // NewRouter constructs a configured chi.Mux handler with security interceptors.
@@ -56,6 +57,11 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 		// Public Catalog (ESB orchestrator for Fakestore API)
 		r.Get("/catalog", cfg.CatalogHandler.GetCatalog)
+
+		// Public Stores
+		if cfg.StoresHandler != nil {
+			r.Get("/stores", cfg.StoresHandler.GetStores)
+		}
 
 		// Protected Checkout Route (JWT + DPoP validation)
 		r.Group(func(r chi.Router) {

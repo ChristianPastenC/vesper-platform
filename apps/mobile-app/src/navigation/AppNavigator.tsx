@@ -10,6 +10,8 @@ import { OnlineCheckoutModal } from '../features/online-shopping/views/OnlineChe
 import { InStoreCheckoutScreen } from '../features/scan-and-go/views/InStoreCheckoutScreen';
 import { PaymentSuccessScreen } from '../features/payment/views/PaymentSuccessScreen';
 import { StoresScreen } from '../features/stores/views/StoresScreen';
+import { OrdersScreen } from '../features/orders/views/OrdersScreen/OrdersScreen';
+import { OrderDetailsScreen } from '../features/orders/views/OrderDetailsScreen/OrderDetailsScreen';
 import { useTheme } from '../core/theme/useTheme';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -79,6 +81,20 @@ export const AppNavigator: React.FC = () => {
         component={StoresScreen}
         options={{
           title: 'Stores',
+        }}
+      />
+      <Stack.Screen
+        name="Orders"
+        component={OrdersScreen}
+        options={{
+          title: 'My Orders',
+        }}
+      />
+      <Stack.Screen
+        name="OrderDetails"
+        component={OrderDetailsScreen}
+        options={{
+          title: 'Order Details',
         }}
       />
     </Stack.Navigator>

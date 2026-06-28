@@ -12,6 +12,7 @@ export const useHomeScreen = () => {
     navigateToScanner,
     navigateToAccount,
     navigateToStores,
+    navigateToOrders,
   } = useHome();
 
   const isFrozen = !isOnline;
@@ -36,6 +37,7 @@ export const useHomeScreen = () => {
     navigateToScanner,
     navigateToAccount,
     navigateToStores,
+    navigateToOrders,
     TRENDING_PRODUCTS,
   };
 };

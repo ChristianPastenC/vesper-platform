@@ -8,6 +8,7 @@ interface CategoriesProps {
   navigateToCatalog: () => void;
   navigateToScanner: () => void;
   navigateToStores: () => void;
+  navigateToOrders: () => void;
   t: (key: string) => string;
 }
 
@@ -15,6 +16,7 @@ export const Categories: React.FC<CategoriesProps> = ({
   navigateToCatalog,
   navigateToScanner,
   navigateToStores,
+  navigateToOrders,
   t,
 }) => {
   const theme = useTheme();
@@ -33,7 +35,7 @@ export const Categories: React.FC<CategoriesProps> = ({
         >
           <Ionicons name="bag-handle-outline" size={24} color={theme.colors.primary} />
           <RNText style={styles.categoryText} numberOfLines={1}>
-            {t('home.shopOnline')}
+            {t('home.shopOnlineCategory')}
           </RNText>
         </TouchableOpacity>
         <TouchableOpacity
@@ -46,13 +48,21 @@ export const Categories: React.FC<CategoriesProps> = ({
             {t('home.scanAndGo')}
           </RNText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.categoryCard} onPress={navigateToStores} testID="action-stores">
+        <TouchableOpacity
+          style={styles.categoryCard}
+          onPress={navigateToStores}
+          testID="action-stores"
+        >
           <Ionicons name="storefront-outline" size={24} color={theme.colors.primary} />
           <RNText style={styles.categoryText} numberOfLines={1}>
             {t('home.ourStores')}
           </RNText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.categoryCard}>
+        <TouchableOpacity
+          style={styles.categoryCard}
+          onPress={navigateToOrders}
+          testID="action-orders"
+        >
           <Ionicons name="receipt-outline" size={24} color={theme.colors.primary} />
           <RNText style={styles.categoryText} numberOfLines={1}>
             {t('home.myOrders')}

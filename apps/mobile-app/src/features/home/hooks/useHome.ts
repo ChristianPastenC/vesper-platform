@@ -34,6 +34,10 @@ export const useHome = () => {
     navigation.navigate('Stores');
   };
 
+  const navigateToOrders = () => {
+    navigation.navigate('Orders');
+  };
+
   return {
     t,
     userName,
@@ -45,5 +49,6 @@ export const useHome = () => {
     navigateToScanner,
     navigateToAccount,
     navigateToStores,
+    navigateToOrders,
   };
 };

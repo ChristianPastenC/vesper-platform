@@ -30,6 +30,7 @@ export const HomeScreen: React.FC = () => {
     navigateToScanner,
     navigateToAccount,
     navigateToStores,
+    navigateToOrders,
     TRENDING_PRODUCTS,
   } = useHomeScreen();
 
@@ -74,6 +75,7 @@ export const HomeScreen: React.FC = () => {
           navigateToCatalog={navigateToCatalog}
           navigateToScanner={navigateToScanner}
           navigateToStores={navigateToStores}
+          navigateToOrders={navigateToOrders}
           t={t}
         />
 

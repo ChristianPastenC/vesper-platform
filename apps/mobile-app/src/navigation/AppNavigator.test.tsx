@@ -42,6 +42,15 @@ jest.mock('../features/scan-and-go/views/InStoreCheckoutScreen', () => ({
 jest.mock('../features/payment/views/PaymentSuccessScreen', () => ({
   PaymentSuccessScreen: () => null,
 }));
+jest.mock('../features/stores/views/StoresScreen', () => ({
+  StoresScreen: () => null,
+}));
+jest.mock('../features/orders/views/OrdersScreen/OrdersScreen', () => ({
+  OrdersScreen: () => null,
+}));
+jest.mock('../features/orders/views/OrderDetailsScreen/OrderDetailsScreen', () => ({
+  OrderDetailsScreen: () => null,
+}));
 
 describe('AppNavigator', () => {
   it('renders without crashing', () => {

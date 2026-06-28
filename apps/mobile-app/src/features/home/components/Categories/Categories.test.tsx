@@ -37,7 +37,7 @@ describe('Categories Component', () => {
     );
 
     expect(getByText('home.categoriesTitle')).toBeTruthy();
-    expect(getByText('home.shopOnline')).toBeTruthy();
+    expect(getByText('home.shopOnlineCategory')).toBeTruthy();
 
     fireEvent.press(getByTestId('action-catalog'));
     expect(mockNavigateToCatalog).toHaveBeenCalledTimes(1);

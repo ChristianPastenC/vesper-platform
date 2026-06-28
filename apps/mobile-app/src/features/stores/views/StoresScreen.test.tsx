@@ -63,7 +63,7 @@ describe('StoresScreen', () => {
     });
 
     const { getByText, getByTestId } = render(<StoresScreen />);
-    
+
     expect(getByText('Our Stores')).toBeTruthy();
     expect(getByText('Nearby Locations')).toBeTruthy();
     expect(getByTestId('store-locator-map')).toBeTruthy();

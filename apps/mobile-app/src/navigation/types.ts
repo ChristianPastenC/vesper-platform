@@ -25,4 +25,6 @@ export type RootStackParamList = {
     type: 'online' | 'instore';
   };
   Stores: undefined;
+  Orders: undefined;
+  OrderDetails: { orderId: string };
 };

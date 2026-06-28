@@ -3,7 +3,7 @@ import { EdgeInsets } from 'react-native-safe-area-context';
 import { ThemeColors } from '../../../../core/theme/colors';
 import { scale, scaleFont } from '../../../../core/theme/responsive';
 
-export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
+export const stylesFactory = (colors: ThemeColors, _insets?: EdgeInsets) =>
   StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFillObject,

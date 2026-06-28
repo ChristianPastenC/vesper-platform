@@ -73,7 +73,7 @@ describe('HomeScreen Component', () => {
     const { getByText } = render(<HomeScreen />);
     // Since `t` returns the key, we assert on the translation keys combined with the variables
     expect(getByText('home.promoTitle')).toBeTruthy();
-    expect(getByText('home.shopOnline')).toBeTruthy();
+    expect(getByText('home.shopOnlineCategory')).toBeTruthy();
     expect(getByText('home.scanAndGo')).toBeTruthy();
     expect(getByText('home.ourStores')).toBeTruthy();
     expect(getByText('home.myOrders')).toBeTruthy();

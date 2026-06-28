@@ -1,24 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { OrderDetailsScreen } from './OrderDetailsScreen';
-
-jest.mock('@react-navigation/native', () => ({
-  useRoute: () => ({
-    params: { orderId: 'ORD-1' },
-  }),
-}));
-
-jest.mock('../../../../core/theme/useTheme', () => ({
-  useTheme: () => ({
-    colors: {
-      background: '#FFFFFF',
-      surface: '#F5F5F5',
-      primary: '#6200EE',
-      text: '#121212',
-      border: '#E0E0E0',
-    },
-  }),
-}));
+import { useOrders } from '../../hooks/useOrders';
+import { useRoute } from '@react-navigation/native';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -26,29 +10,140 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-jest.mock('../../hooks/useOrders', () => ({
-  useOrders: () => ({
-    getOrderById: (id: string) => {
-      if (id === 'ORD-1') {
-        return {
-          id: 'ORD-1',
-          status: 'processing',
-          date: '2023-01-01T10:00:00Z',
-          total: 100,
-          items: [],
-          timeline: [],
-        };
-      }
-      return undefined;
+jest.mock('../../../../core/theme/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      text: '#000000',
     },
   }),
 }));
 
-describe('OrderDetailsScreen', () => {
-  it('renders order details correctly', () => {
-    const { getByText } = render(<OrderDetailsScreen />);
+jest.mock('../../hooks/useOrders', () => ({
+  useOrders: jest.fn(),
+}));
 
-    expect(getByText('orders.orderId1')).toBeTruthy();
+jest.mock('@react-navigation/native', () => ({
+  useRoute: jest.fn(),
+}));
+
+jest.mock('../../components/OrderTimeline/OrderTimeline', () => ({
+  OrderTimeline: () => <></>,
+}));
+
+jest.mock('../../components/OrderItemsSummary/OrderItemsSummary', () => ({
+  OrderItemsSummary: () => <></>,
+}));
+
+describe('OrderDetailsScreen', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders correctly for a found order (processing)', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-123' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => ({
+        id: 'ord-123',
+        status: 'processing',
+        date: new Date().toISOString(),
+        timeline: [],
+        items: [],
+        total: 100,
+      }),
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('orders.orderId123')).toBeTruthy();
     expect(getByText('orders.statusProcessing')).toBeTruthy();
+  });
+
+  it('renders correctly for a shipped order', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-123' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => ({
+        id: 'ord-123',
+        status: 'shipped',
+        date: new Date().toISOString(),
+        timeline: [],
+        items: [],
+        total: 100,
+      }),
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('orders.statusShipped')).toBeTruthy();
+  });
+
+  it('renders correctly for a delivered order', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-123' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => ({
+        id: 'ord-123',
+        status: 'delivered',
+        date: new Date().toISOString(),
+        timeline: [],
+        items: [],
+        total: 100,
+      }),
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('orders.statusDelivered')).toBeTruthy();
+  });
+
+  it('renders correctly for a cancelled order', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-123' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => ({
+        id: 'ord-123',
+        status: 'cancelled',
+        date: new Date().toISOString(),
+        timeline: [],
+        items: [],
+        total: 100,
+      }),
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('orders.statusCancelled')).toBeTruthy();
+  });
+
+  it('renders correctly for an unknown status order', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-123' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => ({
+        id: 'ord-123',
+        status: 'unknown-status',
+        date: new Date().toISOString(),
+        timeline: [],
+        items: [],
+        total: 100,
+      }),
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('unknown-status')).toBeTruthy();
+  });
+
+  it('renders error state when order not found', () => {
+    (useRoute as jest.Mock).mockReturnValue({
+      params: { orderId: 'ord-999' },
+    });
+    (useOrders as jest.Mock).mockReturnValue({
+      getOrderById: () => undefined,
+    });
+
+    const { getByText } = render(<OrderDetailsScreen />);
+    expect(getByText('Order not found.')).toBeTruthy();
   });
 });

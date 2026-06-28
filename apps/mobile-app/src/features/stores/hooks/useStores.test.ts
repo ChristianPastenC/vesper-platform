@@ -58,6 +58,20 @@ describe('useStores', () => {
     expect(result.current.stores).toEqual([]);
   });
 
+  it('handles fetch error that is not an Error instance', async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce('string error');
+
+    const { result } = renderHook(() => useStores());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBe('Unknown error');
+    expect(result.current.stores).toEqual([]);
+  });
+
   it('provides correct default region', () => {
     const { result } = renderHook(() => useStores());
     const region = result.current.getRegion();

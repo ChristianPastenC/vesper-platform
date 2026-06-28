@@ -69,4 +69,29 @@ describe('StoresScreen', () => {
     expect(getByTestId('store-locator-map')).toBeTruthy();
     expect(getByText('Sovereign Downtown')).toBeTruthy();
   });
+
+  it('renders loading state correctly', () => {
+    (useStores as jest.Mock).mockReturnValue({
+      stores: [],
+      isLoading: true,
+      error: null,
+      getRegion: () => ({}),
+    });
+
+    const { getAllByTestId } = render(<StoresScreen />);
+    expect(getAllByTestId('stores-screen')).toBeTruthy();
+  });
+
+  it('renders error state correctly', () => {
+    (useStores as jest.Mock).mockReturnValue({
+      stores: [],
+      isLoading: false,
+      error: new Error('Failed to load'),
+      getRegion: () => ({}),
+    });
+
+    const { getAllByText } = render(<StoresScreen />);
+    expect(getAllByText('Failed to load map').length).toBeGreaterThan(0);
+    expect(getAllByText('Failed to load locations').length).toBeGreaterThan(0);
+  });
 });

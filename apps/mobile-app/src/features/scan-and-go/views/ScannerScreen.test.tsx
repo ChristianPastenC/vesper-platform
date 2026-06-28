@@ -3,7 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { ScannerScreen } from './ScannerScreen';
 import { useScanner } from '../hooks/useScanner';
 import { useTheme } from '../../../core/theme/useTheme';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useAppStore } from '../../../store/useAppStore';
 
 jest.mock('react-i18next', () => ({
@@ -32,6 +32,7 @@ jest.mock('../../../core/theme/useTheme', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
+  useIsFocused: jest.fn(),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -56,6 +57,7 @@ describe('ScannerScreen View', () => {
     (useNavigation as jest.Mock).mockReturnValue({
       navigate: mockNavigate,
     });
+    (useIsFocused as jest.Mock).mockReturnValue(true);
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',

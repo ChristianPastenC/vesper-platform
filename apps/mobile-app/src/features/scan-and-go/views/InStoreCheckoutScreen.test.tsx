@@ -153,4 +153,54 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
     fireEvent.press(getByText('shared_ui.close'));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
+
+  it('navigates to Login when unauthenticated', () => {
+    (useInStoreCheckout as jest.Mock).mockReturnValue({
+      cartItems: [{ id: '1', barcode: '1', name: 'Item', price: 1, quantity: 1 }],
+      total: 1.0,
+      isOnline: true,
+      toggleNetwork: mockToggleNetwork,
+      isProcessing: false,
+      error: null,
+      handleCheckout: mockHandleCheckout,
+      isAuthenticated: false,
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<InStoreCheckoutScreen />);
+    fireEvent.press(getByText('scan_and_go.payButton'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('Login');
+  });
+
+  it('navigates to PaymentSuccessScreen when checkout callback fires', () => {
+    let checkoutCallback: (orderId: string) => void = () => {};
+    mockHandleCheckout.mockImplementation((cb) => {
+      checkoutCallback = cb;
+    });
+
+    (useInStoreCheckout as jest.Mock).mockReturnValue({
+      cartItems: [{ id: '1', barcode: '1', name: 'Item', price: 1, quantity: 1 }],
+      total: 1.0,
+      isOnline: true,
+      toggleNetwork: mockToggleNetwork,
+      isProcessing: false,
+      error: null,
+      handleCheckout: mockHandleCheckout,
+      isAuthenticated: true,
+      t: (key: string) => key,
+    });
+
+    const { getByText } = render(<InStoreCheckoutScreen />);
+    fireEvent.press(getByText('scan_and_go.payButton'));
+
+    expect(mockHandleCheckout).toHaveBeenCalled();
+
+    // Simulate the callback firing
+    checkoutCallback('order-123');
+    expect(mockNavigate).toHaveBeenCalledWith('PaymentSuccessScreen', {
+      orderId: 'order-123',
+      type: 'instore',
+    });
+  });
 });

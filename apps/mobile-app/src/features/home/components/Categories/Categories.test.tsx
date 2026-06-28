@@ -31,8 +31,9 @@ describe('Categories Component', () => {
       <Categories
         navigateToCatalog={mockNavigateToCatalog}
         navigateToScanner={mockNavigateToScanner}
+        navigateToStores={jest.fn()}
         t={mockT}
-      />
+      />,
     );
 
     expect(getByText('home.categoriesTitle')).toBeTruthy();

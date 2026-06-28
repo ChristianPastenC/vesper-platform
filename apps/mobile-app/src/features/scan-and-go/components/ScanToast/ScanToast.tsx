@@ -37,7 +37,7 @@ export const ScanToast: React.FC<ScanToastProps> = ({ lastScanned }) => {
                 inputRange: [0, 1],
                 outputRange: [0.9, 1],
               }),
-            }
+            },
           ],
         },
       ]}

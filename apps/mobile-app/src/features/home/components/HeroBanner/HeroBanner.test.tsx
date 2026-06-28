@@ -31,7 +31,7 @@ describe('HeroBanner Component', () => {
         userName="Alice"
         navigateToAccount={mockNavigateToAccount}
         t={mockT}
-      />
+      />,
     );
 
     expect(getByTestId('hero-auth-card')).toBeTruthy();
@@ -47,13 +47,13 @@ describe('HeroBanner Component', () => {
         userName={null}
         navigateToAccount={mockNavigateToAccount}
         t={mockT}
-      />
+      />,
     );
 
     expect(getByTestId('hero-unauth-card')).toBeTruthy();
     expect(getByText('home.welcomeTitleGuest')).toBeTruthy();
     expect(getByText('home.loginPrompt')).toBeTruthy();
-    
+
     fireEvent.press(getByTestId('hero-login-btn'));
     expect(mockNavigateToAccount).toHaveBeenCalledTimes(1);
   });

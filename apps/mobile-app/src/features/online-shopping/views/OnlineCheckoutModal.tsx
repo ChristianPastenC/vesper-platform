@@ -34,10 +34,7 @@ export const OnlineCheckoutModal: React.FC = () => {
         <Text variant="title" style={styles.title}>
           {t('online_checkout.title')}
         </Text>
-        <DeliveryAddressCard
-          label={t('online_checkout.deliveryAddress')}
-          address={address}
-        />
+        <DeliveryAddressCard label={t('online_checkout.deliveryAddress')} address={address} />
         <CheckoutSummary
           total={total}
           totalLabel={t('online_checkout.total')}

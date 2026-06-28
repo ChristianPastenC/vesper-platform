@@ -30,7 +30,7 @@ jest.mock('../../../../components/Button', () => {
       return React.createElement(
         TouchableOpacity,
         { onPress: props.onPress, testID: props.testID },
-        React.createElement(Text, null, props.title)
+        React.createElement(Text, null, props.title),
       );
     },
   };
@@ -39,17 +39,15 @@ jest.mock('../../../../components/Button', () => {
 describe('AddToCartFooter', () => {
   it('renders correctly and handles interactions', () => {
     const mockOnAddToOnline = jest.fn();
-    
+
     const { getByTestId, getByText, queryByText } = render(
-      <AddToCartFooter
-        onAddToOnline={mockOnAddToOnline}
-      />
+      <AddToCartFooter onAddToOnline={mockOnAddToOnline} />,
     );
-    
+
     expect(getByTestId('add-to-cart-footer')).toBeTruthy();
     expect(getByText('catalog.addToCart')).toBeTruthy();
     expect(queryByText('catalog.addToInStore')).toBeNull();
-    
+
     fireEvent.press(getByTestId('details-add-online-btn'));
     expect(mockOnAddToOnline).toHaveBeenCalledTimes(1);
   });

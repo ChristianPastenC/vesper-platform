@@ -11,9 +11,7 @@ interface AddToCartFooterProps {
   onAddToInStore?: () => void;
 }
 
-export const AddToCartFooter: React.FC<AddToCartFooterProps> = ({
-  onAddToOnline,
-}) => {
+export const AddToCartFooter: React.FC<AddToCartFooterProps> = ({ onAddToOnline }) => {
   const { t } = useTranslation();
   const styles = stylesFactory();
 

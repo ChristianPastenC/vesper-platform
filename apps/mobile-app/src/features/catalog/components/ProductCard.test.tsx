@@ -35,7 +35,7 @@ describe('ProductCard', () => {
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />
+      />,
     );
     expect(getByText('Test Product')).toBeTruthy();
     expect(getByText('$99.99')).toBeTruthy();
@@ -50,9 +50,9 @@ describe('ProductCard', () => {
         onAddToOnline={mockOnAddToOnline}
         onAddToInStore={jest.fn()}
         onPress={jest.fn()}
-      />
+      />,
     );
-    
+
     const addBtn = getByTestId('product-card-add-btn');
     fireEvent.press(addBtn);
     expect(mockOnAddToOnline).toHaveBeenCalledWith(mockProduct);
@@ -66,9 +66,9 @@ describe('ProductCard', () => {
         onAddToOnline={jest.fn()}
         onAddToInStore={jest.fn()}
         onPress={mockOnPress}
-      />
+      />,
     );
-    
+
     const cardBtn = getByTestId('product-card-press');
     fireEvent.press(cardBtn);
     expect(mockOnPress).toHaveBeenCalledTimes(1);

@@ -27,10 +27,7 @@ export const OnlineCartScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <OnlineCartList
-        cartItems={cartItems}
-        emptyMessage={t('online_checkout.empty')}
-      />
+      <OnlineCartList cartItems={cartItems} emptyMessage={t('online_checkout.empty')} />
       {cartItems.length > 0 && (
         <CartFooter
           address={address}

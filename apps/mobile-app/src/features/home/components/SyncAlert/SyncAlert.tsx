@@ -15,10 +15,13 @@ export const SyncAlert: React.FC<SyncAlertProps> = ({ isFrozen, toggleNetwork, t
   if (!isFrozen) return null;
 
   return (
-    <TouchableOpacity style={styles.alertContainer} onPress={toggleNetwork} activeOpacity={0.8} testID="home-network-toggle">
-      <RNText style={styles.alertText}>
-        {t('home.pendingSync')}
-      </RNText>
+    <TouchableOpacity
+      style={styles.alertContainer}
+      onPress={toggleNetwork}
+      activeOpacity={0.8}
+      testID="home-network-toggle"
+    >
+      <RNText style={styles.alertText}>{t('home.pendingSync')}</RNText>
       <Ionicons name="sync-circle-outline" size={24} color="#D97706" />
     </TouchableOpacity>
   );

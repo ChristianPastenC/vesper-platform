@@ -129,8 +129,8 @@ export const CatalogScreen: React.FC = () => {
       {/* 5. SEAMLESS TRANSITION TO THE GRID */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionHeaderTitle}>{t('catalog.trendingTitle')}</Text>
-        <TouchableOpacity 
-          style={styles.seeAllButton} 
+        <TouchableOpacity
+          style={styles.seeAllButton}
           activeOpacity={0.7}
           onPress={() => navigation.navigate('ProductList', { category: selectedCategory })}
           testID="see-all-button"

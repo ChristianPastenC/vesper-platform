@@ -5,7 +5,7 @@ export const useProfileHeader = () => {
   const { isAuthenticated, userName } = useProfile();
   const { t } = useTranslation();
 
-  const getInitial = () => userName ? userName.charAt(0).toUpperCase() : '';
+  const getInitial = () => (userName ? userName.charAt(0).toUpperCase() : '');
 
   return {
     isAuthenticated,

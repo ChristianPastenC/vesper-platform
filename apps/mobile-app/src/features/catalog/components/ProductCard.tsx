@@ -50,11 +50,7 @@ const SkeletonPlaceholder = ({ color }: { color: string }) => {
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({
-  product,
-  onAddToOnline,
-  onPress,
-}) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToOnline, onPress }) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const [imageLoading, setImageLoading] = useState(true);
@@ -81,8 +77,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : (
             <Ionicons name="cube-outline" size={32} color={theme.colors.text + '33'} />
           )}
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.quickAddBtn}
             onPress={() => onAddToOnline(product)}
             testID="product-card-add-btn"

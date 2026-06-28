@@ -8,7 +8,7 @@ export const useScanToast = (lastScanned: string | null) => {
   useEffect(() => {
     if (lastScanned) {
       setVisibleItem(lastScanned);
-      
+
       // Pop in
       Animated.spring(animValue, {
         toValue: 1,

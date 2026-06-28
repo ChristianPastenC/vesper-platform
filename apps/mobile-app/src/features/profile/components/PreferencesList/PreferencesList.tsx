@@ -9,13 +9,7 @@ import { stylesFactory } from './PreferencesList.styles';
 export const PreferencesList: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
-  const {
-    toggleThemeMode,
-    toggleLanguage,
-    themeLabel,
-    languageLabel,
-    t,
-  } = usePreferencesList();
+  const { toggleThemeMode, toggleLanguage, themeLabel, languageLabel, t } = usePreferencesList();
 
   return (
     <View style={styles.section} testID="preferences-list">
@@ -32,11 +26,7 @@ export const PreferencesList: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.rowLast}
-          onPress={toggleLanguage}
-          testID="profile-lang-row"
-        >
+        <TouchableOpacity style={styles.rowLast} onPress={toggleLanguage} testID="profile-lang-row">
           <View style={styles.rowLeft}>
             <Ionicons name="globe-outline" size={22} color={theme.colors.text} />
             <Text style={styles.rowText}>{t('shared_ui.language', 'Language')}</Text>

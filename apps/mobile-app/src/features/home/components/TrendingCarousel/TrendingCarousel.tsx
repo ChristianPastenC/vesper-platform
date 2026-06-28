@@ -21,7 +21,7 @@ export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t 
           <RNText style={styles.seeAllText}>{t('home.seeAll')}</RNText>
         </TouchableOpacity>
       </View>
-      
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -29,7 +29,9 @@ export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t 
       >
         {products.map((product) => (
           <View key={product.id} style={styles.productCard}>
-            <RNText style={styles.productName} numberOfLines={2}>{product.name}</RNText>
+            <RNText style={styles.productName} numberOfLines={2}>
+              {product.name}
+            </RNText>
             <RNText style={styles.productPrice}>{product.price}</RNText>
             <View style={styles.productFooter}>
               <View style={styles.cartIconContainer}>

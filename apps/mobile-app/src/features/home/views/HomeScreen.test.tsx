@@ -77,7 +77,7 @@ describe('HomeScreen Component', () => {
     expect(getByText('home.scanAndGo')).toBeTruthy();
     expect(getByText('home.ourStores')).toBeTruthy();
     expect(getByText('home.myOrders')).toBeTruthy();
-    
+
     // Check trending products list
     expect(getByText('home.trendingTitle')).toBeTruthy();
     expect(getByText('Silk Blend Shirt')).toBeTruthy();

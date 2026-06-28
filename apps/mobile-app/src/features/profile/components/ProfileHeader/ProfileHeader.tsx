@@ -24,10 +24,14 @@ export const ProfileHeader: React.FC = () => {
       </View>
       <View style={styles.headerInfo}>
         <Text variant="bold" style={styles.welcomeText} testID="profile-greeting">
-          {isAuthenticated ? `${t('auth.title', 'Welcome')}, ${userName}!` : t('profile.greetingGuest', 'Hello, Guest!')}
+          {isAuthenticated
+            ? `${t('auth.title', 'Welcome')}, ${userName}!`
+            : t('profile.greetingGuest', 'Hello, Guest!')}
         </Text>
         <Text style={styles.statusText} testID="profile-status">
-          {isAuthenticated ? t('profile.sessionActive', 'Session Active') : t('profile.signInPrompt', 'Sign in to unlock checkout features')}
+          {isAuthenticated
+            ? t('profile.sessionActive', 'Session Active')
+            : t('profile.signInPrompt', 'Sign in to unlock checkout features')}
         </Text>
       </View>
     </View>

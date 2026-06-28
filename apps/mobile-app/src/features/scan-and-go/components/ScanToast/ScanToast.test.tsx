@@ -28,7 +28,7 @@ describe('ScanToast', () => {
 
   it('renders and displays the scanned item', () => {
     const { getByTestId, getByText } = render(<ScanToast lastScanned="123456789" />);
-    
+
     expect(getByTestId('scan-toast')).toBeTruthy();
     expect(getByText('catalog.itemAdded: 123456789')).toBeTruthy();
   });

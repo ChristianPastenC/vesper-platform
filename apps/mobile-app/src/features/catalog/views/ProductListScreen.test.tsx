@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native';
 import { ProductListScreen } from './ProductListScreen';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
 const mockSetOptions = jest.fn();
@@ -30,9 +30,7 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('../hooks/useCatalog', () => ({
   useCatalog: () => ({
-    products: [
-      { id: '1', name: 'Phone', price: 999, barcode: '123' },
-    ],
+    products: [{ id: '1', name: 'Phone', price: 999, barcode: '123' }],
     loading: false,
     error: null,
     isEmpty: false,
@@ -55,14 +53,14 @@ jest.mock('../components/ProductGrid/ProductGrid', () => {
 describe('ProductListScreen', () => {
   it('renders correctly and sets title', () => {
     const { getByTestId } = render(<ProductListScreen />);
-    
+
     expect(getByTestId('product-list-screen')).toBeTruthy();
     expect(getByTestId('mock-product-grid')).toBeTruthy();
-    
+
     expect(mockSetOptions).toHaveBeenCalledWith(
       expect.objectContaining({
         headerBackTitleVisible: false,
-      })
+      }),
     );
   });
 

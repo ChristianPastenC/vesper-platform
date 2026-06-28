@@ -32,11 +32,11 @@ describe('ScannerControls', () => {
         itemsCount={3}
         onSimulateScan={simulateScanMock}
         onCheckout={checkoutMock}
-      />
+      />,
     );
 
     expect(getByTestId('scanner-controls')).toBeTruthy();
-    
+
     const simulateBtn = getByTestId('simulate-scan-btn');
     const checkoutBtn = getByTestId('checkout-btn');
 

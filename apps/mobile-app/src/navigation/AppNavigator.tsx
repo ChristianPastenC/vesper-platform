@@ -9,6 +9,7 @@ import { OnlineCartScreen } from '../features/online-shopping/views/OnlineCartSc
 import { OnlineCheckoutModal } from '../features/online-shopping/views/OnlineCheckoutModal';
 import { InStoreCheckoutScreen } from '../features/scan-and-go/views/InStoreCheckoutScreen';
 import { PaymentSuccessScreen } from '../features/payment/views/PaymentSuccessScreen';
+import { StoresScreen } from '../features/stores/views/StoresScreen';
 import { useTheme } from '../core/theme/useTheme';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -71,6 +72,13 @@ export const AppNavigator: React.FC = () => {
         options={{
           headerLeft: () => null,
           title: 'Order Status',
+        }}
+      />
+      <Stack.Screen
+        name="Stores"
+        component={StoresScreen}
+        options={{
+          title: 'Stores',
         }}
       />
     </Stack.Navigator>

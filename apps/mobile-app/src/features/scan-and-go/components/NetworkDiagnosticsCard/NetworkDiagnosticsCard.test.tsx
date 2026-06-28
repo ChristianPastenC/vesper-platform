@@ -28,20 +28,20 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 describe('NetworkDiagnosticsCard', () => {
   it('renders correctly when online', () => {
     const { getByTestId, getByText } = render(
-      <NetworkDiagnosticsCard isOnline={true} onToggleNetwork={jest.fn()} />
+      <NetworkDiagnosticsCard isOnline={true} onToggleNetwork={jest.fn()} />,
     );
 
     expect(getByTestId('network-diagnostics-card')).toBeTruthy();
     expect(getByText('scan_and_go.networkStatus')).toBeTruthy();
     expect(getByText('scan_and_go.onlineLabel')).toBeTruthy();
-    
+
     const switchElement = getByTestId('network-switch');
     expect(switchElement.props.value).toBe(true);
   });
 
   it('renders correctly when offline', () => {
     const { getByText, getByTestId } = render(
-      <NetworkDiagnosticsCard isOnline={false} onToggleNetwork={jest.fn()} />
+      <NetworkDiagnosticsCard isOnline={false} onToggleNetwork={jest.fn()} />,
     );
 
     expect(getByText('scan_and_go.offlineLabel')).toBeTruthy();
@@ -52,7 +52,7 @@ describe('NetworkDiagnosticsCard', () => {
   it('calls onToggleNetwork when switch is pressed', () => {
     const toggleMock = jest.fn();
     const { getByTestId } = render(
-      <NetworkDiagnosticsCard isOnline={true} onToggleNetwork={toggleMock} />
+      <NetworkDiagnosticsCard isOnline={true} onToggleNetwork={toggleMock} />,
     );
 
     const switchElement = getByTestId('network-switch');

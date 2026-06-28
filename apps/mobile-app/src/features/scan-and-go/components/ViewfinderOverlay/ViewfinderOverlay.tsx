@@ -20,7 +20,7 @@ export const ViewfinderOverlay: React.FC<ViewfinderOverlayProps> = ({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
-  
+
   const laserAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -37,17 +37,18 @@ export const ViewfinderOverlay: React.FC<ViewfinderOverlayProps> = ({
             duration: 1500,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     }
   }, [hasPermission, laserAnim]);
 
   if (!hasPermission) {
     return (
-      <View style={[styles.viewfinderFrame, styles.permissionContainer]} testID="no-permission-view">
-        <Text style={styles.permissionText}>
-          {t('scan_and_go.cameraPermission')}
-        </Text>
+      <View
+        style={[styles.viewfinderFrame, styles.permissionContainer]}
+        testID="no-permission-view"
+      >
+        <Text style={styles.permissionText}>{t('scan_and_go.cameraPermission')}</Text>
         <Button title={t('scan_and_go.requestPermission')} onPress={requestPermission} />
       </View>
     );
@@ -64,10 +65,7 @@ export const ViewfinderOverlay: React.FC<ViewfinderOverlayProps> = ({
           <View style={[styles.corner, styles.bottomLeft]} />
           <View style={[styles.corner, styles.bottomRight]} />
           <Animated.View
-            style={[
-              styles.laserLine,
-              { transform: [{ translateY: laserAnim }] },
-            ]}
+            style={[styles.laserLine, { transform: [{ translateY: laserAnim }] }]}
             testID="laser-line"
           />
         </View>

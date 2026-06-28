@@ -30,6 +30,10 @@ export const useHome = () => {
     navigation.navigate('ProfileTab');
   };
 
+  const navigateToStores = () => {
+    navigation.navigate('Stores');
+  };
+
   return {
     t,
     userName,
@@ -40,5 +44,6 @@ export const useHome = () => {
     navigateToOnlineCart,
     navigateToScanner,
     navigateToAccount,
+    navigateToStores,
   };
 };

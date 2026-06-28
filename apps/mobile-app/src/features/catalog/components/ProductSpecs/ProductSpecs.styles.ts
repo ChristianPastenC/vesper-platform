@@ -5,7 +5,8 @@ import { scale, verticalScale, scaleFont } from '../../../../core/theme/responsi
 export const stylesFactory = (colors: ThemeColors) =>
   StyleSheet.create({
     glassContainer: {
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.75)' : 'rgba(255, 255, 255, 0.95)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.75)' : 'rgba(255, 255, 255, 0.95)',
       borderRadius: scale(24),
       padding: scale(20),
       shadowColor: '#000',
@@ -29,7 +30,8 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     specsTable: {
       borderRadius: scale(12),
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
       overflow: 'hidden',
     },
     specRow: {
@@ -38,7 +40,8 @@ export const stylesFactory = (colors: ThemeColors) =>
       paddingHorizontal: scale(16),
       paddingVertical: verticalScale(12),
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor:
+        colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
     },
     specRowLast: {
       flexDirection: 'row',

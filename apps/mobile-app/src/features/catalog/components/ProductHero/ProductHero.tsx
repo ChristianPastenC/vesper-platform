@@ -27,7 +27,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const { t } = useTranslation();
-  
+
   const [imageLoading, setImageLoading] = useState(true);
   const animValue = useRef(new Animated.Value(0.5)).current;
 
@@ -37,7 +37,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
         Animated.sequence([
           Animated.timing(animValue, { toValue: 1, duration: 800, useNativeDriver: true }),
           Animated.timing(animValue, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-        ])
+        ]),
       ).start();
     } else {
       animValue.setValue(1);
@@ -47,7 +47,6 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
   return (
     <View style={styles.heroContainer} testID="product-hero-container">
       <View style={styles.imageContainer} testID="product-image-container">
-        
         {image ? (
           <>
             <Image
@@ -58,21 +57,34 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
               onError={() => setImageLoading(false)}
             />
             {imageLoading && (
-              <Animated.View style={[styles.skeletonOverlay, { opacity: animValue, backgroundColor: theme.colors.border }]}>
-                <Ionicons name="image-outline" size={48} color={theme.colors.text} style={styles.skeletonIcon} />
+              <Animated.View
+                style={[
+                  styles.skeletonOverlay,
+                  { opacity: animValue, backgroundColor: theme.colors.border },
+                ]}
+              >
+                <Ionicons
+                  name="image-outline"
+                  size={48}
+                  color={theme.colors.text}
+                  style={styles.skeletonIcon}
+                />
               </Animated.View>
             )}
           </>
         ) : (
-          <Ionicons name={getProductIcon(name)} size={160} color={theme.colors.primary} style={{ opacity: 0.5 }} />
+          <Ionicons
+            name={getProductIcon(name)}
+            size={160}
+            color={theme.colors.primary}
+            style={{ opacity: 0.5 }}
+          />
         )}
-        
+
         <View style={styles.gradientOverlay} />
 
         <View style={styles.contentOverlay}>
-          <Text style={styles.title}>
-            {name}
-          </Text>
+          <Text style={styles.title}>{name}</Text>
           <Text style={styles.price} testID="product-details-price">
             ${price.toFixed(2)}
           </Text>
@@ -84,7 +96,6 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
             </Text>
           </View>
         </View>
-
       </View>
     </View>
   );

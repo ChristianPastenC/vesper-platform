@@ -24,7 +24,7 @@ describe('ViewfinderOverlay', () => {
   it('renders permission request view when hasPermission is false', () => {
     const requestPermissionMock = jest.fn();
     const { getByTestId, getByText } = render(
-      <ViewfinderOverlay hasPermission={false} requestPermission={requestPermissionMock} />
+      <ViewfinderOverlay hasPermission={false} requestPermission={requestPermissionMock} />,
     );
 
     expect(getByTestId('no-permission-view')).toBeTruthy();
@@ -37,7 +37,7 @@ describe('ViewfinderOverlay', () => {
 
   it('renders viewfinder and laser line when hasPermission is true', () => {
     const { getByTestId } = render(
-      <ViewfinderOverlay hasPermission={true} requestPermission={jest.fn()} />
+      <ViewfinderOverlay hasPermission={true} requestPermission={jest.fn()} />,
     );
 
     expect(getByTestId('viewfinder-overlay')).toBeTruthy();

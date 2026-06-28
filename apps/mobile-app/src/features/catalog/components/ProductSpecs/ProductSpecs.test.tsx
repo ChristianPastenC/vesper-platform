@@ -25,7 +25,7 @@ describe('ProductSpecs', () => {
       { labelKey: 'catalog.specWeight', value: '1.5kg' },
       { labelKey: 'catalog.specBrand', value: 'catalog.brandApple', isTranslationValue: true },
     ];
-    
+
     const { getByTestId, getByText } = render(<ProductSpecs specifications={mockSpecs} />);
     expect(getByTestId('product-specs-container')).toBeTruthy();
     expect(getByText('catalog.descriptionTitle')).toBeTruthy();

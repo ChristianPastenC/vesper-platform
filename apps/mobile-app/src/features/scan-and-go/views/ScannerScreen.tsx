@@ -42,10 +42,7 @@ export const ScannerScreen: React.FC = () => {
           barcodeTypes: ['ean13', 'ean8', 'code128', 'qr'],
         }}
       >
-        <ViewfinderOverlay
-          hasPermission={hasPermission}
-          requestPermission={requestPermission}
-        />
+        <ViewfinderOverlay hasPermission={hasPermission} requestPermission={requestPermission} />
 
         <View style={styles.overlayTextContainer} pointerEvents="none">
           <Text variant="bold" style={styles.scanHint}>

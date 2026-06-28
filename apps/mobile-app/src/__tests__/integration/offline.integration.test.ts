@@ -41,7 +41,11 @@ describe('Integration: Offline Queue', () => {
       body: new Uint8Array([1, 2, 3]),
     };
 
-    const cryptoMock = (client as unknown as { cryptoProvider: import('@sovereign/secure-client').IDPoPCryptoProvider }).cryptoProvider;
+    const cryptoMock = (
+      client as unknown as {
+        cryptoProvider: import('@sovereign/secure-client').IDPoPCryptoProvider;
+      }
+    ).cryptoProvider;
 
     // Enqueue a serialized SovereignAdapterRequest
     const binaryReq = serializeAdapterRequest(request);

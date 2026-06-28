@@ -28,7 +28,7 @@ const mockItems = [
 describe('OnlineCartList', () => {
   it('renders empty state when cart is empty', () => {
     const { getByTestId, getByText } = render(
-      <OnlineCartList cartItems={[]} emptyMessage="Empty Cart" />
+      <OnlineCartList cartItems={[]} emptyMessage="Empty Cart" />,
     );
     expect(getByTestId('empty-state')).toBeTruthy();
     expect(getByText('Empty Cart')).toBeTruthy();
@@ -36,7 +36,7 @@ describe('OnlineCartList', () => {
 
   it('renders list of items when cart has items', () => {
     const { getByTestId, getByText } = render(
-      <OnlineCartList cartItems={mockItems} emptyMessage="Empty Cart" />
+      <OnlineCartList cartItems={mockItems} emptyMessage="Empty Cart" />,
     );
     expect(getByTestId('cart-list')).toBeTruthy();
     expect(getByText('Item 1')).toBeTruthy();

@@ -98,8 +98,6 @@ describe('ProductDetailsScreen View', () => {
     expect(mockHandleAddToOnline).toHaveBeenCalled();
   });
 
-
-
   describe('getProductIcon branches', () => {
     const testIcon = (name: string) => {
       (useProductDetails as jest.Mock).mockReturnValue({

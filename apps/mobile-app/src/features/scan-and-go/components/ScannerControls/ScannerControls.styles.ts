@@ -16,7 +16,8 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
     },
     glassBackground: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.75)' : 'rgba(255, 255, 255, 0.95)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(24, 24, 27, 0.75)' : 'rgba(255, 255, 255, 0.95)',
       borderRadius: scale(24),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: -4 },
@@ -29,6 +30,7 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
     },
     checkoutBtn: {
       borderColor: colors.border,
-      backgroundColor: colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor:
+        colors.primary === '#F8FAFC' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
     },
   });

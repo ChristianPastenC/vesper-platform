@@ -24,7 +24,7 @@ describe('CartFooter', () => {
   it('renders correctly and handles interactions', () => {
     const onCheckout = jest.fn();
     const onClear = jest.fn();
-    
+
     const { getByText, getByTestId } = render(
       <CartFooter
         address="123 Street"
@@ -35,7 +35,7 @@ describe('CartFooter', () => {
         clearText="Clear Cart"
         totalLabel="Total"
         addressLabel="Delivery Address"
-      />
+      />,
     );
 
     expect(getByText('123 Street')).toBeTruthy();

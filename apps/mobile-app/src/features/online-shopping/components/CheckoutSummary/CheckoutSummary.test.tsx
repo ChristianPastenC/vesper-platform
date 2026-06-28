@@ -24,7 +24,7 @@ describe('CheckoutSummary', () => {
         totalLabel="Total Amount"
         isProcessing={false}
         processingMessage="Processing..."
-      />
+      />,
     );
 
     expect(getByText('Total Amount')).toBeTruthy();
@@ -39,7 +39,7 @@ describe('CheckoutSummary', () => {
         totalLabel="Total Amount"
         isProcessing={true}
         processingMessage="Processing..."
-      />
+      />,
     );
 
     expect(getByTestId('processing-section')).toBeTruthy();

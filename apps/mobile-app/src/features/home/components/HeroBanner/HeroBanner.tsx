@@ -9,7 +9,11 @@ interface HeroBannerProps {
   t: (key: string) => string;
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({ isAuthenticated, navigateToAccount, t }) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({
+  isAuthenticated,
+  navigateToAccount,
+  t,
+}) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 
@@ -27,7 +31,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ isAuthenticated, navigat
         <View style={styles.heroCardUnauth} testID="hero-unauth-card">
           <RNText style={styles.heroTitleUnauth}>{t('home.welcomeTitleGuest')}</RNText>
           <RNText style={styles.heroSubtitleUnauth}>{t('home.loginPrompt')}</RNText>
-          <TouchableOpacity style={styles.heroButtonUnauth} onPress={navigateToAccount} activeOpacity={0.8} testID="hero-login-btn">
+          <TouchableOpacity
+            style={styles.heroButtonUnauth}
+            onPress={navigateToAccount}
+            activeOpacity={0.8}
+            testID="hero-login-btn"
+          >
             <RNText style={styles.heroButtonTextUnauth}>{t('home.loginButton')}</RNText>
           </TouchableOpacity>
         </View>

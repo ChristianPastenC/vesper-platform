@@ -32,7 +32,7 @@ describe('CheckoutFooter', () => {
         cartIsEmpty={false}
         onPayPress={jest.fn()}
         onClose={jest.fn()}
-      />
+      />,
     );
 
     expect(getByTestId('checkout-footer')).toBeTruthy();
@@ -51,7 +51,7 @@ describe('CheckoutFooter', () => {
         cartIsEmpty={false}
         onPayPress={onPayPressMock}
         onClose={onCloseMock}
-      />
+      />,
     );
 
     fireEvent.press(getByTestId('pay-btn'));

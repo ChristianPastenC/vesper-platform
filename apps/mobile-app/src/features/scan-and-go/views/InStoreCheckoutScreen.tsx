@@ -47,10 +47,7 @@ export const InStoreCheckoutScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <NetworkDiagnosticsCard
-        isOnline={isOnline}
-        onToggleNetwork={toggleNetwork}
-      />
+      <NetworkDiagnosticsCard isOnline={isOnline} onToggleNetwork={toggleNetwork} />
 
       <ErrorBanner error={error} />
 

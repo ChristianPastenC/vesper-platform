@@ -10,16 +10,24 @@ interface HomeHeaderProps {
   t: (key: string) => string;
 }
 
-export const HomeHeader: React.FC<HomeHeaderProps> = ({ navigateToScanner, navigateToAccount, t }) => {
+export const HomeHeader: React.FC<HomeHeaderProps> = ({
+  navigateToScanner,
+  navigateToAccount,
+  t,
+}) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.iconButton} onPress={navigateToScanner} testID="header-scanner-btn">
+      <TouchableOpacity
+        style={styles.iconButton}
+        onPress={navigateToScanner}
+        testID="header-scanner-btn"
+      >
         <Ionicons name="scan-outline" size={20} color={theme.colors.text} />
       </TouchableOpacity>
-      
+
       <View style={styles.searchContainer}>
         <Ionicons name="search-outline" size={18} color={theme.colors.textSecondary} />
         <TextInput
@@ -30,8 +38,12 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ navigateToScanner, navig
           testID="header-search-input"
         />
       </View>
-      
-      <TouchableOpacity style={styles.iconButton} onPress={navigateToAccount} testID="header-account-btn">
+
+      <TouchableOpacity
+        style={styles.iconButton}
+        onPress={navigateToAccount}
+        testID="header-account-btn"
+      >
         <Ionicons name="notifications-outline" size={22} color={theme.colors.text} />
         <View style={styles.notificationDot} />
       </TouchableOpacity>

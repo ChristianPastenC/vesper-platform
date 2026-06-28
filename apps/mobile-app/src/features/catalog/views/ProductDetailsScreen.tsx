@@ -28,19 +28,20 @@ export const ProductDetailsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} testID="product-details-scroll" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        testID="product-details-scroll"
+        showsVerticalScrollIndicator={false}
+      >
         <ProductHero name={product.name} price={product.price} barcode={product.barcode} />
-        
+
         <View style={styles.contentPadding}>
           <ProductSpecs specifications={specifications} />
         </View>
       </ScrollView>
 
       {/* Sticky footer at the bottom of the screen */}
-      <AddToCartFooter
-        onAddToOnline={handleAddToOnline}
-        onAddToInStore={handleAddToInStore}
-      />
+      <AddToCartFooter onAddToOnline={handleAddToOnline} onAddToInStore={handleAddToInStore} />
     </View>
   );
 };

@@ -32,7 +32,7 @@ describe('HomeHeader Component', () => {
         navigateToScanner={mockNavigateToScanner}
         navigateToAccount={mockNavigateToAccount}
         t={mockT}
-      />
+      />,
     );
 
     expect(getByPlaceholderText('home.searchPlaceholder')).toBeTruthy();

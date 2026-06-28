@@ -46,7 +46,7 @@ describe('ProductGrid', () => {
         error={null}
         isEmpty={false}
         refetch={jest.fn()}
-      />
+      />,
     );
     expect(getByText('Product 1')).toBeTruthy();
     expect(getByText('Product 2')).toBeTruthy();
@@ -54,13 +54,7 @@ describe('ProductGrid', () => {
 
   it('renders empty state', () => {
     const { getByTestId } = render(
-      <ProductGrid
-        products={[]}
-        loading={false}
-        error={null}
-        isEmpty={true}
-        refetch={jest.fn()}
-      />
+      <ProductGrid products={[]} loading={false} error={null} isEmpty={true} refetch={jest.fn()} />,
     );
     expect(getByTestId('empty-state')).toBeTruthy();
   });
@@ -73,7 +67,7 @@ describe('ProductGrid', () => {
         error={new Error('Error')}
         isEmpty={false}
         refetch={jest.fn()}
-      />
+      />,
     );
     expect(getByTestId('error-state')).toBeTruthy();
   });

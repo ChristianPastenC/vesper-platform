@@ -24,4 +24,5 @@ export type RootStackParamList = {
     orderId: string;
     type: 'online' | 'instore';
   };
+  Stores: undefined;
 };

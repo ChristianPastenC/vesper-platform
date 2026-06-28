@@ -30,11 +30,7 @@ export const AuthPromptCard: React.FC = () => {
             <Ionicons name="chevron-forward" size={16} color={theme.colors.text + '40'} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.rowLast}
-            onPress={onSignIn}
-            testID="profile-login-row"
-          >
+          <TouchableOpacity style={styles.rowLast} onPress={onSignIn} testID="profile-login-row">
             <View style={styles.rowLeft}>
               <Ionicons name="log-in-outline" size={22} color={theme.colors.primary} />
               <Text style={[styles.rowText, { color: theme.colors.primary }]}>

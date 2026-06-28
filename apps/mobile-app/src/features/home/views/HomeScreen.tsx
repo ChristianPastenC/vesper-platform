@@ -18,7 +18,7 @@ export const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
-  
+
   const {
     t,
     userName,
@@ -29,7 +29,8 @@ export const HomeScreen: React.FC = () => {
     navigateToCatalog,
     navigateToScanner,
     navigateToAccount,
-    TRENDING_PRODUCTS
+    navigateToStores,
+    TRENDING_PRODUCTS,
   } = useHomeScreen();
 
   React.useLayoutEffect(() => {
@@ -53,39 +54,30 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <HomeHeader 
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <HomeHeader
           navigateToScanner={navigateToScanner}
           navigateToAccount={navigateToAccount}
           t={t}
         />
 
-        <HeroBanner 
+        <HeroBanner
           isAuthenticated={isAuthenticated}
           userName={userName}
           navigateToAccount={navigateToAccount}
           t={t}
         />
 
-        <SyncAlert 
-          isFrozen={isFrozen}
-          toggleNetwork={toggleNetwork}
-          t={t}
-        />
+        <SyncAlert isFrozen={isFrozen} toggleNetwork={toggleNetwork} t={t} />
 
-        <Categories 
+        <Categories
           navigateToCatalog={navigateToCatalog}
           navigateToScanner={navigateToScanner}
+          navigateToStores={navigateToStores}
           t={t}
         />
 
-        <TrendingCarousel 
-          products={TRENDING_PRODUCTS}
-          t={t}
-        />
+        <TrendingCarousel products={TRENDING_PRODUCTS} t={t} />
       </ScrollView>
     </View>
   );

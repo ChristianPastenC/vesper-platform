@@ -16,7 +16,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 describe('ProductHero', () => {
   it('renders correctly', () => {
     const { getByTestId, getByText } = render(
-      <ProductHero name="Test Product" price={99.99} barcode="123456789" />
+      <ProductHero name="Test Product" price={99.99} barcode="123456789" />,
     );
     expect(getByTestId('product-hero-container')).toBeTruthy();
     expect(getByText('Test Product')).toBeTruthy();

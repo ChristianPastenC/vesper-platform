@@ -18,13 +18,15 @@ export const ProductListScreen: React.FC = () => {
   const route = useRoute<ProductListRouteProp>();
 
   const category = route.params?.category;
-  
+
   // Use existing catalog hook
   const { products, loading, error, isEmpty, refetch } = useCatalog(category, 50);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      title: category ? t(`catalog.category_${category}`, t('catalog.productListTitle')) : t('catalog.productListTitle'),
+      title: category
+        ? t(`catalog.category_${category}`, t('catalog.productListTitle'))
+        : t('catalog.productListTitle'),
       headerBackTitleVisible: false,
     });
   }, [navigation, t, category]);

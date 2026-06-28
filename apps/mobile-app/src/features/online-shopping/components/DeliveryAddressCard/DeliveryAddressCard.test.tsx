@@ -19,7 +19,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 describe('DeliveryAddressCard', () => {
   it('renders correctly', () => {
     const { getByText } = render(
-      <DeliveryAddressCard label="Delivery Address" address="123 Test Ave" />
+      <DeliveryAddressCard label="Delivery Address" address="123 Test Ave" />,
     );
 
     expect(getByText('Delivery Address')).toBeTruthy();

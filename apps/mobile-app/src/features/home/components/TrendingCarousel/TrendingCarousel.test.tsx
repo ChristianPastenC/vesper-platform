@@ -30,16 +30,14 @@ describe('TrendingCarousel Component', () => {
   });
 
   it('renders a list of products', () => {
-    const { getByText } = render(
-      <TrendingCarousel products={mockProducts} t={mockT} />
-    );
+    const { getByText } = render(<TrendingCarousel products={mockProducts} t={mockT} />);
 
     expect(getByText('home.trendingTitle')).toBeTruthy();
     expect(getByText('home.seeAll')).toBeTruthy();
 
     expect(getByText('Silk Blend Shirt')).toBeTruthy();
     expect(getByText('$120.00')).toBeTruthy();
-    
+
     expect(getByText('Leather Weekender')).toBeTruthy();
     expect(getByText('$350.00')).toBeTruthy();
   });

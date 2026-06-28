@@ -12,8 +12,8 @@ func NewStoresHandler() *StoresHandler {
 }
 
 type StoreFeature struct {
-	Type       string `json:"type"`
-	Geometry   struct {
+	Type     string `json:"type"`
+	Geometry struct {
 		Type        string    `json:"type"`
 		Coordinates []float64 `json:"coordinates"`
 	} `json:"geometry"`

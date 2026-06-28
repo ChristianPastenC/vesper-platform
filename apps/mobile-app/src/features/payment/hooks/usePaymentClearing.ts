@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { getNativeClient } from '../../../../../../packages/secure-client/src/ledger/queue';
+import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 
 /**
  * usePaymentClearing Hook
@@ -9,6 +10,7 @@ import { getNativeClient } from '../../../../../../packages/secure-client/src/le
  */
 export const usePaymentClearing = () => {
   const isProcessing = useRef(false);
+  const { execute } = useAuthenticatedRequest();
 
   const processQueue = useCallback(async () => {
     // Re-entrancy lock to prevent fast network toggles (signal flapping) from triggering parallel processing
@@ -28,6 +30,9 @@ export const usePaymentClearing = () => {
         `[PaymentClearing] Network restored. Processing ${queueIds.length} in-memory transactions...`,
       );
 
+      const batch = [];
+      const validIds = [];
+
       for (const id of queueIds) {
         // Read binary payload from C++ memory
         const payload = client.getTransactionPayload(id);
@@ -39,33 +44,30 @@ export const usePaymentClearing = () => {
           continue;
         }
 
-        try {
-          // Encode binary buffer to securely transmit it to the backend for verification
-          const base64Payload = client.base64UrlEncode(payload);
+        // Encode binary buffer to securely transmit it to the backend for verification
+        const base64Payload = client.base64UrlEncode(payload);
+        batch.push({ transactionId: id, payload: base64Payload });
+        validIds.push(id);
+      }
 
-          const response = await fetch('https://api.sovereigncore.internal/v1/checkout/sync', {
+      if (batch.length > 0) {
+        try {
+          await execute('sync-offline-payments', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ transactionId: id, payload: base64Payload }),
+            path: '/api/v1/checkout/sync',
+            body: { transactions: batch },
           });
 
-          if (response.ok) {
-            console.log(
-              `[PaymentClearing] Transaction ${id} processed successfully. Dequeuing (zeroizing)...`,
-            );
-            // Release and destroy RAM buffer
+          console.log(
+            `[PaymentClearing] Batch of ${batch.length} transactions processed successfully. Dequeuing (zeroizing)...`,
+          );
+
+          // Release and destroy RAM buffer for all successfully sent transactions
+          for (const id of validIds) {
             client.dequeueTransaction(id);
-          } else {
-            console.error(`[PaymentClearing] Failed to sync ${id}: HTTP ${response.status}`);
-            // On an HTTP failure (e.g. 500) we stop the loop to avoid spamming and preserve FIFO ordering
-            break;
           }
         } catch (error) {
-          console.error(`[PaymentClearing] Network error while processing ${id}:`, error);
-          // Recurring network failure: safely break the loop
-          break;
+          console.error(`[PaymentClearing] Network error while processing batch:`, error);
         }
       }
     } catch (error) {
@@ -76,7 +78,7 @@ export const usePaymentClearing = () => {
     } finally {
       isProcessing.current = false;
     }
-  }, []);
+  }, [execute]);
 
   useEffect(() => {
     // Actively listen to network changes

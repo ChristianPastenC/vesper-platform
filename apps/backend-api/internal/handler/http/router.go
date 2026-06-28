@@ -81,6 +81,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			r.Use(middleware.HashValidator)
 
 			r.Post("/checkout/pay", cfg.PaymentHandler.ProcessPayment)
+			r.Post("/checkout/sync", cfg.PaymentHandler.SyncOfflinePayments)
 			r.Post("/checkout/online", cfg.PaymentHandler.ProcessPayment)
 			r.Post("/checkout/instore", cfg.PaymentHandler.ProcessPayment)
 

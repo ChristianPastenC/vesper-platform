@@ -89,3 +89,44 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 		"message":       "Transaction processed successfully",
 	})
 }
+
+type SyncTransaction struct {
+	TransactionID string `json:"transactionId"`
+	Payload       string `json:"payload"`
+}
+
+type SyncRequest struct {
+	Transactions []SyncTransaction `json:"transactions"`
+}
+
+type SyncResponse struct {
+	SyncedIDs []string `json:"syncedIds"`
+	Message   string   `json:"message"`
+}
+
+func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
+		return
+	}
+
+	var req SyncRequest
+	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*5)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		return
+	}
+
+	syncedIDs := make([]string, 0, len(req.Transactions))
+
+	for _, tx := range req.Transactions {
+		// Print directly to console for Ledger Syncing as requested
+		println("[Ledger Syncing] Received encrypted offline transaction " + tx.TransactionID + ". Simulating asymmetric decode...")
+		syncedIDs = append(syncedIDs, tx.TransactionID)
+	}
+
+	writeJSON(w, http.StatusOK, SyncResponse{
+		SyncedIDs: syncedIDs,
+		Message:   "Offline transactions synchronized successfully",
+	})
+}

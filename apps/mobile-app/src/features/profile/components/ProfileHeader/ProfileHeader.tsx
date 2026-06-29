@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useState } from 'react';
+import { View, Image } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { Text } from '../../../../components/Text';
@@ -9,12 +9,19 @@ import { stylesFactory } from './ProfileHeader.styles';
 export const ProfileHeader: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
-  const { isAuthenticated, userName, initial, t } = useProfileHeader();
+  const { isAuthenticated, userName, avatar, initial, t } = useProfileHeader();
+  const [imageError, setImageError] = useState(false);
 
   return (
     <View style={styles.headerCard} testID="profile-header-card">
       <View style={styles.avatarContainer} testID="profile-avatar">
-        {isAuthenticated && userName ? (
+        {isAuthenticated && avatar && !imageError ? (
+          <Image
+            source={{ uri: avatar }}
+            style={{ width: '100%', height: '100%', borderRadius: 30 }}
+            onError={() => setImageError(true)}
+          />
+        ) : isAuthenticated && userName ? (
           <Text variant="bold" style={styles.avatarText}>
             {initial}
           </Text>

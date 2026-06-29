@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Image } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { Text } from '../../../../components/Text';
@@ -12,6 +12,7 @@ export interface StoreCardProps {
   distance: string;
   hours: string;
   address: string;
+  image?: string;
   onPressRoute?: () => void;
 }
 
@@ -20,6 +21,7 @@ export const StoreCard: React.FC<StoreCardProps> = ({
   distance,
   hours,
   address,
+  image,
   onPressRoute,
 }) => {
   const theme = useTheme();
@@ -28,6 +30,7 @@ export const StoreCard: React.FC<StoreCardProps> = ({
 
   return (
     <View style={styles.cardContainer} testID="store-card">
+      {image && <Image source={{ uri: image }} style={styles.storeImage} resizeMode="cover" />}
       <View style={styles.headerRow}>
         <Text style={styles.storeName}>{name}</Text>
         <View style={styles.distanceBadge}>

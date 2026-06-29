@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { StoresScreen } from './StoresScreen';
 import { useStores } from '../hooks/useStores';
 
@@ -68,6 +68,9 @@ describe('StoresScreen', () => {
     expect(getByText('Nearby Locations')).toBeTruthy();
     expect(getByTestId('store-locator-map')).toBeTruthy();
     expect(getByText('Sovereign Downtown')).toBeTruthy();
+
+    const routeBtn = getByTestId('store-route-btn');
+    fireEvent.press(routeBtn);
   });
 
   it('renders loading state correctly', () => {

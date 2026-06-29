@@ -45,4 +45,18 @@ describe('StoreCard', () => {
     fireEvent.press(getByTestId('store-route-btn'));
     expect(mockOnPress).toHaveBeenCalledTimes(1);
   });
+
+  it('renders with image', () => {
+    const { getByTestId } = render(
+      <StoreCard
+        id="2"
+        name="Store with Image"
+        distance="2.0 km"
+        hours="10:00 - 20:00"
+        address="456 Elm St"
+        image="https://example.com/image.jpg"
+      />,
+    );
+    expect(getByTestId('store-card')).toBeTruthy();
+  });
 });

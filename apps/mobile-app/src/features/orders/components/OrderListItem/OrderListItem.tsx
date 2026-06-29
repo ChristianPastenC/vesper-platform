@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text as RNText } from 'react-native';
+import { View, TouchableOpacity, Text as RNText, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { Order } from '../../hooks/useOrders';
@@ -49,6 +49,12 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
   const formattedDate = new Date(order.date).toLocaleDateString();
   const itemsCount = order.items.reduce((acc, item) => acc + item.qty, 0);
 
+  // Take up to 3 images to display in the thumbnail list
+  const itemImages = order.items
+    .filter((i) => !!i.image)
+    .map((i) => i.image)
+    .slice(0, 3);
+
   return (
     <TouchableOpacity
       style={styles.card}
@@ -66,6 +72,14 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
       </View>
 
       <RNText style={styles.itemsCount}>{`${itemsCount} item${itemsCount > 1 ? 's' : ''}`}</RNText>
+
+      {itemImages.length > 0 && (
+        <View style={styles.imagesContainer}>
+          {itemImages.map((uri, index) => (
+            <Image key={index} source={{ uri }} style={styles.itemImage} />
+          ))}
+        </View>
+      )}
 
       <View style={styles.detailsRow}>
         <RNText style={styles.dateText}>{`${t('orders.orderDate')}${formattedDate}`}</RNText>

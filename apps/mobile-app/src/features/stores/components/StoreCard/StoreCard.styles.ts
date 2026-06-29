@@ -61,4 +61,11 @@ export const stylesFactory = (colors: ThemeColors) =>
       fontWeight: 'bold',
       fontSize: scaleFont(14),
     },
+    storeImage: {
+      width: '100%',
+      height: verticalScale(120),
+      borderRadius: scale(8),
+      marginBottom: verticalScale(12),
+      backgroundColor: colors.border,
+    },
   });

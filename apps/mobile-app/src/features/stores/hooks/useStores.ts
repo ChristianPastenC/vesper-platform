@@ -7,6 +7,7 @@ export interface StoreFeature {
   distance: string;
   hours: string;
   address: string;
+  image?: string;
   coordinate: {
     latitude: number;
     longitude: number;
@@ -37,6 +38,7 @@ export const useStores = () => {
           distance: string;
           hours: string;
           address: string;
+          image?: string;
         };
       }
 
@@ -46,6 +48,7 @@ export const useStores = () => {
         distance: feature.properties.distance,
         hours: feature.properties.hours,
         address: feature.properties.address,
+        image: feature.properties.image,
         coordinate: {
           latitude: feature.geometry.coordinates[1],
           longitude: feature.geometry.coordinates[0],

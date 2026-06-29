@@ -33,6 +33,7 @@ type OrderItem struct {
 	Name  string  `json:"name"`
 	Qty   int     `json:"qty"`
 	Price float64 `json:"price"`
+	Image string  `json:"image"`
 }
 
 type OrderTimelineEvent struct {
@@ -84,7 +85,7 @@ func getFallbackCarts() []FakeStoreCart {
 				ProductID int `json:"productId"`
 				Quantity  int `json:"quantity"`
 			}{
-				{ProductID: 1, Quantity: 2},
+				{ProductID: 1, Quantity: 1},
 				{ProductID: 2, Quantity: 1},
 			},
 		},
@@ -96,7 +97,7 @@ func getFallbackCarts() []FakeStoreCart {
 				ProductID int `json:"productId"`
 				Quantity  int `json:"quantity"`
 			}{
-				{ProductID: 3, Quantity: 1},
+				{ProductID: 3, Quantity: 2},
 			},
 		},
 	}
@@ -106,17 +107,29 @@ func enrichCartToOrder(cart FakeStoreCart) Order {
 	var total float64
 	var items []OrderItem
 
-	// Simulating product details
+	// Simulating product details with varied data
+	mockProducts := map[int]OrderItem{
+		1: {ID: "1", Name: "Premium Wireless Headphones", Price: 299.99, Image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200&auto=format&fit=crop"},
+		2: {ID: "2", Name: "Sovereign Obsidian Smartwatch", Price: 199.50, Image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=200&auto=format&fit=crop"},
+		3: {ID: "3", Name: "Men's Minimalist T-Shirt", Price: 25.00, Image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=200&auto=format&fit=crop"},
+	}
+
 	for _, p := range cart.Products {
-		price := float64(p.ProductID) * 10.0 // simulated price
+		product, exists := mockProducts[p.ProductID]
+		if !exists {
+			product = OrderItem{
+				ID:    strconv.Itoa(p.ProductID),
+				Name:  fmt.Sprintf("Product %d", p.ProductID),
+				Price: float64(p.ProductID) * 10.0,
+				Image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200&auto=format&fit=crop",
+			}
+		}
+		
 		qty := p.Quantity
-		total += price * float64(qty)
-		items = append(items, OrderItem{
-			ID:    strconv.Itoa(p.ProductID),
-			Name:  fmt.Sprintf("Product %d", p.ProductID),
-			Qty:   qty,
-			Price: price,
-		})
+		total += product.Price * float64(qty)
+		
+		product.Qty = qty
+		items = append(items, product)
 	}
 
 	// Simulating status and timeline based on ID parity

@@ -60,4 +60,30 @@ describe('CheckoutFooter', () => {
     fireEvent.press(getByTestId('close-btn'));
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });
+
+  it('renders loading state when processing', () => {
+    const { getByTestId } = render(
+      <CheckoutFooter
+        total={100.5}
+        isProcessing={true}
+        cartIsEmpty={false}
+        onPayPress={jest.fn()}
+        onClose={jest.fn()}
+      />,
+    );
+    expect(getByTestId('checkout-footer')).toBeTruthy();
+  });
+
+  it('renders disabled state when cart is empty', () => {
+    const { getByTestId } = render(
+      <CheckoutFooter
+        total={0}
+        isProcessing={false}
+        cartIsEmpty={true}
+        onPayPress={jest.fn()}
+        onClose={jest.fn()}
+      />,
+    );
+    expect(getByTestId('checkout-footer')).toBeTruthy();
+  });
 });

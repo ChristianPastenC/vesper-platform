@@ -49,6 +49,7 @@ export const StoresScreen: React.FC = () => {
               distance={store.distance}
               hours={store.hours}
               address={store.address}
+              image={store.image}
               onPressRoute={() => handleRoutePress(store.id)}
             />
           ))

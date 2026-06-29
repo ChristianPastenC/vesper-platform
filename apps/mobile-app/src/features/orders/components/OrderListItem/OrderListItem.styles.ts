@@ -53,6 +53,17 @@ export const stylesFactory = (colors: ThemeColors) =>
       fontSize: 14,
       color: colors.text,
       opacity: 0.7,
-      marginBottom: 4,
+      marginBottom: 8,
+    },
+    imagesContainer: {
+      flexDirection: 'row',
+      marginBottom: 12,
+    },
+    itemImage: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      marginRight: 8,
+      backgroundColor: colors.border,
     },
   });

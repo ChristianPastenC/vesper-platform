@@ -10,6 +10,7 @@ export interface UserProfileData {
   firstName: string;
   lastName: string;
   phone: string;
+  avatar?: string;
 }
 
 export const useProfile = () => {

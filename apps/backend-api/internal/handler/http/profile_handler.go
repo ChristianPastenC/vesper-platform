@@ -58,6 +58,7 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		"firstName": fakeStoreUser.Name.Firstname,
 		"lastName":  fakeStoreUser.Name.Lastname,
 		"phone":     fakeStoreUser.Phone,
+		"avatar":    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -72,5 +73,6 @@ func getFallbackProfile() map[string]interface{} {
 		"firstName": "John",
 		"lastName":  "Doe",
 		"phone":     "1-570-236-7033",
+		"avatar":    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop",
 	}
 }

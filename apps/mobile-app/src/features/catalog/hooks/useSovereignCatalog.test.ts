@@ -55,7 +55,12 @@ describe('useSovereignCatalog', () => {
   });
 
   it('handles abort gracefully without setting state', async () => {
-    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true, json: async () => [] }), 100)));
+    (global.fetch as jest.Mock).mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ ok: true, json: async () => [] }), 100),
+        ),
+    );
 
     const { result, unmount } = renderHook(() => useSovereignCatalog());
 

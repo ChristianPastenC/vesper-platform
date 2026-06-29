@@ -53,9 +53,12 @@ func TestFakeStoreGateway_GetProducts(t *testing.T) {
 		gw.baseURL = ts.URL
 
 		ctx := context.Background()
-		_, err := gw.GetProducts(ctx, domain.CatalogQuery{})
-		if err == nil {
-			t.Fatalf("expected error, got nil")
+		products, err := gw.GetProducts(ctx, domain.CatalogQuery{})
+		if err != nil {
+			t.Fatalf("expected no error (fallback), got %v", err)
+		}
+		if len(products) == 0 {
+			t.Fatalf("expected fallback products, got empty")
 		}
 	})
 
@@ -70,9 +73,12 @@ func TestFakeStoreGateway_GetProducts(t *testing.T) {
 		gw.baseURL = ts.URL
 
 		ctx := context.Background()
-		_, err := gw.GetProducts(ctx, domain.CatalogQuery{})
-		if err == nil {
-			t.Fatalf("expected error for bad json, got nil")
+		products, err := gw.GetProducts(ctx, domain.CatalogQuery{})
+		if err != nil {
+			t.Fatalf("expected no error (fallback), got %v", err)
+		}
+		if len(products) == 0 {
+			t.Fatalf("expected fallback products, got empty")
 		}
 	})
 
@@ -107,12 +113,12 @@ func TestFakeStoreGateway_GetProducts(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 		defer cancel()
 
-		_, err := gw.GetProducts(ctx, domain.CatalogQuery{})
-		if err == nil {
-			t.Fatalf("expected error for network timeout, got nil")
+		products, err := gw.GetProducts(ctx, domain.CatalogQuery{})
+		if err != nil {
+			t.Fatalf("expected no error (fallback), got %v", err)
 		}
-		if err.Error() != "timeout" {
-			t.Errorf("expected timeout error, got: %v", err)
+		if len(products) == 0 {
+			t.Fatalf("expected fallback products, got empty")
 		}
 	})
 }

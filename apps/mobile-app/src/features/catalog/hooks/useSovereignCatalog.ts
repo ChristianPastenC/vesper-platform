@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getAccessToken } from '../../../core/auth/tokenStore';
 import { Product } from '../components/ProductCard';
-import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
-import { SovereignAdapterRequest } from '@sovereign/secure-client';
-import { randomUUID } from 'react-native-quick-crypto';
 import { getApiUrl } from '../../../core/config';
 
 export interface BackendProduct {
@@ -21,8 +17,6 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const { execute } = useAuthenticatedRequest();
-
   const fetchCatalog = useCallback(
     async (signal?: AbortSignal) => {
       try {
@@ -30,31 +24,26 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
         setLoading(true);
         setError(null);
 
-        const token = await getAccessToken();
-        const headers: Record<string, string> = {
-          Accept: 'application/json',
-        };
-
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
         let url = `${API_URL}/api/v1/catalog?limit=${limit}`;
         if (category) {
           url += `&category=${encodeURIComponent(category)}`;
         }
 
-        const request: SovereignAdapterRequest = {
+        const response = await fetch(url, {
           method: 'GET',
-          url,
-          headers,
+          headers: {
+            Accept: 'application/json',
+          },
           signal,
-        };
+        });
 
-        const requestId = randomUUID();
-        const response = await execute<BackendProduct[]>(requestId, request);
+        if (!response.ok) {
+          throw new Error('Failed to fetch catalog');
+        }
 
-        const mappedProducts: Product[] = response.map((p) => ({
+        const data: BackendProduct[] = await response.json();
+
+        const mappedProducts: Product[] = data.map((p) => ({
           id: String(p.id),
           name: p.title,
           price: p.price,
@@ -78,7 +67,7 @@ export const useSovereignCatalog = (category?: string, limit: number = 20) => {
         }
       }
     },
-    [execute, category, limit],
+    [category, limit],
   );
 
   useEffect(() => {

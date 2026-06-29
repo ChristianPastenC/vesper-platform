@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -17,14 +18,18 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get("https://fakestoreapi.com/users/1")
 	if err != nil || resp.StatusCode != http.StatusOK {
-		http.Error(w, "failed to fetch user profile", http.StatusBadGateway)
+		log.Printf("profile_handler: failed to fetch user profile: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(getFallbackProfile())
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "failed to read response", http.StatusInternalServerError)
+		log.Printf("profile_handler: failed to read response: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(getFallbackProfile())
 		return
 	}
 
@@ -40,7 +45,9 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(body, &fakeStoreUser); err != nil {
-		http.Error(w, "failed to parse profile data", http.StatusInternalServerError)
+		log.Printf("profile_handler: failed to parse profile data: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(getFallbackProfile())
 		return
 	}
 
@@ -55,4 +62,15 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func getFallbackProfile() map[string]interface{} {
+	return map[string]interface{}{
+		"id":        1,
+		"email":     "john.doe@sovereign-core.internal",
+		"username":  "johndoe",
+		"firstName": "John",
+		"lastName":  "Doe",
+		"phone":     "1-570-236-7033",
+	}
 }

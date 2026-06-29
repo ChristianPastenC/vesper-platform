@@ -1,42 +1,32 @@
 import { renderHook, waitFor, act } from '@testing-library/react-native';
 import { useSovereignCatalog } from './useSovereignCatalog';
-import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
-import { getAccessToken } from '../../../core/auth/tokenStore';
 
-jest.mock('../../../core/auth/useAuthenticatedRequest', () => ({
-  useAuthenticatedRequest: jest.fn(),
-}));
-
-jest.mock('../../../core/auth/tokenStore', () => ({
-  getAccessToken: jest.fn(),
-}));
-
-jest.mock('react-native-quick-crypto', () => ({
-  randomUUID: jest.fn(() => 'mock-uuid'),
+jest.mock('../../../core/config', () => ({
+  getApiUrl: jest.fn(() => 'http://localhost:8080'),
 }));
 
 describe('useSovereignCatalog', () => {
-  const mockExecuteRequest = jest.fn();
-
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    (useAuthenticatedRequest as jest.Mock).mockReturnValue({ execute: mockExecuteRequest });
-    (getAccessToken as jest.Mock).mockResolvedValue('mock-token');
+    global.fetch = jest.fn() as jest.Mock;
   });
 
   it('fetches and returns products', async () => {
-    mockExecuteRequest.mockResolvedValue([
-      {
-        id: 1,
-        title: 'Product 1',
-        price: 10,
-        barcode: '111',
-        description: 'desc',
-        category: 'cat',
-        image: 'url',
-      },
-    ]);
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          id: 1,
+          title: 'Product 1',
+          price: 10,
+          barcode: '111',
+          description: 'desc',
+          category: 'cat',
+          image: 'url',
+        },
+      ],
+    });
 
     const { result } = renderHook(() => useSovereignCatalog());
 
@@ -52,7 +42,7 @@ describe('useSovereignCatalog', () => {
   });
 
   it('handles error', async () => {
-    mockExecuteRequest.mockRejectedValue(new Error('Fetch failed'));
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Fetch failed'));
 
     const { result } = renderHook(() => useSovereignCatalog('cat-error'));
 
@@ -65,9 +55,7 @@ describe('useSovereignCatalog', () => {
   });
 
   it('handles abort gracefully without setting state', async () => {
-    mockExecuteRequest.mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve([]), 100)),
-    );
+    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve({ ok: true, json: async () => [] }), 100)));
 
     const { result, unmount } = renderHook(() => useSovereignCatalog());
 
@@ -78,19 +66,19 @@ describe('useSovereignCatalog', () => {
   it('handles AbortError in catch block', async () => {
     const abortError = new Error('Canceled');
     abortError.name = 'AbortError';
-    mockExecuteRequest.mockRejectedValue(abortError);
+    (global.fetch as jest.Mock).mockRejectedValueOnce(abortError);
 
     renderHook(() => useSovereignCatalog());
 
-    // We expect loading to remain true or not be updated if aborted
     await waitFor(() => {
       // Just wait a tick
     });
   });
 
-  it('handles missing token', async () => {
-    (getAccessToken as jest.Mock).mockResolvedValue(null);
-    mockExecuteRequest.mockResolvedValue([]);
+  it('handles non-ok response', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+    });
 
     const { result } = renderHook(() => useSovereignCatalog());
 
@@ -99,22 +87,29 @@ describe('useSovereignCatalog', () => {
     });
 
     expect(result.current.products).toHaveLength(0);
+    expect(result.current.error).toBeTruthy();
   });
 
   it('handles refetch', async () => {
-    mockExecuteRequest.mockResolvedValue([]);
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    });
     const { result } = renderHook(() => useSovereignCatalog());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    });
+
     act(() => {
       result.current.refetch();
     });
 
-    // We expect loading to be true initially during refetch
-    // Wait for the mock to resolve
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });

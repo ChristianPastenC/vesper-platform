@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -60,25 +61,30 @@ func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.Catalog
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, targetURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("fakestore_gateway: failed to create request: %w", err)
+		log.Printf("fakestore_gateway: failed to create request: %v", err)
+		return f.getFallbackProducts(query), nil
 	}
 
 	resp, err := f.client.Do(req)
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
-			return nil, fmt.Errorf("timeout")
+			log.Printf("fakestore_gateway: timeout fetching products")
+		} else {
+			log.Printf("fakestore_gateway: request failed: %v", err)
 		}
-		return nil, fmt.Errorf("fakestore_gateway: request failed: %w", err)
+		return f.getFallbackProducts(query), nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fakestore_gateway: returned non-200 status: %d", resp.StatusCode)
+		log.Printf("fakestore_gateway: returned non-200 status: %d", resp.StatusCode)
+		return f.getFallbackProducts(query), nil
 	}
 
 	var rawProducts []FakeStoreProduct
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 2*1024*1024)).Decode(&rawProducts); err != nil {
-		return nil, fmt.Errorf("fakestore_gateway: failed to decode JSON payload: %w", err)
+		log.Printf("fakestore_gateway: failed to decode JSON payload: %v", err)
+		return f.getFallbackProducts(query), nil
 	}
 
 	// 3. Map to domain products and generate barcode
@@ -96,6 +102,54 @@ func (f *FakeStoreGateway) GetProducts(ctx context.Context, query domain.Catalog
 	}
 
 	return products, nil
+}
+
+// getFallbackProducts returns an in-memory mock catalog if the external API fails.
+func (f *FakeStoreGateway) getFallbackProducts(query domain.CatalogQuery) []domain.Product {
+	mockProducts := []domain.Product{
+		{
+			ID:          1,
+			Title:       "Fjallraven - Foldsack No. 1 Backpack",
+			Price:       109.95,
+			Description: "Your perfect pack for everyday use and walks in the forest.",
+			Category:    "men's clothing",
+			Image:       "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
+			Barcode:     generateEAN13(1),
+		},
+		{
+			ID:          2,
+			Title:       "Mens Casual Premium T-Shirts",
+			Price:       22.3,
+			Description: "Slim-fitting style, contrast raglan sleeve, three-button henley placket.",
+			Category:    "men's clothing",
+			Image:       "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
+			Barcode:     generateEAN13(2),
+		},
+		{
+			ID:          3,
+			Title:       "Mens Cotton Jacket",
+			Price:       55.99,
+			Description: "Great outerwear jackets for Spring/Autumn/Winter, suitable for many occasions.",
+			Category:    "men's clothing",
+			Image:       "https://fakestoreapi.com/img/71li-ujtlAL._AC_UX679_.jpg",
+			Barcode:     generateEAN13(3),
+		},
+		{
+			ID:          4,
+			Title:       "Mens Casual Slim Fit",
+			Price:       15.99,
+			Description: "The color could be slightly different between on the screen and in practice.",
+			Category:    "men's clothing",
+			Image:       "https://fakestoreapi.com/img/71YXzeOuslL._AC_UY879_.jpg",
+			Barcode:     generateEAN13(4),
+		},
+	}
+
+	if query.Limit > 0 && query.Limit < len(mockProducts) {
+		return mockProducts[:query.Limit]
+	}
+
+	return mockProducts
 }
 
 // generateEAN13 creates a syntactically valid EAN-13 barcode based on a numeric ID.

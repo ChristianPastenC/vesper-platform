@@ -79,10 +79,10 @@ describe('TabNavigator Component', () => {
   it('renders tab titles correctly', () => {
     const { getByText, queryByText } = render(<TabNavigator />);
 
-    expect(getByText('Home')).toBeTruthy();
+    expect(getByText('home.tabTitle')).toBeTruthy();
     expect(getByText('catalog.title')).toBeTruthy();
     expect(queryByText('online_checkout.cartTitle')).toBeNull();
     expect(getByText('scan_and_go.title')).toBeTruthy();
-    expect(getByText('Account')).toBeTruthy();
+    expect(getByText('profile.tabTitle')).toBeTruthy();
   });
 });

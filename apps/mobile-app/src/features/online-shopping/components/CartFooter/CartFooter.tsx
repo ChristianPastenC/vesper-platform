@@ -15,6 +15,7 @@ export interface CartFooterProps {
   clearText: string;
   totalLabel: string;
   addressLabel: string;
+  emptyAddressText?: string;
 }
 
 export const CartFooter: React.FC<CartFooterProps> = ({
@@ -26,6 +27,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   clearText,
   totalLabel,
   addressLabel,
+  emptyAddressText = 'Not provided',
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -35,7 +37,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
     <View style={styles.footer} testID="cart-footer">
       <View style={styles.addressSection}>
         <Text variant="bold">{addressLabel}</Text>
-        <Text style={styles.addressText}>{address || 'Not provided'}</Text>
+        <Text style={styles.addressText}>{address || emptyAddressText}</Text>
       </View>
       <View style={styles.totalSection}>
         <Text variant="bold">{totalLabel}:</Text>

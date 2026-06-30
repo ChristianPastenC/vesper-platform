@@ -6,12 +6,14 @@ import { stylesFactory } from './HeroBanner.styles';
 interface HeroBannerProps {
   isAuthenticated: boolean;
   navigateToAccount: () => void;
+  navigateToCatalog: () => void;
   t: (key: string) => string;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
   isAuthenticated,
   navigateToAccount,
+  navigateToCatalog,
   t,
 }) => {
   const theme = useTheme();
@@ -23,7 +25,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         <View style={styles.heroCardAuth} testID="hero-auth-card">
           <RNText style={styles.heroTitleAuth}>{t('home.promoTitle')}</RNText>
           <RNText style={styles.heroSubtitleAuth}>{t('home.promoSubtitle')}</RNText>
-          <TouchableOpacity style={styles.heroButton} activeOpacity={0.8} testID="hero-vault-btn">
+          <TouchableOpacity 
+            style={styles.heroButton} 
+            activeOpacity={0.8} 
+            testID="hero-vault-btn"
+            onPress={navigateToCatalog}
+          >
             <RNText style={styles.heroButtonText}>{t('home.shopNow')}</RNText>
           </TouchableOpacity>
         </View>

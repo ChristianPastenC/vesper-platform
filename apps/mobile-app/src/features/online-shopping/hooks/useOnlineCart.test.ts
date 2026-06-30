@@ -46,7 +46,7 @@ describe('useOnlineCart', () => {
 
     expect(result.current.cartItems).toHaveLength(1);
     expect(result.current.total).toBe(10);
-    expect(result.current.address).toBe('online_checkout.simulatedAddress');
+    expect(result.current.address).toBe('');
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.isProcessing).toBe(false);
   });
@@ -61,6 +61,7 @@ describe('useOnlineCart', () => {
 
   it('handles checkout', () => {
     const { result } = renderHook(() => useOnlineCart());
+
     const mockOnSuccess = jest.fn();
 
     act(() => {
@@ -68,7 +69,7 @@ describe('useOnlineCart', () => {
     });
 
     expect(mockMutate).toHaveBeenCalledWith(
-      { items: result.current.cartItems, address: 'online_checkout.simulatedAddress' },
+      { items: result.current.cartItems, address: '' },
       expect.any(Object),
     );
 

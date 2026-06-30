@@ -38,6 +38,8 @@ export const OnlineCheckoutModal: React.FC = () => {
           label={t('online_checkout.deliveryAddress')} 
           address={address} 
           onChangeAddress={setAddress}
+          placeholderText={t('online_checkout.addressPlaceholder')}
+          emptyText={t('online_checkout.addressEmpty')}
         />
         <CheckoutSummary
           total={total}

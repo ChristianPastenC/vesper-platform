@@ -14,10 +14,13 @@ import { OrdersScreen } from '../features/orders/views/OrdersScreen/OrdersScreen
 import { OrderDetailsScreen } from '../features/orders/views/OrderDetailsScreen/OrderDetailsScreen';
 import { useTheme } from '../core/theme/useTheme';
 
+import { useTranslation } from 'react-i18next';
+
 const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Stack.Navigator
@@ -40,7 +43,7 @@ export const AppNavigator: React.FC = () => {
         component={LoginScreen}
         options={{
           presentation: 'modal',
-          title: 'Sign In',
+          title: t('auth.loginButton'),
         }}
       />
       <Stack.Screen name="ProductList" component={ProductListScreen} />
@@ -49,7 +52,7 @@ export const AppNavigator: React.FC = () => {
         name="OnlineCart"
         component={OnlineCartScreen}
         options={{
-          title: 'Online Cart',
+          title: t('online_checkout.cartTitle'),
         }}
       />
       <Stack.Screen
@@ -57,7 +60,7 @@ export const AppNavigator: React.FC = () => {
         component={OnlineCheckoutModal}
         options={{
           presentation: 'modal',
-          title: 'Online Checkout',
+          title: t('online_checkout.title'),
         }}
       />
       <Stack.Screen
@@ -65,7 +68,7 @@ export const AppNavigator: React.FC = () => {
         component={InStoreCheckoutScreen}
         options={{
           presentation: 'modal',
-          title: 'Store Checkout',
+          title: t('scan_and_go.checkoutTitle'),
         }}
       />
       <Stack.Screen
@@ -73,28 +76,28 @@ export const AppNavigator: React.FC = () => {
         component={PaymentSuccessScreen}
         options={{
           headerLeft: () => null,
-          title: 'Order Status',
+          title: t('orders.statusTitle'),
         }}
       />
       <Stack.Screen
         name="Stores"
         component={StoresScreen}
         options={{
-          title: 'Stores',
+          title: t('stores.title'),
         }}
       />
       <Stack.Screen
         name="Orders"
         component={OrdersScreen}
         options={{
-          title: 'My Orders',
+          title: t('orders.title'),
         }}
       />
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
         options={{
-          title: 'Order Details',
+          title: t('orders.detailsTitle'),
         }}
       />
     </Stack.Navigator>

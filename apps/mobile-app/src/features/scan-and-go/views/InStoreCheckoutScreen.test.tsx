@@ -31,6 +31,7 @@ jest.mock('@react-navigation/native', () => ({
 describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
   const mockGoBack = jest.fn();
   const mockNavigate = jest.fn();
+  const mockReplace = jest.fn();
   const mockToggleNetwork = jest.fn();
   const mockHandleCheckout = jest.fn();
 
@@ -39,6 +40,7 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
     (useNavigation as jest.Mock).mockReturnValue({
       goBack: mockGoBack,
       navigate: mockNavigate,
+      replace: mockReplace,
     });
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
@@ -198,7 +200,7 @@ describe('InStoreCheckoutScreen - Physical Retail Flow', () => {
 
     // Simulate the callback firing
     checkoutCallback('order-123');
-    expect(mockNavigate).toHaveBeenCalledWith('PaymentSuccessScreen', {
+    expect(mockReplace).toHaveBeenCalledWith('PaymentSuccessScreen', {
       orderId: 'order-123',
       type: 'instore',
     });

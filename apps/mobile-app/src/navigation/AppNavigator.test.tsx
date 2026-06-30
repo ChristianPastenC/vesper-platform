@@ -8,6 +8,11 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
+}));
+
 // Mock dependencies
 jest.mock('../core/theme/useTheme', () => ({
   useTheme: () => ({

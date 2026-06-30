@@ -35,7 +35,7 @@ export const TabNavigator: React.FC = () => {
         name="HomeTab"
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: t('home.tabTitle'),
         }}
       />
       <Tab.Screen
@@ -56,7 +56,7 @@ export const TabNavigator: React.FC = () => {
         name="ProfileTab"
         component={ProfileScreen}
         options={{
-          title: 'Account',
+          title: t('profile.tabTitle'),
         }}
       />
     </Tab.Navigator>

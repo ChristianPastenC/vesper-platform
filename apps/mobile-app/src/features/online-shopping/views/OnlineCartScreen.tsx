@@ -38,6 +38,7 @@ export const OnlineCartScreen: React.FC = () => {
           clearText={t('shared_ui.close')}
           totalLabel={t('online_checkout.total')}
           addressLabel={t('online_checkout.deliveryAddress')}
+          emptyAddressText={t('online_checkout.addressEmpty')}
         />
       )}
     </View>

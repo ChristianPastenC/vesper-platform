@@ -20,12 +20,14 @@ jest.mock('@react-navigation/native', () => ({
 describe('OnlineCheckoutModal View', () => {
   const mockGoBack = jest.fn();
   const mockNavigate = jest.fn();
+  const mockReplace = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useNavigation as jest.Mock).mockReturnValue({
       goBack: mockGoBack,
       navigate: mockNavigate,
+      replace: mockReplace,
     });
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
@@ -55,7 +57,7 @@ describe('OnlineCheckoutModal View', () => {
 
     fireEvent.press(getByText('online_checkout.checkoutButton'));
     expect(mockCheckout).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('PaymentSuccessScreen', {
+    expect(mockReplace).toHaveBeenCalledWith('PaymentSuccessScreen', {
       orderId: 'ON-123456',
       type: 'online',
     });

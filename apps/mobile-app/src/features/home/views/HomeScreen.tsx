@@ -71,8 +71,8 @@ export const HomeScreen: React.FC = () => {
 
         <HeroBanner
           isAuthenticated={isAuthenticated}
-          userName={userName}
           navigateToAccount={navigateToAccount}
+          navigateToCatalog={navigateToCatalog}
           t={t}
         />
 

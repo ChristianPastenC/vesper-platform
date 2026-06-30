@@ -42,11 +42,17 @@ const resources = {
         heroTitle: 'Summer Collection',
         heroSubText:
           'Discover premium seasonal pieces. Enjoy complementary home shipping and priority checkout.',
+        empty: 'No products found.',
+        emptySearch: 'No results found',
+        retry: 'Retry',
+        errorLoad: 'Failed to load catalog. Please check your connection.',
       },
       online_checkout: {
         title: 'Online Checkout',
         cartTitle: 'Online Cart',
         deliveryAddress: 'Delivery Address',
+        addressPlaceholder: 'Enter your delivery address',
+        addressEmpty: 'No address provided',
         simulatedAddress: '123 Sovereign Way, Crypto City',
         checkoutButton: 'Place Home Order',
         processing: 'Processing online order...',
@@ -83,6 +89,7 @@ const resources = {
         networkIndicator: 'Simulated Network Status',
       },
       home: {
+        tabTitle: 'Home',
         greeting: 'Good morning',
         guest: 'Guest',
         location: 'Sovereign Flagship Store',
@@ -116,6 +123,7 @@ const resources = {
       },
       orders: {
         title: 'My Orders',
+        statusTitle: 'Order Status',
         filterActive: 'Active',
         filterPast: 'Past',
         statusProcessing: 'Processing',
@@ -130,6 +138,12 @@ const resources = {
         emptyActive: 'No active orders found.',
         emptyPast: 'No past orders found.',
         orderId: 'Order #',
+      },
+      profile: {
+        tabTitle: 'Account',
+      },
+      stores: {
+        title: 'Stores',
       },
     },
   },
@@ -173,11 +187,17 @@ const resources = {
         heroTitle: 'Colección de Verano',
         heroSubText:
           'Descubre piezas premium de temporada. Disfruta de envío a casa gratis y pago prioritario.',
+        empty: 'No se encontraron productos.',
+        emptySearch: 'No se encontraron resultados',
+        retry: 'Reintentar',
+        errorLoad: 'Error al cargar el catálogo. Verifica tu conexión.',
       },
       online_checkout: {
         title: 'Pago en Línea',
         cartTitle: 'Cesta Online',
         deliveryAddress: 'Dirección de Entrega',
+        addressPlaceholder: 'Ingresa tu dirección de entrega',
+        addressEmpty: 'No se proporcionó dirección',
         simulatedAddress: 'Avenida Soberana 123, Ciudad Cripto',
         checkoutButton: 'Confirmar Pedido',
         processing: 'Procesando pedido online...',
@@ -214,6 +234,7 @@ const resources = {
         networkIndicator: 'Estado de Red Simulado',
       },
       home: {
+        tabTitle: 'Inicio',
         greeting: 'Buenos días',
         guest: 'Invitado',
         location: 'Tienda Insignia Sovereign',
@@ -247,6 +268,7 @@ const resources = {
       },
       orders: {
         title: 'Mis Pedidos',
+        statusTitle: 'Estado del Pedido',
         filterActive: 'Activos',
         filterPast: 'Pasados',
         statusProcessing: 'Procesando',
@@ -261,6 +283,12 @@ const resources = {
         emptyActive: 'No tienes pedidos activos.',
         emptyPast: 'No tienes pedidos pasados.',
         orderId: 'Pedido #',
+      },
+      profile: {
+        tabTitle: 'Cuenta',
+      },
+      stores: {
+        title: 'Tiendas',
       },
     },
   },

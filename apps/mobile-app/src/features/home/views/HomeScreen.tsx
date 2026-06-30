@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Text as RNText } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useHomeScreen } from './useHomeScreen';
 import { stylesFactory } from './HomeScreen.styles';
+import { Text } from '../../../components/Text';
 
 import { HomeHeader } from '../components/HomeHeader/HomeHeader';
 import { HeroBanner } from '../components/HeroBanner/HeroBanner';
@@ -25,7 +26,6 @@ export const HomeScreen: React.FC = () => {
 
   const {
     t,
-    userName,
     isAuthenticated,
     isFrozen,
     cartItemsCount,
@@ -49,7 +49,7 @@ export const HomeScreen: React.FC = () => {
           <Ionicons name="cart-outline" size={26} color={theme.colors.primary} />
           {cartItemsCount > 0 && (
             <View style={styles.badgeContainer} testID="header-cart-badge">
-              <RNText style={styles.badgeText}>{cartItemsCount}</RNText>
+              <Text style={styles.badgeText}>{cartItemsCount}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -60,7 +60,7 @@ export const HomeScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <SearchModal isVisible={isSearchVisible} onClose={() => setIsSearchVisible(false)} />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <HomeHeader
           navigateToScanner={navigateToScanner}
@@ -88,11 +88,7 @@ export const HomeScreen: React.FC = () => {
 
         <PromoCarousel />
 
-        <TrendingCarousel 
-          products={TRENDING_PRODUCTS} 
-          t={t} 
-          onSeeAll={navigateToCatalog} 
-        />
+        <TrendingCarousel products={TRENDING_PRODUCTS} t={t} onSeeAll={navigateToCatalog} />
       </ScrollView>
     </View>
   );

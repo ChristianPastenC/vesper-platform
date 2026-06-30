@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, Text as RNText } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../../../navigation/types';
@@ -8,6 +8,7 @@ import { useOrders } from '../../hooks/useOrders';
 import { OrderTimeline } from '../../components/OrderTimeline/OrderTimeline';
 import { OrderItemsSummary } from '../../components/OrderItemsSummary/OrderItemsSummary';
 import { stylesFactory } from './OrderDetailsScreen.styles';
+import { Text } from '../../../../components/Text';
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 
@@ -24,7 +25,7 @@ export const OrderDetailsScreen: React.FC = () => {
   if (!order) {
     return (
       <View style={styles.container}>
-        <RNText style={styles.errorText}>Order not found.</RNText>
+        <Text style={styles.errorText}>Order not found.</Text>
       </View>
     );
   }
@@ -67,16 +68,16 @@ export const OrderDetailsScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
           <View style={styles.headerRow}>
-            <RNText
+            <Text
               style={styles.orderIdText}
-            >{`${t('orders.orderId')}${order.id.split('-')[1]}`}</RNText>
+            >{`${t('orders.orderId')}${order.id.split('-')[1]}`}</Text>
             <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
-              <RNText style={[styles.statusText, { color: statusColor }]}>
+              <Text style={[styles.statusText, { color: statusColor }]}>
                 {getStatusTranslation(order.status)}
-              </RNText>
+              </Text>
             </View>
           </View>
-          <RNText style={styles.dateText}>{`${t('orders.orderDate')}${formattedDate}`}</RNText>
+          <Text style={styles.dateText}>{`${t('orders.orderDate')}${formattedDate}`}</Text>
         </View>
 
         <OrderTimeline events={order.timeline} />

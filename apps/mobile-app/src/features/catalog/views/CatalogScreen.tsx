@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { View, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,6 +12,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { stylesFactory } from './CatalogScreen.styles';
 import { CatalogHeader } from '../components/CatalogHeader/CatalogHeader';
 import { ProductGrid } from '../components/ProductGrid/ProductGrid';
+import { Text } from '../../../components/Text';
 
 type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
 
@@ -32,9 +33,9 @@ export const CatalogScreen: React.FC = () => {
   const filteredProducts = React.useMemo(() => {
     if (!searchQuery) return products;
     const lowerQuery = searchQuery.toLowerCase();
-    return products.filter((p) => 
-      p.name.toLowerCase().includes(lowerQuery) || 
-      (p.barcode && p.barcode.includes(lowerQuery))
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(lowerQuery) || (p.barcode && p.barcode.includes(lowerQuery)),
     );
   }, [products, searchQuery]);
 
@@ -45,8 +46,8 @@ export const CatalogScreen: React.FC = () => {
   }, [navigation]);
 
   const CATEGORIES = [
-    { id: "electronics", name: isEs ? 'Tecnología' : 'Electronics', icon: 'hardware-chip-outline' },
-    { id: "jewelery", name: isEs ? 'Joyería' : 'Jewelry', icon: 'diamond-outline' },
+    { id: 'electronics', name: isEs ? 'Tecnología' : 'Electronics', icon: 'hardware-chip-outline' },
+    { id: 'jewelery', name: isEs ? 'Joyería' : 'Jewelry', icon: 'diamond-outline' },
     { id: "men's clothing", name: isEs ? 'Hombre' : "Men's", icon: 'man-outline' },
     { id: "women's clothing", name: isEs ? 'Mujer' : "Women's", icon: 'woman-outline' },
   ];

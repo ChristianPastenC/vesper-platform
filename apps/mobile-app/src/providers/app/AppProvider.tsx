@@ -1,5 +1,5 @@
 import React, { createContext, useEffect } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import i18n from '../../core/i18n/i18n';
 import { useTheme } from '../../core/theme/useTheme';
 import { ThemeColors } from '../../core/theme/colors';
 import { useAppStore } from '../../store/useAppStore';
+import { Text } from '../../components/Text';
 
 import { useSovereignInitializer } from '../sovereign/useSovereignInitializer';
 import { SovereignClientContext } from '../sovereign/SovereignClientContext';

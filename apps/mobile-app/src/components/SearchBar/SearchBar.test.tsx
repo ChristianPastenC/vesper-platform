@@ -24,9 +24,7 @@ describe('SearchBar Component', () => {
   });
 
   it('renders correctly with default props', () => {
-    const { getByTestId, getByPlaceholderText } = render(
-      <SearchBar placeholder="Search..." />
-    );
+    const { getByTestId, getByPlaceholderText } = render(<SearchBar placeholder="Search..." />);
     expect(getByTestId('search-bar-container')).toBeTruthy();
     expect(getByPlaceholderText('Search...')).toBeTruthy();
   });
@@ -34,7 +32,7 @@ describe('SearchBar Component', () => {
   it('handles onChangeText', () => {
     const mockOnChangeText = jest.fn();
     const { getByPlaceholderText } = render(
-      <SearchBar placeholder="Search..." onChangeText={mockOnChangeText} />
+      <SearchBar placeholder="Search..." onChangeText={mockOnChangeText} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Search...'), 'New text');
@@ -44,7 +42,7 @@ describe('SearchBar Component', () => {
   it('renders as a touchable when not editable and onPress is provided', () => {
     const mockOnPress = jest.fn();
     const { getByTestId } = render(
-      <SearchBar editable={false} onPress={mockOnPress} placeholder="Search..." />
+      <SearchBar editable={false} onPress={mockOnPress} placeholder="Search..." />,
     );
 
     const touchable = getByTestId('search-bar-touchable');
@@ -55,9 +53,7 @@ describe('SearchBar Component', () => {
   });
 
   it('renders rightElement if provided', () => {
-    const { getByText } = render(
-      <SearchBar rightElement={<Text>Right Element</Text>} />
-    );
+    const { getByText } = render(<SearchBar rightElement={<Text>Right Element</Text>} />);
     expect(getByText('Right Element')).toBeTruthy();
   });
 });

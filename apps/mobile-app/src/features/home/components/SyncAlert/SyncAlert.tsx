@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, Text as RNText } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { stylesFactory } from './SyncAlert.styles';
+import { Text } from '../../../../components/Text';
 
 interface SyncAlertProps {
   isFrozen: boolean;
@@ -21,7 +22,7 @@ export const SyncAlert: React.FC<SyncAlertProps> = ({ isFrozen, toggleNetwork, t
       activeOpacity={0.8}
       testID="home-network-toggle"
     >
-      <RNText style={styles.alertText}>{t('home.pendingSync')}</RNText>
+      <Text style={styles.alertText}>{t('home.pendingSync')}</Text>
       <Ionicons name="sync-circle-outline" size={24} color="#D97706" />
     </TouchableOpacity>
   );

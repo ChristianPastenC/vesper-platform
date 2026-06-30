@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, TextInput } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { SearchBar } from '../../../../components/SearchBar/SearchBar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../../core/theme/useTheme';

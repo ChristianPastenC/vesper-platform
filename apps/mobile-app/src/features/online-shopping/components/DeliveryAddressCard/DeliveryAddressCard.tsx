@@ -13,9 +13,9 @@ export interface DeliveryAddressCardProps {
   emptyText?: string;
 }
 
-export const DeliveryAddressCard: React.FC<DeliveryAddressCardProps> = ({ 
-  label, 
-  address, 
+export const DeliveryAddressCard: React.FC<DeliveryAddressCardProps> = ({
+  label,
+  address,
   onChangeAddress,
   editable = true,
   placeholderText = 'Enter your delivery address',
@@ -38,9 +38,7 @@ export const DeliveryAddressCard: React.FC<DeliveryAddressCardProps> = ({
           placeholderTextColor={theme.colors.text + '50'}
         />
       ) : (
-        <Text style={styles.value}>
-          {address || emptyText}
-        </Text>
+        <Text style={styles.value}>{address || emptyText}</Text>
       )}
     </View>
   );

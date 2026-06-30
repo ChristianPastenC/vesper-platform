@@ -44,7 +44,7 @@ describe('HomeHeader Component', () => {
 
     fireEvent.press(getByTestId('header-account-btn'));
     expect(mockNavigateToAccount).toHaveBeenCalledTimes(1);
-    
+
     fireEvent.press(getByTestId('search-bar-touchable'));
     expect(mockOnSearchPress).toHaveBeenCalledTimes(1);
   });

@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { stylesFactory } from './PromoCarousel.styles';
+import { Text } from '../../../../components/Text';
 
 export const PromoCarousel: React.FC = () => {
   const { t } = useTranslation();

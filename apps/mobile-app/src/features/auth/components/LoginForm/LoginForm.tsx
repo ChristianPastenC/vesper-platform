@@ -10,8 +10,6 @@ export const LoginForm: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const {
-    name,
-    setName,
     email,
     setEmail,
     password,
@@ -29,8 +27,6 @@ export const LoginForm: React.FC = () => {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
-
-
 
       <View style={styles.inputGroup}>
         <Text variant="bold" style={styles.label}>

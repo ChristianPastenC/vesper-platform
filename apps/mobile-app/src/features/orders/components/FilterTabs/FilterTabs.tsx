@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, TouchableOpacity, Text as RNText } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { stylesFactory } from './FilterTabs.styles';
+import { Text } from '../../../../components/Text';
 
 interface FilterTabsProps {
   activeTab: 'active' | 'past';
@@ -21,9 +22,9 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ activeTab, onTabChange }
         onPress={() => onTabChange('active')}
         testID="tab-active"
       >
-        <RNText style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
+        <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>
           {t('orders.filterActive')}
-        </RNText>
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -31,9 +32,9 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ activeTab, onTabChange }
         onPress={() => onTabChange('past')}
         testID="tab-past"
       >
-        <RNText style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
+        <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
           {t('orders.filterPast')}
-        </RNText>
+        </Text>
       </TouchableOpacity>
     </View>
   );

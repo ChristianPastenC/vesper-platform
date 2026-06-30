@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, TouchableOpacity, Text as RNText, Image } from 'react-native';
+import { View, TouchableOpacity, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { Order } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderListItem.styles';
+import { Text } from '../../../../components/Text';
 
 interface OrderListItemProps {
   order: Order;
@@ -63,15 +64,15 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <RNText style={styles.orderId}>{`${t('orders.orderId')}${order.id.split('-')[1]}`}</RNText>
+        <Text style={styles.orderId}>{`${t('orders.orderId')}${order.id.split('-')[1]}`}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
-          <RNText style={[styles.statusText, { color: statusColor }]}>
+          <Text style={[styles.statusText, { color: statusColor }]}>
             {getStatusTranslation(order.status)}
-          </RNText>
+          </Text>
         </View>
       </View>
 
-      <RNText style={styles.itemsCount}>{`${itemsCount} item${itemsCount > 1 ? 's' : ''}`}</RNText>
+      <Text style={styles.itemsCount}>{`${itemsCount} item${itemsCount > 1 ? 's' : ''}`}</Text>
 
       {itemImages.length > 0 && (
         <View style={styles.imagesContainer}>
@@ -82,8 +83,8 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
       )}
 
       <View style={styles.detailsRow}>
-        <RNText style={styles.dateText}>{`${t('orders.orderDate')}${formattedDate}`}</RNText>
-        <RNText style={styles.totalText}>${order.total.toFixed(2)}</RNText>
+        <Text style={styles.dateText}>{`${t('orders.orderDate')}${formattedDate}`}</Text>
+        <Text style={styles.totalText}>${order.total.toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
   );

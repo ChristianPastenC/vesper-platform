@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text as RNText } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { OrderTimelineEvent } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderTimeline.styles';
+import { Text } from '../../../../components/Text';
 
 interface OrderTimelineProps {
   events: OrderTimelineEvent[];
@@ -20,7 +21,7 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ events }) => {
 
   return (
     <View style={styles.container} testID="order-timeline">
-      <RNText style={styles.title}>{t('orders.timelineTitle')}</RNText>
+      <Text style={styles.title}>{t('orders.timelineTitle')}</Text>
 
       {sortedEvents.map((event, index) => {
         const isLast = index === sortedEvents.length - 1;
@@ -39,9 +40,9 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({ events }) => {
               {!isLast && <View style={styles.line} />}
             </View>
             <View style={styles.contentContainer}>
-              <RNText style={styles.statusText}>{event.status}</RNText>
-              <RNText style={styles.descText}>{event.description}</RNText>
-              <RNText style={styles.timeText}>{formattedDate}</RNText>
+              <Text style={styles.statusText}>{event.status}</Text>
+              <Text style={styles.descText}>{event.description}</Text>
+              <Text style={styles.timeText}>{formattedDate}</Text>
             </View>
           </View>
         );

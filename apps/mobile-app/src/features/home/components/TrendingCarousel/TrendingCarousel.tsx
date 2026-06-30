@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Text as RNText } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { stylesFactory } from './TrendingCarousel.styles';
+import { Text } from '../../../../components/Text';
 
 import { Product, ProductCard } from '../../../../components/ProductCard/ProductCard';
 
@@ -14,16 +14,22 @@ interface TrendingCarouselProps {
   onProductPress?: (product: Product) => void;
 }
 
-export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t, onSeeAll, onAddToOnline, onProductPress }) => {
+export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({
+  products,
+  t,
+  onSeeAll,
+  onAddToOnline,
+  onProductPress,
+}) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <RNText style={styles.sectionTitle}>{t('home.trendingTitle')}</RNText>
+        <Text style={styles.sectionTitle}>{t('home.trendingTitle')}</Text>
         <TouchableOpacity onPress={onSeeAll}>
-          <RNText style={styles.seeAllText}>{t('home.seeAll')}</RNText>
+          <Text style={styles.seeAllText}>{t('home.seeAll')}</Text>
         </TouchableOpacity>
       </View>
 

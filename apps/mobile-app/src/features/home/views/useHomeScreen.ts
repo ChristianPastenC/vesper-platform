@@ -2,6 +2,8 @@ import { useHome } from '../hooks/useHome';
 import { useAppStore } from '../../../store/useAppStore';
 import { useSovereignCatalog } from '../../catalog/hooks/useSovereignCatalog';
 
+import { Product } from '../../catalog/domain/product.entity';
+
 export const useHomeScreen = () => {
   const {
     t,
@@ -25,7 +27,7 @@ export const useHomeScreen = () => {
   // Fetch real catalog data with a limit of 5 for trending
   const { products: TRENDING_PRODUCTS } = useSovereignCatalog(undefined, 5);
 
-  const handleAddToOnline = (product: any) => {
+  const handleAddToOnline = (product: Product) => {
     addToOnlineCart({
       id: product.id,
       name: product.name,

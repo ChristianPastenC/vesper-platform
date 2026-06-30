@@ -27,11 +27,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
   const { t } = useTranslation();
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
-  const navigation = useNavigation<NavigationProp<any>>();
+  const navigation = useNavigation<NavigationProp<Record<string, object | undefined>>>();
   const searchInputRef = useRef<TextInput>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Use the catalog hook without category to fetch all products
   const { products, loading } = useSovereignCatalog(undefined, 50);
 
@@ -40,8 +40,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
     const lowerQuery = searchQuery.toLowerCase();
     return products.filter(
       (p) =>
-        p.name.toLowerCase().includes(lowerQuery) ||
-        (p.barcode && p.barcode.includes(lowerQuery))
+        p.name.toLowerCase().includes(lowerQuery) || (p.barcode && p.barcode.includes(lowerQuery)),
     );
   }, [products, searchQuery]);
 
@@ -68,7 +67,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
       onPress={() => handleProductPress(item)}
       testID={`search-result-${item.id}`}
     >
-      <Ionicons name="search-outline" size={20} color={theme.colors.textSecondary} style={styles.resultIcon} />
+      <Ionicons
+        name="search-outline"
+        size={20}
+        color={theme.colors.textSecondary}
+        style={styles.resultIcon}
+      />
       <View style={styles.resultTextContainer}>
         <Text style={styles.resultName} numberOfLines={1}>
           {item.name}
@@ -87,7 +91,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
     <Modal visible={isVisible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton} testID="close-search-modal">
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeButton}
+            testID="close-search-modal"
+          >
             <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <View style={styles.searchBarWrapper}>
@@ -117,7 +125,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
                 searchQuery.trim().length > 0 ? (
                   <View style={styles.emptyContainer}>
                     <Ionicons name="search" size={48} color={theme.colors.textSecondary + '50'} />
-                    <Text style={styles.emptyText}>{t('catalog.emptySearch') || 'No results found'}</Text>
+                    <Text style={styles.emptyText}>
+                      {t('catalog.emptySearch') || 'No results found'}
+                    </Text>
                   </View>
                 ) : null
               }

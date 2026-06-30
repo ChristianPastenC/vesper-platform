@@ -12,8 +12,8 @@ jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 describe('TrendingCarousel Component', () => {
   const mockT = (key: string) => key;
   const mockProducts = [
-    { id: '1', name: 'Silk Blend Shirt', price: 120.00, barcode: '123' },
-    { id: '2', name: 'Leather Weekender', price: 350.00, barcode: '456' },
+    { id: '1', name: 'Silk Blend Shirt', price: 120.0, barcode: '123' },
+    { id: '2', name: 'Leather Weekender', price: 350.0, barcode: '456' },
   ];
 
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('TrendingCarousel Component', () => {
   it('calls onSeeAll when see all button is pressed', () => {
     const mockOnSeeAll = jest.fn();
     const { getByText } = render(
-      <TrendingCarousel products={mockProducts} t={mockT} onSeeAll={mockOnSeeAll} />
+      <TrendingCarousel products={mockProducts} t={mockT} onSeeAll={mockOnSeeAll} />,
     );
 
     const seeAllButton = getByText('home.seeAll');

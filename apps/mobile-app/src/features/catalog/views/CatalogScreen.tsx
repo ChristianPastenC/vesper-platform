@@ -11,7 +11,6 @@ import { RootStackParamList, TabParamList } from '../../../navigation/types';
 import { useAppStore } from '../../../store/useAppStore';
 import { stylesFactory } from './CatalogScreen.styles';
 import { CatalogHeader } from '../components/CatalogHeader/CatalogHeader';
-import { PromoCarousel } from '../components/PromoCarousel/PromoCarousel';
 import { ProductGrid } from '../components/ProductGrid/ProductGrid';
 
 type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
@@ -27,7 +26,17 @@ export const CatalogScreen: React.FC = () => {
   const isEs = i18n?.language?.startsWith('es');
 
   const [selectedCategory, setSelectedCategory] = React.useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = React.useState<string>('');
   const { products, loading, error, isEmpty, refetch } = useCatalog(selectedCategory, 20);
+
+  const filteredProducts = React.useMemo(() => {
+    if (!searchQuery) return products;
+    const lowerQuery = searchQuery.toLowerCase();
+    return products.filter((p) => 
+      p.name.toLowerCase().includes(lowerQuery) || 
+      (p.barcode && p.barcode.includes(lowerQuery))
+    );
+  }, [products, searchQuery]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -36,11 +45,10 @@ export const CatalogScreen: React.FC = () => {
   }, [navigation]);
 
   const CATEGORIES = [
-    { id: 'new', name: isEs ? 'Novedades' : 'New In', icon: 'sparkles-outline' },
-    { id: 'apparel', name: isEs ? 'Moda' : 'Apparel', icon: 'shirt-outline' },
-    { id: 'footwear', name: isEs ? 'Calzado' : 'Footwear', icon: 'walk-outline' },
-    { id: 'accessories', name: isEs ? 'Accesorios' : 'Accessories', icon: 'watch-outline' },
-    { id: 'tech', name: isEs ? 'Tech' : 'Tech', icon: 'hardware-chip-outline' },
+    { id: "electronics", name: isEs ? 'Tecnología' : 'Electronics', icon: 'hardware-chip-outline' },
+    { id: "jewelery", name: isEs ? 'Joyería' : 'Jewelry', icon: 'diamond-outline' },
+    { id: "men's clothing", name: isEs ? 'Hombre' : "Men's", icon: 'man-outline' },
+    { id: "women's clothing", name: isEs ? 'Mujer' : "Women's", icon: 'woman-outline' },
   ];
 
   const renderListHeader = () => (
@@ -71,7 +79,7 @@ export const CatalogScreen: React.FC = () => {
       </View>
 
       {/* 2. SEARCH & SCAN INTEGRATION BAR */}
-      <CatalogHeader />
+      <CatalogHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       {/* 3. COUTURIER STORIES / ROUND CATEGORIES */}
       <View style={styles.categoriesContainer}>
@@ -123,16 +131,13 @@ export const CatalogScreen: React.FC = () => {
         </ScrollView>
       </View>
 
-      {/* 4. HERO PROMOTIONAL BANNER */}
-      <PromoCarousel />
-
       {/* 5. SEAMLESS TRANSITION TO THE GRID */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionHeaderTitle}>{t('catalog.trendingTitle')}</Text>
         <TouchableOpacity
           style={styles.seeAllButton}
           activeOpacity={0.7}
-          onPress={() => navigation.navigate('ProductList', { category: selectedCategory })}
+          onPress={() => navigation.navigate('ProductList', { category: undefined })}
           testID="see-all-button"
         >
           <Text style={styles.seeAllText}>{t('catalog.seeAll')}</Text>
@@ -144,10 +149,10 @@ export const CatalogScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ProductGrid
-        products={products}
+        products={filteredProducts}
         loading={loading}
         error={error}
-        isEmpty={isEmpty}
+        isEmpty={isEmpty || (filteredProducts.length === 0 && !loading)}
         refetch={refetch}
         ListHeaderComponent={renderListHeader}
       />

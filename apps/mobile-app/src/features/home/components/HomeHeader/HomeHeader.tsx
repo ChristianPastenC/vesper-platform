@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, TextInput } from 'react-native';
+import { SearchBar } from '../../../../components/SearchBar/SearchBar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { stylesFactory } from './HomeHeader.styles';
@@ -7,12 +8,14 @@ import { stylesFactory } from './HomeHeader.styles';
 interface HomeHeaderProps {
   navigateToScanner: () => void;
   navigateToAccount: () => void;
+  onSearchPress: () => void;
   t: (key: string) => string;
 }
 
 export const HomeHeader: React.FC<HomeHeaderProps> = ({
   navigateToScanner,
   navigateToAccount,
+  onSearchPress,
   t,
 }) => {
   const theme = useTheme();
@@ -28,16 +31,13 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
         <Ionicons name="scan-outline" size={20} color={theme.colors.text} />
       </TouchableOpacity>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={18} color={theme.colors.textSecondary} />
-        <TextInput
-          style={styles.searchPlaceholder}
-          placeholder={t('home.searchPlaceholder')}
-          placeholderTextColor={theme.colors.textSecondary}
-          editable={false}
-          testID="header-search-input"
-        />
-      </View>
+      <SearchBar
+        placeholder={t('home.searchPlaceholder')}
+        editable={false}
+        onPress={onSearchPress}
+        containerStyle={{ flex: 1, marginHorizontal: 12 }}
+        testID="header-search-input"
+      />
 
       <TouchableOpacity
         style={styles.iconButton}

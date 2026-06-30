@@ -39,7 +39,6 @@ describe('LoginForm', () => {
     });
 
     const { getByTestId, queryByTestId } = render(<LoginForm />);
-    expect(getByTestId('name-input')).toBeTruthy();
     expect(getByTestId('email-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
     expect(getByTestId('login-submit-button')).toBeTruthy();

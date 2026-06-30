@@ -27,10 +27,12 @@ describe('HomeHeader Component', () => {
   });
 
   it('renders correctly and responds to interactions', () => {
+    const mockOnSearchPress = jest.fn();
     const { getByTestId, getByPlaceholderText } = render(
       <HomeHeader
         navigateToScanner={mockNavigateToScanner}
         navigateToAccount={mockNavigateToAccount}
+        onSearchPress={mockOnSearchPress}
         t={mockT}
       />,
     );
@@ -42,5 +44,8 @@ describe('HomeHeader Component', () => {
 
     fireEvent.press(getByTestId('header-account-btn'));
     expect(mockNavigateToAccount).toHaveBeenCalledTimes(1);
+    
+    fireEvent.press(getByTestId('search-bar-touchable'));
+    expect(mockOnSearchPress).toHaveBeenCalledTimes(1);
   });
 });

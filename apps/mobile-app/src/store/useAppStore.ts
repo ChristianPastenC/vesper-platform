@@ -43,6 +43,8 @@ interface AppState {
   setThemeMode: (mode: ThemeMode) => void;
 
   // Online Flow
+  deliveryAddress: string;
+  setDeliveryAddress: (address: string) => void;
   addToOnlineCart: (item: Omit<OnlineCartItem, 'quantity'>) => void;
   clearOnlineCart: () => void;
   getOnlineTotal: () => number;
@@ -62,6 +64,8 @@ export const useAppStore = create<AppState>()(
       isFrozen: false,
       language: 'en',
       themeMode: 'system',
+      deliveryAddress: '',
+      setDeliveryAddress: (address) => set({ deliveryAddress: address }),
       onlineCart: [],
       inStoreCart: [],
 

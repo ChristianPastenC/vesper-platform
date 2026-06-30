@@ -1,5 +1,6 @@
 import { useHome } from '../hooks/useHome';
 import { useAppStore } from '../../../store/useAppStore';
+import { useSovereignCatalog } from '../../catalog/hooks/useSovereignCatalog';
 
 export const useHomeScreen = () => {
   const {
@@ -18,13 +19,19 @@ export const useHomeScreen = () => {
   const isFrozen = !isOnline;
 
   const onlineCart = useAppStore((state) => state.onlineCart);
+  const addToOnlineCart = useAppStore((state) => state.addToOnlineCart);
   const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const TRENDING_PRODUCTS = [
-    { id: '1', name: 'Silk Blend Shirt', price: '$120.00' },
-    { id: '2', name: 'Leather Weekender', price: '$350.00' },
-    { id: '3', name: 'Cashmere Beanie', price: '$85.00' },
-  ];
+  // Fetch real catalog data with a limit of 5 for trending
+  const { products: TRENDING_PRODUCTS } = useSovereignCatalog(undefined, 5);
+
+  const handleAddToOnline = (product: any) => {
+    addToOnlineCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+    });
+  };
 
   return {
     t,
@@ -39,5 +46,6 @@ export const useHomeScreen = () => {
     navigateToStores,
     navigateToOrders,
     TRENDING_PRODUCTS,
+    handleAddToOnline,
   };
 };

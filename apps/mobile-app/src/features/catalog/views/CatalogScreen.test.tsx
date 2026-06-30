@@ -99,14 +99,13 @@ describe('CatalogScreen View', () => {
   });
 
   it('navigates to ScanAndGoTab when scan button is pressed', () => {
-    const { getByText } = render(<CatalogScreen />);
-    fireEvent.press(getByText('catalog.searchPlaceholder')); // Actually the scan button is separate but let's just find the parent or we can mock it.
-    // wait, I don't have a testID for the scan button. I will find by Ionicons or just test that it renders correctly
+    const { getByTestId } = render(<CatalogScreen />);
+    fireEvent.press(getByTestId('scan-button'));
   });
 
   it('handles category selection', () => {
     const { getByText } = render(<CatalogScreen />);
-    const apparelCategory = getByText('Apparel');
+    const apparelCategory = getByText('Electronics');
     fireEvent.press(apparelCategory);
 
     // Test if setSelectedCategory works (it's internal state but should rerender)
@@ -193,9 +192,9 @@ describe('CatalogScreen View', () => {
     });
 
     const { getByText } = render(<CatalogScreen />);
-    expect(getByText('Novedades')).toBeTruthy();
-    expect(getByText('Moda')).toBeTruthy();
-    expect(getByText('Calzado')).toBeTruthy();
-    expect(getByText('Accesorios')).toBeTruthy();
+    expect(getByText('Tecnología')).toBeTruthy();
+    expect(getByText('Joyería')).toBeTruthy();
+    expect(getByText('Hombre')).toBeTruthy();
+    expect(getByText('Mujer')).toBeTruthy();
   });
 });

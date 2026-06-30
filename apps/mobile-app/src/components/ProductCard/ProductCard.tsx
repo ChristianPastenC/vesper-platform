@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Image, Animated } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useTheme } from '../../../core/theme/useTheme';
-import { Text } from '../../../components/Text';
+import { useTheme } from '../../core/theme/useTheme';
+import { Text } from '../Text';
 import { stylesFactory } from './ProductCard.styles';
 
 export interface Product {

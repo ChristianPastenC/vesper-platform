@@ -42,10 +42,18 @@ func NewInMemoryUserRepository() *InMemoryUserRepository {
 // GetUserByUsername retrieves the user details and their credentials for authentication.
 func (r *InMemoryUserRepository) GetUserByUsername(ctx context.Context, username string) (domain.User, string, error) {
 	user, exists := r.users[username]
-	if !exists {
-		return domain.User{}, "", errors.New("user_repository: user not found")
+	if exists {
+		return user, r.passwords[username], nil
 	}
-	return user, r.passwords[username], nil
+
+	// Fallback to checking by email
+	for key, u := range r.users {
+		if u.Email == username {
+			return u, r.passwords[key], nil
+		}
+	}
+
+	return domain.User{}, "", errors.New("user_repository: user not found")
 }
 
 // GetUserByID retrieves the user details by ID.

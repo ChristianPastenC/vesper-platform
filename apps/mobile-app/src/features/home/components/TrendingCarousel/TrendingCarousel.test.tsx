@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { TrendingCarousel } from './TrendingCarousel';
 import { useTheme } from '../../../../core/theme/useTheme';
 
@@ -12,8 +12,8 @@ jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 describe('TrendingCarousel Component', () => {
   const mockT = (key: string) => key;
   const mockProducts = [
-    { id: '1', name: 'Silk Blend Shirt', price: '$120.00' },
-    { id: '2', name: 'Leather Weekender', price: '$350.00' },
+    { id: '1', name: 'Silk Blend Shirt', price: 120.00, barcode: '123' },
+    { id: '2', name: 'Leather Weekender', price: 350.00, barcode: '456' },
   ];
 
   beforeEach(() => {
@@ -40,5 +40,17 @@ describe('TrendingCarousel Component', () => {
 
     expect(getByText('Leather Weekender')).toBeTruthy();
     expect(getByText('$350.00')).toBeTruthy();
+  });
+
+  it('calls onSeeAll when see all button is pressed', () => {
+    const mockOnSeeAll = jest.fn();
+    const { getByText } = render(
+      <TrendingCarousel products={mockProducts} t={mockT} onSeeAll={mockOnSeeAll} />
+    );
+
+    const seeAllButton = getByText('home.seeAll');
+    fireEvent.press(seeAllButton);
+
+    expect(mockOnSeeAll).toHaveBeenCalledTimes(1);
   });
 });

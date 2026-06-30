@@ -33,13 +33,17 @@ describe('CatalogHeader', () => {
   });
 
   it('renders correctly', () => {
-    const { getByTestId, getByText } = render(<CatalogHeader />);
+    const { getByTestId, getByPlaceholderText } = render(
+      <CatalogHeader searchQuery="" onSearchChange={jest.fn()} />
+    );
     expect(getByTestId('catalog-header-container')).toBeTruthy();
-    expect(getByText('catalog.searchPlaceholder')).toBeTruthy();
+    expect(getByPlaceholderText('catalog.searchPlaceholder')).toBeTruthy();
   });
 
   it('navigates to ScanAndGoTab on scan button press', () => {
-    const { getByTestId } = render(<CatalogHeader />);
+    const { getByTestId } = render(
+      <CatalogHeader searchQuery="" onSearchChange={jest.fn()} />
+    );
     const scanBtn = getByTestId('scan-button');
     fireEvent.press(scanBtn);
     expect(mockNavigate).toHaveBeenCalledWith('ScanAndGoTab');

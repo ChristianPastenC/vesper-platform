@@ -30,21 +30,7 @@ export const LoginForm: React.FC = () => {
         </View>
       ) : null}
 
-      <View style={styles.inputGroup}>
-        <Text variant="bold" style={styles.label}>
-          {t('auth.nameLabel', 'Name')}
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder={t('auth.namePlaceholder', 'Enter your name')}
-          placeholderTextColor={theme.colors.text + '50'}
-          autoCapitalize="words"
-          editable={!isPending}
-          testID="name-input"
-        />
-      </View>
+
 
       <View style={styles.inputGroup}>
         <Text variant="bold" style={styles.label}>

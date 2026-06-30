@@ -1,14 +1,9 @@
-import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 import { useCatalog } from './useCatalog';
 import { useSovereignCatalog } from './useSovereignCatalog';
-import { useIsAuthenticated } from '../../../store/useAppStore';
 
 jest.mock('./useSovereignCatalog', () => ({
   useSovereignCatalog: jest.fn(),
-}));
-
-jest.mock('../../../store/useAppStore', () => ({
-  useIsAuthenticated: jest.fn(),
 }));
 
 describe('useCatalog', () => {
@@ -16,8 +11,7 @@ describe('useCatalog', () => {
     jest.clearAllMocks();
   });
 
-  it('delegates to useSovereignCatalog when authenticated', () => {
-    (useIsAuthenticated as jest.Mock).mockReturnValue(true);
+  it('delegates to useSovereignCatalog unconditionally', () => {
     const mockSovereignData = {
       products: [{ id: '1', name: 'Real Product', price: 100 }],
       loading: false,
@@ -27,66 +21,9 @@ describe('useCatalog', () => {
     };
     (useSovereignCatalog as jest.Mock).mockReturnValue(mockSovereignData);
 
-    const { result } = renderHook(() => useCatalog());
+    const { result } = renderHook(() => useCatalog('electronics', 15));
 
+    expect(useSovereignCatalog).toHaveBeenCalledWith('electronics', 15);
     expect(result.current.products).toEqual(mockSovereignData.products);
-  });
-
-  it('returns mock data when not authenticated', async () => {
-    jest.useFakeTimers();
-    (useIsAuthenticated as jest.Mock).mockReturnValue(false);
-    (useSovereignCatalog as jest.Mock).mockReturnValue({
-      products: [],
-      loading: true,
-      error: null,
-      isEmpty: true,
-      refetch: jest.fn(),
-    });
-
-    const { result } = renderHook(() => useCatalog());
-
-    expect(result.current.loading).toBe(true);
-    expect(result.current.products).toHaveLength(0);
-
-    act(() => {
-      jest.runAllTimers();
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    expect(result.current.products).toHaveLength(2);
-    expect(result.current.products[0].name).toBe('Sovereign Hoodie');
-    jest.useRealTimers();
-  });
-
-  it('handles mock refetch correctly', async () => {
-    jest.useFakeTimers();
-    (useIsAuthenticated as jest.Mock).mockReturnValue(false);
-
-    const { result } = renderHook(() => useCatalog());
-
-    act(() => {
-      jest.runAllTimers();
-    });
-
-    // Invoke refetch
-    act(() => {
-      result.current.refetch();
-    });
-
-    expect(result.current.loading).toBe(true);
-
-    act(() => {
-      jest.runAllTimers();
-    });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    expect(result.current.products).toHaveLength(2);
-    jest.useRealTimers();
   });
 });

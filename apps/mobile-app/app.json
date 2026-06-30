@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#0f0f0f"
       },
-      "package": "mx.edu.sovereign.core"
+      "package": "mx.edu.sovereign.core",
+      "usesCleartextTraffic": true
     },
     "plugins": [
       "expo-secure-store"

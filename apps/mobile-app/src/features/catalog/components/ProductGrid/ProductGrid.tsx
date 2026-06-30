@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { ProductCard, Product } from '../../components/ProductCard';
+import { ProductCard, Product } from '../../../../components/ProductCard/ProductCard';
 import { Button } from '../../../../components/Button';
 import { stylesFactory } from './ProductGrid.styles';
 import { useProductGrid } from './useProductGrid';

@@ -33,7 +33,7 @@ export const useSovereignLogin = () => {
     setError(null);
 
     // a. Validate that name, email and password are not empty
-    if (!name || !email || !password) {
+    if (!email || !password) {
       setError(t('auth.emptyFieldsError', 'All fields are required.'));
       return;
     }

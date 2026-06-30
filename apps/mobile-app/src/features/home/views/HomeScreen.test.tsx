@@ -5,9 +5,14 @@ import { useHome } from '../hooks/useHome';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useAppStore } from '../../../store/useAppStore';
 import { useNavigation } from '@react-navigation/native';
+import { useSovereignCatalog } from '../../catalog/hooks/useSovereignCatalog';
 
 jest.mock('../hooks/useHome', () => ({
   useHome: jest.fn(),
+}));
+
+jest.mock('../../catalog/hooks/useSovereignCatalog', () => ({
+  useSovereignCatalog: jest.fn(),
 }));
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -43,6 +48,13 @@ describe('HomeScreen Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useAppStore as unknown as jest.Mock).mockReturnValue([]);
+    (useSovereignCatalog as jest.Mock).mockReturnValue({
+      products: [{ id: '1', name: 'Mock Real Product', price: 100, barcode: '123' }],
+      loading: false,
+      error: null,
+      isEmpty: false,
+      refetch: jest.fn(),
+    });
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',
@@ -80,7 +92,7 @@ describe('HomeScreen Component', () => {
 
     // Check trending products list
     expect(getByText('home.trendingTitle')).toBeTruthy();
-    expect(getByText('Silk Blend Shirt')).toBeTruthy();
+    expect(getByText('Mock Real Product')).toBeTruthy();
   });
 
   it('renders guest mode and offline state correctly', () => {
@@ -107,7 +119,13 @@ describe('HomeScreen Component', () => {
   });
 
   it('renders header cart badge when items exist', () => {
-    (useAppStore as unknown as jest.Mock).mockReturnValue([{ quantity: 2 }]);
+    (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
+      const state = {
+        onlineCart: [{ quantity: 2 }],
+        addToOnlineCart: jest.fn(),
+      };
+      return selector(state);
+    });
     const mockSetOptions = jest.fn();
     (useNavigation as jest.Mock).mockReturnValue({
       setOptions: mockSetOptions,

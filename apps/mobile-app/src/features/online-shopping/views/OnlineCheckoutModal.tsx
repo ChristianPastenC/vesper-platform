@@ -17,11 +17,11 @@ export const OnlineCheckoutModal: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const navigation = useNavigation<NavigationProp>();
-  const { total, address, isProcessing, handleCheckout, t } = useOnlineCart();
+  const { total, address, setAddress, isProcessing, handleCheckout, t } = useOnlineCart();
 
   const handleConfirmOrder = () => {
     handleCheckout((orderId) => {
-      navigation.navigate('PaymentSuccessScreen', {
+      navigation.replace('PaymentSuccessScreen', {
         orderId,
         type: 'online',
       });
@@ -34,7 +34,11 @@ export const OnlineCheckoutModal: React.FC = () => {
         <Text variant="title" style={styles.title}>
           {t('online_checkout.title')}
         </Text>
-        <DeliveryAddressCard label={t('online_checkout.deliveryAddress')} address={address} />
+        <DeliveryAddressCard 
+          label={t('online_checkout.deliveryAddress')} 
+          address={address} 
+          onChangeAddress={setAddress}
+        />
         <CheckoutSummary
           total={total}
           totalLabel={t('online_checkout.total')}
@@ -46,6 +50,7 @@ export const OnlineCheckoutModal: React.FC = () => {
         <Button
           title={t('online_checkout.checkoutButton')}
           status={isProcessing ? 'loading' : 'idle'}
+          disabled={!address.trim() || isProcessing}
           onPress={handleConfirmOrder}
           style={styles.confirmBtn}
         />

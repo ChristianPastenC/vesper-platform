@@ -4,12 +4,17 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { stylesFactory } from './TrendingCarousel.styles';
 
+import { Product, ProductCard } from '../../../../components/ProductCard/ProductCard';
+
 interface TrendingCarouselProps {
-  products: Array<{ id: string; name: string; price: string }>;
+  products: Array<Product>;
   t: (key: string) => string;
+  onSeeAll?: () => void;
+  onAddToOnline?: (product: Product) => void;
+  onProductPress?: (product: Product) => void;
 }
 
-export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t }) => {
+export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t, onSeeAll, onAddToOnline, onProductPress }) => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
 
@@ -17,7 +22,7 @@ export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t 
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <RNText style={styles.sectionTitle}>{t('home.trendingTitle')}</RNText>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onSeeAll}>
           <RNText style={styles.seeAllText}>{t('home.seeAll')}</RNText>
         </TouchableOpacity>
       </View>
@@ -28,16 +33,13 @@ export const TrendingCarousel: React.FC<TrendingCarouselProps> = ({ products, t 
         contentContainerStyle={styles.transactionsList}
       >
         {products.map((product) => (
-          <View key={product.id} style={styles.productCard}>
-            <RNText style={styles.productName} numberOfLines={2}>
-              {product.name}
-            </RNText>
-            <RNText style={styles.productPrice}>{product.price}</RNText>
-            <View style={styles.productFooter}>
-              <View style={styles.cartIconContainer}>
-                <Ionicons name="cart-outline" size={14} color={theme.colors.textSecondary} />
-              </View>
-            </View>
+          <View key={product.id} style={{ width: 160, marginRight: 16 }}>
+            <ProductCard
+              product={product}
+              onAddToOnline={onAddToOnline || (() => {})}
+              onAddToInStore={() => {}} // Usually not for in-store from home
+              onPress={() => onProductPress?.(product)}
+            />
           </View>
         ))}
       </ScrollView>

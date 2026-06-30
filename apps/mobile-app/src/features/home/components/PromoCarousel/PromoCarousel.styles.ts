@@ -5,9 +5,10 @@ import { scale, verticalScale, scaleFont } from '../../../../core/theme/responsi
 export const stylesFactory = (colors: ThemeColors) =>
   StyleSheet.create({
     heroBanner: {
-      borderRadius: scale(20),
-      padding: scale(20),
-      marginBottom: verticalScale(28),
+      borderRadius: scale(16),
+      padding: scale(16),
+      marginBottom: verticalScale(16),
+      marginHorizontal: scale(16), // ensure it has side margins in home
       backgroundColor: colors.primary === '#F8FAFC' ? '#18181B' : '#0F172A',
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 6 },
@@ -32,8 +33,8 @@ export const stylesFactory = (colors: ThemeColors) =>
     },
     heroTitle: {
       color: '#FFFFFF',
-      fontSize: scaleFont(22),
-      lineHeight: verticalScale(28),
+      fontSize: scaleFont(18),
+      lineHeight: verticalScale(24),
       fontWeight: '700',
       marginBottom: verticalScale(6),
     },

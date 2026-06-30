@@ -35,7 +35,7 @@ export const InStoreCheckoutScreen: React.FC = () => {
   const handlePayPress = () => {
     if (isAuthenticated) {
       handleCheckout((orderId) => {
-        navigation.navigate('PaymentSuccessScreen', {
+        navigation.replace('PaymentSuccessScreen', {
           orderId,
           type: 'instore',
         });

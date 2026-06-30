@@ -50,7 +50,6 @@ describe('LoginScreen View', () => {
     const { getByTestId, getByText } = render(<LoginScreen />);
 
     expect(getByText('auth.title')).toBeTruthy();
-    expect(getByTestId('name-input')).toBeTruthy();
     expect(getByTestId('email-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
   });

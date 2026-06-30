@@ -8,7 +8,7 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-jest.mock('../../../core/theme/useTheme', () => ({
+jest.mock('../../core/theme/useTheme', () => ({
   useTheme: () => ({
     colors: {
       primary: '#000',

@@ -35,7 +35,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
     <View style={styles.footer} testID="cart-footer">
       <View style={styles.addressSection}>
         <Text variant="bold">{addressLabel}</Text>
-        <Text style={styles.addressText}>{address}</Text>
+        <Text style={styles.addressText}>{address || 'Not provided'}</Text>
       </View>
       <View style={styles.totalSection}>
         <Text variant="bold">{totalLabel}:</Text>

@@ -20,4 +20,11 @@ export const stylesFactory = (colors: ThemeColors) =>
     value: {
       fontSize: scaleFont(16),
     },
+    input: {
+      fontSize: scaleFont(16),
+      color: colors.text,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingVertical: verticalScale(8),
+    },
   });

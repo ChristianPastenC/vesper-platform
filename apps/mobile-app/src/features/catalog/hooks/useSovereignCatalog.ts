@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Product } from '../components/ProductCard';
+import { Product } from '../../../components/ProductCard/ProductCard';
 import { getApiUrl } from '../../../core/config';
 
 export interface BackendProduct {

@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, TabParamList } from '../../../../navigation/types';
 import { useAppStore } from '../../../../store/useAppStore';
-import { Product } from '../../components/ProductCard';
+import { Product } from '../../../../components/ProductCard/ProductCard';
 
 type NavigationProp = StackNavigationProp<RootStackParamList & TabParamList>;
 

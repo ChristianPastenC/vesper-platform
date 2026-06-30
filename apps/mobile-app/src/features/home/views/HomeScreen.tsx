@@ -12,12 +12,16 @@ import { HeroBanner } from '../components/HeroBanner/HeroBanner';
 import { SyncAlert } from '../components/SyncAlert/SyncAlert';
 import { Categories } from '../components/Categories/Categories';
 import { TrendingCarousel } from '../components/TrendingCarousel/TrendingCarousel';
+import { PromoCarousel } from '../components/PromoCarousel/PromoCarousel';
+
+import { SearchModal } from '../components/SearchModal/SearchModal';
 
 export const HomeScreen: React.FC = () => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = stylesFactory(theme.colors, insets);
   const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
+  const [isSearchVisible, setIsSearchVisible] = React.useState(false);
 
   const {
     t,
@@ -55,10 +59,13 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <SearchModal isVisible={isSearchVisible} onClose={() => setIsSearchVisible(false)} />
+      
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <HomeHeader
           navigateToScanner={navigateToScanner}
           navigateToAccount={navigateToAccount}
+          onSearchPress={() => setIsSearchVisible(true)}
           t={t}
         />
 
@@ -79,7 +86,13 @@ export const HomeScreen: React.FC = () => {
           t={t}
         />
 
-        <TrendingCarousel products={TRENDING_PRODUCTS} t={t} />
+        <PromoCarousel />
+
+        <TrendingCarousel 
+          products={TRENDING_PRODUCTS} 
+          t={t} 
+          onSeeAll={navigateToCatalog} 
+        />
       </ScrollView>
     </View>
   );

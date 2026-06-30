@@ -11,8 +11,11 @@ export const useOnlineCart = () => {
 
   const checkoutMutation = useOnlineCheckoutMutation();
 
+  const deliveryAddress = useAppStore((state) => state.deliveryAddress);
+  const setDeliveryAddress = useAppStore((state) => state.setDeliveryAddress);
+
   const total = getOnlineTotal();
-  const address = t('online_checkout.simulatedAddress');
+  const address = deliveryAddress || '';
 
   const handleCheckout = (onSuccess: (orderId: string) => void) => {
     checkoutMutation.mutate(
@@ -29,6 +32,7 @@ export const useOnlineCart = () => {
     cartItems: onlineCart,
     total,
     address,
+    setAddress: setDeliveryAddress,
     clearCart: clearOnlineCart,
     isProcessing: checkoutMutation.isPending,
     handleCheckout,

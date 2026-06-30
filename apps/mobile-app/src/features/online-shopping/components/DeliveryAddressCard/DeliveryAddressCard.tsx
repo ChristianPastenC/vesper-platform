@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput } from 'react-native';
+import { View } from 'react-native';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { Text } from '../../../../components/Text';
 import { stylesFactory } from './DeliveryAddressCard.styles';
@@ -7,18 +7,16 @@ import { stylesFactory } from './DeliveryAddressCard.styles';
 export interface DeliveryAddressCardProps {
   label: string;
   address: string;
-  onChangeAddress?: (text: string) => void;
+  onPressEdit?: () => void;
   editable?: boolean;
-  placeholderText?: string;
   emptyText?: string;
 }
 
 export const DeliveryAddressCard: React.FC<DeliveryAddressCardProps> = ({
   label,
   address,
-  onChangeAddress,
+  onPressEdit,
   editable = true,
-  placeholderText = 'Enter your delivery address',
   emptyText = 'No address provided',
 }) => {
   const theme = useTheme();
@@ -29,16 +27,17 @@ export const DeliveryAddressCard: React.FC<DeliveryAddressCardProps> = ({
       <Text variant="bold" style={styles.label}>
         {label}
       </Text>
-      {editable && onChangeAddress ? (
-        <TextInput
-          style={styles.input}
-          value={address}
-          onChangeText={onChangeAddress}
-          placeholder={placeholderText}
-          placeholderTextColor={theme.colors.text + '50'}
-        />
-      ) : (
-        <Text style={styles.value}>{address || emptyText}</Text>
+      <Text style={styles.value}>{address || emptyText}</Text>
+
+      {editable && onPressEdit && (
+        <Text
+          variant="link"
+          style={{ marginTop: 8 }}
+          onPress={onPressEdit}
+          testID="edit-address-button"
+        >
+          {address ? 'Edit Address' : 'Add Address'}
+        </Text>
       )}
     </View>
   );

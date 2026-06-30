@@ -4,11 +4,17 @@ import { ProfileScreen } from './ProfileScreen';
 import { useProfile } from '../hooks/useProfile';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useNavigation } from '@react-navigation/native';
+import { useAppStore } from '../../../store/useAppStore';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, defaultText: string) => defaultText || key,
   }),
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
+}));
+
+jest.mock('../../../store/useAppStore', () => ({
+  useAppStore: jest.fn(),
 }));
 
 jest.mock('../hooks/useProfile', () => ({
@@ -42,6 +48,7 @@ describe('ProfileScreen View Settings Redesign', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useAppStore as unknown as jest.Mock).mockReturnValue('123 Sovereign Way');
     (useNavigation as jest.Mock).mockReturnValue({
       navigate: mockNavigate,
     });

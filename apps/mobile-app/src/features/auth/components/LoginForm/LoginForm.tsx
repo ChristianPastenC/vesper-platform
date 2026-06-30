@@ -9,16 +9,8 @@ import { stylesFactory } from './LoginForm.styles';
 export const LoginForm: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
-  const {
-    email,
-    setEmail,
-    password,
-    setPassword,
-    error,
-    isPending,
-    handleLogin,
-    t,
-  } = useLoginForm();
+  const { email, setEmail, password, setPassword, error, isPending, handleLogin, t } =
+    useLoginForm();
 
   return (
     <View testID="login-form">

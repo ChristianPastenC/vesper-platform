@@ -145,6 +145,13 @@ const resources = {
       stores: {
         title: 'Stores',
       },
+      location: {
+        title: 'Delivery Address',
+        addressLabel: 'Your Address',
+        addressPlaceholder: 'Enter your full address',
+        saveButton: 'Save Address',
+        cancelButton: 'Cancel',
+      },
     },
   },
   es: {
@@ -289,6 +296,13 @@ const resources = {
       },
       stores: {
         title: 'Tiendas',
+      },
+      location: {
+        title: 'Dirección de Entrega',
+        addressLabel: 'Tu Dirección',
+        addressPlaceholder: 'Ingresa tu dirección completa',
+        saveButton: 'Guardar Dirección',
+        cancelButton: 'Cancelar',
       },
     },
   },

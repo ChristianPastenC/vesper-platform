@@ -7,8 +7,9 @@ import { useOnlineCart } from '../hooks/useOnlineCart';
 import { Text } from '../../../components/Text';
 import { Button } from '../../../components/Button';
 import { RootStackParamList } from '../../../navigation/types';
-import { DeliveryAddressCard } from '../components/DeliveryAddressCard';
-import { CheckoutSummary } from '../components/CheckoutSummary';
+import { DeliveryAddressCard } from '../components/DeliveryAddressCard/DeliveryAddressCard';
+import { CheckoutSummary } from '../components/CheckoutSummary/CheckoutSummary';
+import { AddressModal } from '../../../components/AddressModal/AddressModal';
 import { stylesFactory } from './OnlineCheckoutModal.styles';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'OnlineCheckoutModal'>;
@@ -17,7 +18,8 @@ export const OnlineCheckoutModal: React.FC = () => {
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const navigation = useNavigation<NavigationProp>();
-  const { total, address, setAddress, isProcessing, handleCheckout, t } = useOnlineCart();
+  const [isAddressModalVisible, setAddressModalVisible] = React.useState(false);
+  const { total, address, isProcessing, handleCheckout, t } = useOnlineCart();
 
   const handleConfirmOrder = () => {
     handleCheckout((orderId) => {
@@ -37,7 +39,7 @@ export const OnlineCheckoutModal: React.FC = () => {
         <DeliveryAddressCard
           label={t('online_checkout.deliveryAddress')}
           address={address}
-          onChangeAddress={setAddress}
+          onPressEdit={() => setAddressModalVisible(true)}
           placeholderText={t('online_checkout.addressPlaceholder')}
           emptyText={t('online_checkout.addressEmpty')}
         />
@@ -63,6 +65,7 @@ export const OnlineCheckoutModal: React.FC = () => {
           onPress={() => navigation.goBack()}
         />
       </View>
+      <AddressModal visible={isAddressModalVisible} onClose={() => setAddressModalVisible(false)} />
     </View>
   );
 };

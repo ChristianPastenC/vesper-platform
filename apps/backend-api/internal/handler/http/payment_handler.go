@@ -73,7 +73,6 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 3. Invoke the business logic interactor
-	req.Card.Simulate = req.UseMock
 	resp, err := h.interactor.ProcessOrder(r.Context(), req.Total, req.Card)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())

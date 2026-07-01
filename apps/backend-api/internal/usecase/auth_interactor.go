@@ -77,8 +77,8 @@ func (a *AuthInteractor) AuthenticateUser(ctx context.Context, username, passwor
 		return domain.User{}, err
 	}
 
-	// Simple password verification. In a real-world system, use bcrypt/argon2.
-	// For this baseline, we do a simple string comparison against the mock data.
+	// Password verification using bcrypt (cost 12). The stored hash was generated
+	// during registration via bcrypt.GenerateFromPassword in RegisterUser.
 	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
 		return domain.User{}, errors.New("auth_interactor: invalid credentials")
 	}

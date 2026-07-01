@@ -52,7 +52,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"user":         user,
 		"accessToken":  accessToken,

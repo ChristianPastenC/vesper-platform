@@ -159,10 +159,7 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 			failed++
 			continue
 		}
-
-
-
-		// MockGateway.CreateCharge and OrderRepo.SaveOrder is done by interactor
+		// Charge and persist via interactor (MockGateway + OrderRepo)
 		resp, err := h.interactor.SyncOfflineTransaction(r.Context(), userID, tx.TransactionID, tx.Payload)
 		if err != nil {
 			results = append(results, SyncResult{

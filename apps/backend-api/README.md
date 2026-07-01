@@ -6,7 +6,9 @@ This is the backend API for the Sovereign Core Platform. It provides a highly se
 
 The following environment variables are required to run the service:
 
-- `PORT`: The port on which the server runs. Defaults to `8080`.
-- `DB_PATH`: The path to the embedded BoltDB database file. Defaults to `./data/sovereign.db`.
-- `PAYLOAD_SECRET_KEY`: A 32-character minimum secret key used for HMAC request payload validation. Required for all POST requests.
-- `ECDSA_PRIVATE_KEY_PEM`: (Optional) Base64URL-encoded PEM format of the ECDSA private key used for JWT signing. If not provided, an ephemeral key will be generated and printed to the logs at startup.
+- `PORT` (optional): Port for the HTTP server to listen on (default `8080`).
+- `DB_PATH` (optional): Path to the BoltDB file (default `./data/sovereign.db`).
+- `PAYLOAD_SECRET_KEY` (required): Secret key used for `X-Sovereign-Hash` payload integrity validation. Must be at least 32 characters.
+- `ECDSA_PRIVATE_KEY_PEM` (optional): Base64url-encoded DER-format ECDSA P-256 private key.
+  If not provided, the server generates an ephemeral key on each startup and logs it.
+  Copy the logged key value to this variable to keep JWT sessions valid across restarts.

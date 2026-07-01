@@ -65,7 +65,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	var req CheckoutRequest
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body: "+err.Error())
 		return
 	}
 
@@ -158,7 +158,7 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 	var req SyncRequest
 	r.Body = http.MaxBytesReader(w, r.Body, 1024*1024*5)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body: "+err.Error())
 		return
 	}
 

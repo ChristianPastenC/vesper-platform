@@ -13,3 +13,7 @@ get {
 headers {
   Authorization: Bearer {{jwt}}
 }
+
+vars:pre-request {
+  baseUrl: http://localhost:8080
+}

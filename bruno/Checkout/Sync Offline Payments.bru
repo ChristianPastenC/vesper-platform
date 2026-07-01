@@ -18,30 +18,39 @@ headers {
 
 body:json {
   {
+    "ledger": [
+      {
+        "index": 1,
+        "hash": "daf263259956d9db4a91e4a03a98a6fe8dbfb23e685dc500451d449c61d0febe",
+        "precedingHash": "0",
+        "timestamp": 1782941120,
+        "payload": "{\"total\": 50}"
+      }
+    ],
     "transactions": [
       {
         "transactionId": "offline_txn_1",
-        "hash": "abc123hash",
-        "previousHash": "genesis",
-        "timestamp": "2026-07-01T12:00:00Z",
-        "payload": {
-          "total": 50.0,
-          "card": {
-            "number": "4242424242424242",
-            "expMonth": "10",
-            "expYear": "2028",
-            "cvc": "111"
-          },
-          "items": [
-            {
-              "id": "2",
-              "title": "Offline Product",
-              "price": 50.0,
-              "quantity": 1
-            }
-          ]
-        }
+        "index": 1,
+        "hash": "daf263259956d9db4a91e4a03a98a6fe8dbfb23e685dc500451d449c61d0febe",
+        "precedingHash": "0",
+        "timestamp": 1782941120,
+        "payload": "{\"total\": 50}"
       }
     ]
   }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8080
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const secret = bru.getEnvVar("PAYLOAD_SECRET_KEY") || bru.getVar("PAYLOAD_SECRET_KEY") || "sovereign-core-secret-hmac-key-20260701";
+  const body = req.getBody();
+  const bodyStr = typeof body === "string" ? body : JSON.stringify(body);
+  const hash = CryptoJS.HmacSHA256(bodyStr, secret).toString(CryptoJS.enc.Hex);
+  
+  req.setHeader("X-Sovereign-Hash", hash);
 }

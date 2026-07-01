@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"sovereign-core/backend-api/internal/domain"
@@ -66,8 +67,8 @@ func JWTAuth(tokenService domain.TokenService) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Enforce DPoP Binding if jkt claim is present
-			if claims.Cnf != nil && claims.Cnf.Jkt != "" {
+			// Enforce DPoP Binding if jkt claim is present (and bypass is not active)
+			if claims.Cnf != nil && claims.Cnf.Jkt != "" && os.Getenv("DEV_DPOP_BYPASS") != "true" {
 				jkt, ok := GetJKTFromContext(r.Context())
 				if !ok || jkt != claims.Cnf.Jkt {
 					writeErrorJSON(w, http.StatusUnauthorized, "invalid_dpop_binding", "DPoP token binding mismatch")

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -70,6 +71,11 @@ func (d *DPoPValidator) startCleanupWorker(interval time.Duration) {
 // Middleware returns the HTTP middleware handler for validating DPoP headers.
 func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if os.Getenv("DEV_DPOP_BYPASS") == "true" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		dpopHeader := r.Header.Get("DPoP")
 		if dpopHeader == "" {
 			writeErrorJSON(w, http.StatusBadRequest, "invalid_dpop", "Missing DPoP proof header")

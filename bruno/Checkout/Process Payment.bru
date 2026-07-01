@@ -13,25 +13,49 @@ post {
 headers {
   Content-Type: application/json
   Authorization: Bearer {{jwt}}
-  X-Idempotency-Key: idemp_test_123
+  X-Idempotency-Key: idemp_test_124
 }
 
 body:json {
   {
-    "total": 150.50,
+    "total": 150.5,
     "card": {
       "number": "4242424242424242",
-      "expMonth": "12",
-      "expYear": "2026",
+      "expMonth": 12,
+      "expYear": 2026,
       "cvc": "123"
     },
     "items": [
       {
         "id": "1",
         "title": "Test Product",
-        "price": 150.50,
+        "price": 150.5,
         "quantity": 1
+      }
+    ],
+    "ledger": [
+      {
+        "index": 0,
+        "hash": "d87d172ab0a9f863d9d8d7f05bcd601a74287fc7fa04b14146f619916ca016c4",
+        "precedingHash": "0",
+        "timestamp": 1782941120,
+        "payload": "{}"
       }
     ]
   }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8080
+}
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  
+  const secret = bru.getEnvVar("PAYLOAD_SECRET_KEY") || bru.getVar("PAYLOAD_SECRET_KEY") || "sovereign-core-secret-hmac-key-20260701";
+  const body = req.getBody();
+  const bodyStr = typeof body === "string" ? body : JSON.stringify(body);
+  const hash = CryptoJS.HmacSHA256(bodyStr, secret).toString(CryptoJS.enc.Hex);
+  
+  req.setHeader("X-Sovereign-Hash", hash);
 }

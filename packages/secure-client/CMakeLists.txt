@@ -87,6 +87,7 @@ if (BUILD_TESTING)
         cpp/tests/SovereignSecureCoreTests.cpp
         cpp/tests/SovereignLedgerTests.cpp
         cpp/tests/CryptoUtilsTests.cpp
+        cpp/tests/VolatileQueueTests.cpp
     )
 
     target_include_directories(SovereignSecureCoreTests PRIVATE cpp)

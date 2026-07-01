@@ -68,4 +68,11 @@ describe('SovereignSecureClientFallback', () => {
     const result = await fallback.verifyIntegrity();
     expect(result).toBe(true);
   });
+
+  it('should encode ArrayBuffer to base64url correctly', () => {
+    const input = new Uint8Array([104, 101, 108, 108, 111]); // "hello"
+    const encoded = fallback.base64UrlEncode(input.buffer);
+    // "hello" in base64 is "aGVsbG8=" -> base64url is "aGVsbG8"
+    expect(encoded).toBe('aGVsbG8');
+  });
 });

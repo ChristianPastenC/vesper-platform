@@ -39,6 +39,20 @@ func NewIdempotencyManager() *IdempotencyManager {
 	return im
 }
 
+// CheckAndAcquire atomically checks if a key exists, and if not, registers it.
+func (im *IdempotencyManager) CheckAndAcquire(key string) bool {
+	im.mu.Lock()
+	defer im.mu.Unlock()
+	if _, exists := im.records[key]; exists {
+		return false
+	}
+	im.records[key] = idempotencyRecord{
+		state:     stateCompleted,
+		expiresAt: time.Now().Add(1 * time.Hour),
+	}
+	return true
+}
+
 func (im *IdempotencyManager) cleanupWorker() {
 	ticker := time.NewTicker(5 * time.Minute)
 	for range ticker.C {

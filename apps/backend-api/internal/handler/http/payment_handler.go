@@ -91,16 +91,24 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 
 type SyncTransaction struct {
 	TransactionID string `json:"transactionId"`
-	Payload       string `json:"payload"`
+	domain.TransactionBlock
 }
 
 type SyncRequest struct {
 	Transactions []SyncTransaction `json:"transactions"`
 }
 
+type SyncResult struct {
+	TransactionID string `json:"transactionId"`
+	ReceiptHash   string `json:"receiptHash,omitempty"`
+	Status        string `json:"status"`
+	Error         string `json:"error,omitempty"`
+}
+
 type SyncResponse struct {
-	SyncedIDs []string `json:"syncedIds"`
-	Message   string   `json:"message"`
+	Synced  int          `json:"synced"`
+	Failed  int          `json:"failed"`
+	Results []SyncResult `json:"results"`
 }
 
 func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Request) {
@@ -122,17 +130,60 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	syncedIDs := make([]string, 0, len(req.Transactions))
-
+	blocks := make([]domain.TransactionBlock, 0, len(req.Transactions))
 	for _, tx := range req.Transactions {
-		println("[Ledger Syncing] Received encrypted offline transaction " + tx.TransactionID + ". Simulating asymmetric decode...")
-		// Save the synced offline transaction
-		_ = h.interactor.SyncOfflineTransaction(r.Context(), userID, tx.TransactionID, tx.Payload)
-		syncedIDs = append(syncedIDs, tx.TransactionID)
+		blocks = append(blocks, tx.TransactionBlock)
+	}
+
+	var results []SyncResult
+	var synced, failed int
+
+	for i, tx := range req.Transactions {
+		// 1. Valida la cadena criptográfica
+		if !usecase.ValidateLedgerChain(blocks[:i+1]) {
+			results = append(results, SyncResult{
+				TransactionID: tx.TransactionID,
+				Status:        "failed",
+				Error:         "invalid_ledger_block",
+			})
+			failed++
+			continue
+		}
+
+		// Prevent double charging with idempotency manager
+		if !h.idempMgr.CheckAndAcquire(tx.TransactionID) {
+			results = append(results, SyncResult{
+				TransactionID: tx.TransactionID,
+				Status:        "failed",
+				Error:         "duplicate transaction",
+			})
+			failed++
+			continue
+		}
+
+		// MockGateway.CreateCharge and OrderRepo.SaveOrder is done by interactor
+		resp, err := h.interactor.SyncOfflineTransaction(r.Context(), userID, tx.TransactionID, tx.Payload)
+		if err != nil {
+			results = append(results, SyncResult{
+				TransactionID: tx.TransactionID,
+				Status:        "failed",
+				Error:         err.Error(),
+			})
+			failed++
+			continue
+		}
+
+		results = append(results, SyncResult{
+			TransactionID: tx.TransactionID,
+			ReceiptHash:   resp.ReceiptHash,
+			Status:        resp.Status,
+		})
+		synced++
 	}
 
 	writeJSON(w, http.StatusOK, SyncResponse{
-		SyncedIDs: syncedIDs,
-		Message:   "Offline transactions synchronized successfully",
+		Synced:  synced,
+		Failed:  failed,
+		Results: results,
 	})
 }

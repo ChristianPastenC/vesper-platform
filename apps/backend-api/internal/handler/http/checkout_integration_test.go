@@ -63,12 +63,14 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 	}
 	repo := &mockIntegrationOrderRepo{}
 	interactor := usecase.NewPaymentInteractor(gw, repo)
-	paymentHandler := apiHTTP.NewPaymentHandler(interactor)
+	idempMgr := middleware.NewIdempotencyManager()
+	paymentHandler := apiHTTP.NewPaymentHandler(interactor, idempMgr)
 
 	cfg := apiHTTP.RouterConfig{
-		Log:            logger,
-		TokenService:   &mockIntegrationTokenService{},
-		PaymentHandler: paymentHandler,
+		Log:                logger,
+		TokenService:       &mockIntegrationTokenService{},
+		PaymentHandler:     paymentHandler,
+		IdempotencyManager: idempMgr,
 	}
 
 	secretKey := "test-secret-key"

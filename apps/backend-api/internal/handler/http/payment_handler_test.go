@@ -47,7 +47,8 @@ func TestPaymentHandler_ProcessPayment(t *testing.T) {
 	}
 	repo := &mockOrderRepo{}
 	interactor := usecase.NewPaymentInteractor(gw, repo)
-	handler := apiHTTP.NewPaymentHandler(interactor)
+	idempMgr := middleware.NewIdempotencyManager()
+	handler := apiHTTP.NewPaymentHandler(interactor, idempMgr)
 
 	// compute valid genesis block hash
 	raw := "gen" + "0" + "123456"

@@ -22,8 +22,9 @@ type RouterConfig struct {
 	CatalogHandler  *CatalogHandler
 	PaymentHandler  *PaymentHandler
 	ProfileHandler  *ProfileHandler
-	OrdersHandler   *OrdersHandler
-	StoresHandler   *StoresHandler
+	OrdersHandler      *OrdersHandler
+	StoresHandler      *StoresHandler
+	IdempotencyManager *middleware.IdempotencyManager
 }
 
 // NewRouter constructs a configured chi.Mux handler with security interceptors.
@@ -66,7 +67,6 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		// Protected Checkout Route (JWT + DPoP validation)
 		r.Group(func(r chi.Router) {
 			dpopValidator := middleware.NewDPoPValidator()
-			idempotencyManager := middleware.NewIdempotencyManager()
 			protectedLimiter := middleware.ProtectedLimiter()
 
 			// First validate the JWT token validity
@@ -76,7 +76,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			// Then validate client signature on DPoP header
 			r.Use(dpopValidator.Middleware)
 			// Apply idempotency interceptor
-			r.Use(idempotencyManager.Middleware)
+			if cfg.IdempotencyManager != nil {
+				r.Use(cfg.IdempotencyManager.Middleware)
+			}
 			// Validate payload integrity via HMAC-SHA256
 			r.Use(middleware.HashValidator)
 

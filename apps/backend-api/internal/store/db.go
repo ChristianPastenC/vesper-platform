@@ -13,6 +13,7 @@ const (
 	UsersByIDBucket    = "users_by_id"
 	OrdersBucket       = "orders"
 	OrdersByUserBucket = "orders_by_user"
+	RefreshTokensBucket = "refresh_tokens"
 )
 
 // OpenDB initializes the bbolt database.
@@ -39,6 +40,7 @@ func InitBuckets(db *bbolt.DB) error {
 			UsersByIDBucket,
 			OrdersBucket,
 			OrdersByUserBucket,
+			RefreshTokensBucket,
 		}
 
 		for _, b := range buckets {

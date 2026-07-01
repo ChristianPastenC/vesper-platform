@@ -125,3 +125,58 @@ func (r *BoltUserRepository) RegisterUser(ctx context.Context, user domain.User,
 		return nil
 	})
 }
+
+func (r *BoltUserRepository) UpdateUser(ctx context.Context, userID string, updates domain.UserUpdate) (domain.User, error) {
+	var updatedUser domain.User
+
+	err := r.db.Update(func(tx *bbolt.Tx) error {
+		bIdx := tx.Bucket([]byte(UsersByIDBucket))
+		bUsers := tx.Bucket([]byte(UsersBucket))
+		if bIdx == nil || bUsers == nil {
+			return errors.New("store: buckets not initialized")
+		}
+
+		uBytes := bIdx.Get([]byte(userID))
+		if uBytes == nil {
+			return errors.New("user_repository: user not found")
+		}
+		username := string(uBytes)
+
+		data := bUsers.Get([]byte(username))
+		if data == nil {
+			return errors.New("user_repository: user not found")
+		}
+
+		var su storedUser
+		if err := json.Unmarshal(data, &su); err != nil {
+			return err
+		}
+
+		if updates.FirstName != "" {
+			su.User.FirstName = updates.FirstName
+		}
+		if updates.LastName != "" {
+			su.User.LastName = updates.LastName
+		}
+		if updates.Phone != "" {
+			su.User.Phone = updates.Phone
+		}
+		if updates.Avatar != "" {
+			su.User.Avatar = updates.Avatar
+		}
+
+		newData, err := json.Marshal(su)
+		if err != nil {
+			return err
+		}
+
+		if err := bUsers.Put([]byte(username), newData); err != nil {
+			return err
+		}
+
+		updatedUser = su.User
+		return nil
+	})
+
+	return updatedUser, err
+}

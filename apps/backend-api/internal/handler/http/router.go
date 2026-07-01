@@ -92,6 +92,7 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 			if cfg.ProfileHandler != nil {
 				r.Get("/profile/me", cfg.ProfileHandler.GetProfile)
+				r.Put("/profile/me", cfg.ProfileHandler.UpdateProfile)
 			}
 
 			if cfg.OrdersHandler != nil {

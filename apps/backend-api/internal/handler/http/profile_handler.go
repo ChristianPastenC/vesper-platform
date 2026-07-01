@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"sovereign-core/backend-api/internal/domain"
@@ -29,6 +30,30 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to retrieve user profile")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, user)
+}
+
+func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User identity missing from context")
+		return
+	}
+
+	var updates domain.UserUpdate
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body or payload too large")
+		return
+	}
+
+	// Make sure body isn't totally empty of updates if needed, though omitempty covers it.
+	user, err := h.userRepo.UpdateUser(r.Context(), userID, updates)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal_error", err.Error())
 		return
 	}
 

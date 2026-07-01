@@ -5,12 +5,52 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"errors"
 	"testing"
 	"time"
 
 	"sovereign-core/backend-api/internal/adapter/auth"
 	"sovereign-core/backend-api/internal/domain"
 )
+
+type mockRefreshTokenRepo struct {
+	tokens map[string]struct {
+		userID    string
+		expiresAt int64
+	}
+}
+
+func (m *mockRefreshTokenRepo) Save(ctx context.Context, tokenHash string, userID string, expiresAt int64) error {
+	if m.tokens == nil {
+		m.tokens = make(map[string]struct {
+			userID    string
+			expiresAt int64
+		})
+	}
+	m.tokens[tokenHash] = struct {
+		userID    string
+		expiresAt int64
+	}{userID, expiresAt}
+	return nil
+}
+
+func (m *mockRefreshTokenRepo) Get(ctx context.Context, tokenHash string) (string, int64, error) {
+	if m.tokens == nil {
+		return "", 0, errors.New("not found")
+	}
+	data, ok := m.tokens[tokenHash]
+	if !ok {
+		return "", 0, errors.New("not found")
+	}
+	return data.userID, data.expiresAt, nil
+}
+
+func (m *mockRefreshTokenRepo) Delete(ctx context.Context, tokenHash string) error {
+	if m.tokens != nil {
+		delete(m.tokens, tokenHash)
+	}
+	return nil
+}
 
 func TestTokenService_GenerateAndValidate(t *testing.T) {
 	ctx := context.Background()
@@ -23,7 +63,7 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 	pubKey := &privKey.PublicKey
 
 	// 2. Initialize service
-	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, nil)
+	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, nil, &mockRefreshTokenRepo{})
 
 	user := domain.User{
 		ID:       "usr_test_123",
@@ -63,7 +103,7 @@ func TestTokenService_GenerateAndValidate(t *testing.T) {
 	// 5. Test validation fails with a wrong public key
 	wrongPrivKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	wrongPubKey := &wrongPrivKey.PublicKey
-	wrongSvc := auth.NewEcdsaTokenService(privKey, wrongPubKey, 1*time.Minute, nil)
+	wrongSvc := auth.NewEcdsaTokenService(privKey, wrongPubKey, 1*time.Minute, nil, &mockRefreshTokenRepo{})
 
 	_, err = wrongSvc.ValidateToken(ctx, accessToken)
 	if err == nil {
@@ -78,7 +118,7 @@ func TestTokenService_ValidateRefreshToken(t *testing.T) {
 	pubKey := &privKey.PublicKey
 
 	repo := auth.NewInMemoryUserRepository() // uses real repo mock to resolve the ID
-	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, repo)
+	svc := auth.NewEcdsaTokenService(privKey, pubKey, 1*time.Minute, repo, &mockRefreshTokenRepo{})
 
 	user, _, _ := repo.GetUserByUsername(ctx, "admin")
 

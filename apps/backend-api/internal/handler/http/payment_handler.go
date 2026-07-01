@@ -160,16 +160,7 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 			continue
 		}
 
-		// Prevent double charging with idempotency manager
-		if !h.idempMgr.CheckAndAcquire(tx.TransactionID) {
-			results = append(results, SyncResult{
-				TransactionID: tx.TransactionID,
-				Status:        "failed",
-				Error:         "duplicate transaction",
-			})
-			failed++
-			continue
-		}
+
 
 		// MockGateway.CreateCharge and OrderRepo.SaveOrder is done by interactor
 		resp, err := h.interactor.SyncOfflineTransaction(r.Context(), userID, tx.TransactionID, tx.Payload)

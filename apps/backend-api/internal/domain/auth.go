@@ -14,6 +14,14 @@ type User struct {
 	CreatedAt int64  `json:"createdAt,omitempty"`
 }
 
+// UserUpdate struct for profile updates.
+type UserUpdate struct {
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+	Phone     string `json:"phone,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+}
+
 // UserCredentials contains credentials for login verification.
 type UserCredentials struct {
 	Username string `json:"username"`
@@ -53,11 +61,21 @@ type AuthRepository interface {
 	RegisterUser(ctx context.Context, user User, passwordHash string) error
 	GetUserByUsername(ctx context.Context, username string) (User, string, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
+	UpdateUser(ctx context.Context, userID string, updates UserUpdate) (User, error)
+}
+
+// RefreshTokenRepository defines the outbound port for managing refresh tokens.
+type RefreshTokenRepository interface {
+	Save(ctx context.Context, tokenHash string, userID string, expiresAt int64) error
+	Get(ctx context.Context, tokenHash string) (string, int64, error)
+	Delete(ctx context.Context, tokenHash string) error
 }
 
 // TokenService defines the outbound port for signing and verifying tokens using asymmetric keys.
 type TokenService interface {
 	GenerateTokenPair(ctx context.Context, user User, jkt string) (string, string, error)
 	ValidateToken(ctx context.Context, tokenStr string) (*TokenClaims, error)
+	IssueRefreshToken(ctx context.Context, userID string) (string, error)
 	ValidateRefreshToken(ctx context.Context, refreshToken string) (User, error)
+	RevokeRefreshToken(ctx context.Context, token string) error
 }

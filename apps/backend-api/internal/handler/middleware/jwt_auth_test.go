@@ -31,6 +31,14 @@ func (m *mockTokenService) ValidateRefreshToken(ctx context.Context, refreshToke
 	return domain.User{}, nil
 }
 
+func (m *mockTokenService) IssueRefreshToken(ctx context.Context, userID string) (string, error) {
+	return "", nil
+}
+
+func (m *mockTokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	return nil
+}
+
 func TestJWTAuth(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := middleware.GetUserIDFromContext(r.Context())

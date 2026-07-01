@@ -26,11 +26,12 @@ type EcdsaTokenService struct {
 	privateKey *ecdsa.PrivateKey
 	publicKey  *ecdsa.PublicKey
 	tokenTTL   time.Duration
-	repo       domain.AuthRepository
+	userRepo   domain.AuthRepository
+	tokenRepo  domain.RefreshTokenRepository
 }
 
 // NewEcdsaTokenService creates an EcdsaTokenService instance.
-func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, tokenTTL time.Duration, repo domain.AuthRepository) *EcdsaTokenService {
+func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, tokenTTL time.Duration, userRepo domain.AuthRepository, tokenRepo domain.RefreshTokenRepository) *EcdsaTokenService {
 	if tokenTTL <= 0 {
 		tokenTTL = 15 * time.Minute
 	}
@@ -38,7 +39,8 @@ func NewEcdsaTokenService(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicK
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		tokenTTL:   tokenTTL,
-		repo:       repo,
+		userRepo:   userRepo,
+		tokenRepo:  tokenRepo,
 	}
 }
 
@@ -79,10 +81,13 @@ func (e *EcdsaTokenService) GenerateTokenPair(ctx context.Context, user domain.U
 	sigB64 := base64.RawURLEncoding.EncodeToString(sigBytes)
 
 	accessToken := signingInput + "." + sigB64
-	// Return a simulated high-entropy refresh token
-	mockRefreshToken := fmt.Sprintf("ref_%d_%s", time.Now().UnixNano(), user.ID)
+	
+	refreshToken, err := e.IssueRefreshToken(ctx, user.ID)
+	if err != nil {
+		return "", "", err
+	}
 
-	return accessToken, mockRefreshToken, nil
+	return accessToken, refreshToken, nil
 }
 
 // ValidateToken parses and validates the asymmetric JWT using the ECDSA public key.
@@ -123,15 +128,44 @@ func (e *EcdsaTokenService) ValidateToken(ctx context.Context, tokenStr string) 
 	return &claims, nil
 }
 
-// ValidateRefreshToken checks if the refresh token is valid and returns the associated user.
-func (e *EcdsaTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
-	parts := strings.SplitN(refreshToken, "_", 3)
-	if len(parts) != 3 || parts[0] != "ref" {
-		return domain.User{}, errors.New("token_service: invalid refresh token format")
+func (e *EcdsaTokenService) IssueRefreshToken(ctx context.Context, userID string) (string, error) {
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return "", fmt.Errorf("token_service: failed to generate refresh token: %w", err)
+	}
+	token := base64.RawURLEncoding.EncodeToString(tokenBytes)
+
+	tokenHashBytes := sha256.Sum256([]byte(token))
+	tokenHash := fmt.Sprintf("%x", tokenHashBytes)
+
+	expiresAt := time.Now().Add(7 * 24 * time.Hour).Unix()
+	if err := e.tokenRepo.Save(ctx, tokenHash, userID, expiresAt); err != nil {
+		return "", fmt.Errorf("token_service: failed to save refresh token: %w", err)
 	}
 
-	userID := parts[2]
-	user, err := e.repo.GetUserByID(ctx, userID)
+	return token, nil
+}
+
+func (e *EcdsaTokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	tokenHashBytes := sha256.Sum256([]byte(token))
+	tokenHash := fmt.Sprintf("%x", tokenHashBytes)
+	return e.tokenRepo.Delete(ctx, tokenHash)
+}
+
+// ValidateRefreshToken checks if the refresh token is valid, rotating it by deleting it upon use.
+func (e *EcdsaTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
+	tokenHashBytes := sha256.Sum256([]byte(refreshToken))
+	tokenHash := fmt.Sprintf("%x", tokenHashBytes)
+
+	userID, expiresAt, err := e.tokenRepo.Get(ctx, tokenHash)
+	if err != nil || time.Now().Unix() > expiresAt {
+		return domain.User{}, errors.New("token_service: refresh token invalid or expired")
+	}
+
+	// Rotate: One-time use token
+	_ = e.tokenRepo.Delete(ctx, tokenHash)
+
+	user, err := e.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return domain.User{}, errors.New("token_service: user not found for refresh token")
 	}

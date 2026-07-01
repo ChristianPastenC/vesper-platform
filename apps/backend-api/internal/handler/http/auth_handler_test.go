@@ -40,6 +40,10 @@ func (m *mockAuthRepo) GetUserByID(ctx context.Context, id string) (domain.User,
 	return m.user, nil
 }
 
+func (m *mockAuthRepo) UpdateUser(ctx context.Context, userID string, updates domain.UserUpdate) (domain.User, error) {
+	return m.user, m.err
+}
+
 type mockTokenService struct {
 	accessToken  string
 	refreshToken string
@@ -58,6 +62,14 @@ func (m *mockTokenService) ValidateToken(ctx context.Context, tokenStr string) (
 
 func (m *mockTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
 	return m.validUser, m.validErr
+}
+
+func (m *mockTokenService) IssueRefreshToken(ctx context.Context, userID string) (string, error) {
+	return m.refreshToken, m.err
+}
+
+func (m *mockTokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	return m.err
 }
 
 func TestAuthHandler_Login(t *testing.T) {

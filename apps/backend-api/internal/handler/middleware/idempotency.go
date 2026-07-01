@@ -89,8 +89,17 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idempotencyKey := r.Header.Get("X-Idempotency-Key")
 
-		// Only intercept POST /api/v1/checkout/pay with an idempotency key
-		if r.Method != http.MethodPost || r.URL.Path != "/api/v1/checkout/pay" || idempotencyKey == "" {
+		checkoutPaths := []string{"/api/v1/checkout/pay", "/api/v1/checkout/sync", "/api/v1/checkout/instore", "/api/v1/checkout/online"}
+		isCheckout := false
+		for _, p := range checkoutPaths {
+			if r.URL.Path == p {
+				isCheckout = true
+				break
+			}
+		}
+
+		// Only intercept POST checkout endpoints with an idempotency key
+		if r.Method != http.MethodPost || !isCheckout || idempotencyKey == "" {
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -39,6 +39,14 @@ func (m *mockIntegrationTokenService) ValidateRefreshToken(ctx context.Context, 
 	return domain.User{ID: "test_user"}, nil
 }
 
+func (m *mockIntegrationTokenService) IssueRefreshToken(ctx context.Context, userID string) (string, error) {
+	return "valid-refresh", nil
+}
+
+func (m *mockIntegrationTokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	return nil
+}
+
 type mockIntegrationOrderRepo struct{}
 
 func (m *mockIntegrationOrderRepo) SaveOrder(ctx context.Context, order domain.Order) error {

@@ -33,6 +33,10 @@ func (m *mockAuthRepo) GetUserByID(ctx context.Context, id string) (domain.User,
 	return m.user, nil
 }
 
+func (m *mockAuthRepo) UpdateUser(ctx context.Context, userID string, updates domain.UserUpdate) (domain.User, error) {
+	return m.user, m.err
+}
+
 type mockTokenService struct {
 	accessToken  string
 	refreshToken string
@@ -49,8 +53,16 @@ func (m *mockTokenService) ValidateToken(ctx context.Context, tokenStr string) (
 	return nil, nil
 }
 
+func (m *mockTokenService) IssueRefreshToken(ctx context.Context, userID string) (string, error) {
+	return m.refreshToken, m.err
+}
+
 func (m *mockTokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) (domain.User, error) {
 	return m.validUser, m.validErr
+}
+
+func (m *mockTokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	return m.err
 }
 
 func TestAuthInteractor_AuthenticateUser(t *testing.T) {
@@ -137,4 +149,65 @@ func TestAuthInteractor_RefreshTokens(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for bad refresh token")
 	}
+}
+
+func TestAuthInteractor_RegisterUser(t *testing.T) {
+	ctx := context.Background()
+	repo := &mockAuthRepo{}
+	svc := &mockTokenService{}
+
+	interactor := usecase.NewAuthInteractor(repo, svc)
+
+	t.Run("success", func(t *testing.T) {
+		req := domain.RegisterRequest{
+			Username:  "newuser",
+			Email:     "test@example.com",
+			Password:  "password123",
+			FirstName: "Test",
+			LastName:  "User",
+		}
+		user, err := interactor.RegisterUser(ctx, req)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if user.Username != "newuser" {
+			t.Errorf("expected newuser, got %v", user.Username)
+		}
+	})
+
+	t.Run("invalid email - missing @", func(t *testing.T) {
+		req := domain.RegisterRequest{
+			Username:  "newuser",
+			Email:     "testexample.com",
+			Password:  "password123",
+		}
+		_, err := interactor.RegisterUser(ctx, req)
+		if err == nil || err.Error() != "auth_interactor: invalid email format" {
+			t.Errorf("expected invalid email format error, got %v", err)
+		}
+	})
+
+	t.Run("invalid email - missing .", func(t *testing.T) {
+		req := domain.RegisterRequest{
+			Username:  "newuser",
+			Email:     "test@examplecom",
+			Password:  "password123",
+		}
+		_, err := interactor.RegisterUser(ctx, req)
+		if err == nil || err.Error() != "auth_interactor: invalid email format" {
+			t.Errorf("expected invalid email format error, got %v", err)
+		}
+	})
+
+	t.Run("email too short", func(t *testing.T) {
+		req := domain.RegisterRequest{
+			Username:  "newuser",
+			Email:     "a@b.",
+			Password:  "password123",
+		}
+		_, err := interactor.RegisterUser(ctx, req)
+		if err == nil || err.Error() != "auth_interactor: email too short" {
+			t.Errorf("expected email too short error, got %v", err)
+		}
+	})
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -32,6 +33,12 @@ func (a *AuthInteractor) RegisterUser(ctx context.Context, req domain.RegisterRe
 	}
 	if len(req.Password) < 8 {
 		return domain.User{}, errors.New("auth_interactor: password must be at least 8 characters")
+	}
+	if !strings.Contains(req.Email, "@") || !strings.Contains(req.Email, ".") {
+		return domain.User{}, errors.New("auth_interactor: invalid email format")
+	}
+	if len(req.Email) < 5 {
+		return domain.User{}, errors.New("auth_interactor: email too short")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)

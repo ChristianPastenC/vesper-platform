@@ -17,13 +17,15 @@ type OrderTimelineEvent struct {
 }
 
 type Order struct {
-	ID       string               `json:"id"`
-	UserID   string               `json:"userId"`
-	Status   string               `json:"status"`
-	Date     string               `json:"date"`
-	Total    float64              `json:"total"`
-	Items    []OrderItem          `json:"items"`
-	Timeline []OrderTimelineEvent `json:"timeline"`
+	ID          string               `json:"id"`
+	UserID      string               `json:"userId"`
+	Status      string               `json:"status"`
+	Date        string               `json:"date"`
+	Total       float64              `json:"total"`
+	Items       []OrderItem          `json:"items"`
+	Timeline    []OrderTimelineEvent `json:"timeline"`
+	ReceiptHash string               `json:"receiptHash"`
+	CreatedAt   int64                `json:"createdAt"`
 }
 
 // OrderRepository defines the contract for persisting and retrieving orders.

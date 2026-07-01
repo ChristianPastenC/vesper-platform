@@ -73,7 +73,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 3. Invoke the business logic interactor
-	resp, err := h.interactor.ProcessOrder(r.Context(), userID, req.Total, req.Card)
+	resp, err := h.interactor.ProcessOrder(r.Context(), userID, req.Total, req.Card, req.Ledger)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())
 		return
@@ -116,11 +116,18 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User identity missing from context")
+		return
+	}
+
 	syncedIDs := make([]string, 0, len(req.Transactions))
 
 	for _, tx := range req.Transactions {
-		// Print directly to console for Ledger Syncing as requested
 		println("[Ledger Syncing] Received encrypted offline transaction " + tx.TransactionID + ". Simulating asymmetric decode...")
+		// Save the synced offline transaction
+		_ = h.interactor.SyncOfflineTransaction(r.Context(), userID, tx.TransactionID, tx.Payload)
 		syncedIDs = append(syncedIDs, tx.TransactionID)
 	}
 

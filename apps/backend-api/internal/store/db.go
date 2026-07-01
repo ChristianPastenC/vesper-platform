@@ -2,18 +2,20 @@ package store
 
 import (
 	"fmt"
-	"path/filepath"
 	"os"
+	"path/filepath"
 
 	"go.etcd.io/bbolt"
 )
 
 const (
+	UsersBucket        = "users"
+	UsersByIDBucket    = "users_by_id"
 	OrdersBucket       = "orders"
 	OrdersByUserBucket = "orders_by_user"
 )
 
-// OpenDB initializes the bbolt database and ensures required buckets exist.
+// OpenDB initializes the bbolt database.
 func OpenDB(dbPath string) (*bbolt.DB, error) {
 	// Ensure directory exists
 	dir := filepath.Dir(dbPath)
@@ -26,20 +28,24 @@ func OpenDB(dbPath string) (*bbolt.DB, error) {
 		return nil, fmt.Errorf("store: failed to open bbolt database: %w", err)
 	}
 
-	err = db.Update(func(tx *bbolt.Tx) error {
-		if _, err := tx.CreateBucketIfNotExists([]byte(OrdersBucket)); err != nil {
-			return fmt.Errorf("create bucket %s: %w", OrdersBucket, err)
+	return db, nil
+}
+
+// InitBuckets creates the required buckets if they do not exist.
+func InitBuckets(db *bbolt.DB) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		buckets := []string{
+			UsersBucket,
+			UsersByIDBucket,
+			OrdersBucket,
+			OrdersByUserBucket,
 		}
-		if _, err := tx.CreateBucketIfNotExists([]byte(OrdersByUserBucket)); err != nil {
-			return fmt.Errorf("create bucket %s: %w", OrdersByUserBucket, err)
+
+		for _, b := range buckets {
+			if _, err := tx.CreateBucketIfNotExists([]byte(b)); err != nil {
+				return fmt.Errorf("create bucket %s: %w", b, err)
+			}
 		}
 		return nil
 	})
-
-	if err != nil {
-		db.Close()
-		return nil, err
-	}
-
-	return db, nil
 }

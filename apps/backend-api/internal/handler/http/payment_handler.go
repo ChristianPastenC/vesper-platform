@@ -12,12 +12,14 @@ import (
 // PaymentHandler handles transacting payments and orders.
 type PaymentHandler struct {
 	interactor *usecase.PaymentInteractor
+	idempMgr   *middleware.IdempotencyManager
 }
 
 // NewPaymentHandler initializes a PaymentHandler.
-func NewPaymentHandler(interactor *usecase.PaymentInteractor) *PaymentHandler {
+func NewPaymentHandler(interactor *usecase.PaymentInteractor, idempMgr *middleware.IdempotencyManager) *PaymentHandler {
 	return &PaymentHandler{
 		interactor: interactor,
+		idempMgr:   idempMgr,
 	}
 }
 
@@ -26,6 +28,7 @@ type CheckoutRequest struct {
 	Total   float64                   `json:"total"`
 	Card    domain.CardDetails        `json:"card"`
 	Ledger  []domain.TransactionBlock `json:"ledger"`
+	Items   []domain.OrderItem        `json:"items"`
 	UseMock bool                      `json:"use_mock,omitempty"`
 }
 
@@ -67,13 +70,20 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 2. Validate cryptographic ledger chain
-	if !usecase.ValidateLedgerChain(req.Ledger) {
-		writeError(w, http.StatusUnprocessableEntity, "invalid_ledger", "Cryptographic chain validation failed")
-		return
+	if len(req.Ledger) > 0 {
+		if !usecase.ValidateLedgerChain(req.Ledger) {
+			writeError(w, http.StatusUnprocessableEntity, "invalid_ledger", "Cryptographic chain validation failed")
+			return
+		}
+	}
+
+	orderType := "online"
+	if r.URL.Path == "/api/v1/checkout/instore" {
+		orderType = "instore"
 	}
 
 	// 3. Invoke the business logic interactor
-	resp, err := h.interactor.ProcessOrder(r.Context(), userID, req.Total, req.Card, req.Ledger)
+	resp, err := h.interactor.ProcessOrder(r.Context(), userID, req.Total, req.Card, req.Items, orderType)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())
 		return

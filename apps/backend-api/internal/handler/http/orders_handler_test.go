@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/handler/middleware"
 )
 
 type mockOrderRepo struct{}
@@ -27,6 +28,9 @@ func TestOrdersHandler_GetOrders(t *testing.T) {
 	handler := NewOrdersHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/orders", nil)
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "1")
+	req = req.WithContext(ctx)
+
 	rr := httptest.NewRecorder()
 
 	handler.GetOrders(rr, req)

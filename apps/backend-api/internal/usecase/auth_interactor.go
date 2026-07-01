@@ -2,7 +2,10 @@ package usecase
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"fmt"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"sovereign-core/backend-api/internal/domain"
@@ -20,6 +23,40 @@ func NewAuthInteractor(repo domain.AuthRepository, tokenService domain.TokenServ
 		repo:         repo,
 		tokenService: tokenService,
 	}
+}
+
+// RegisterUser registers a new user after validating fields and hashing the password.
+func (a *AuthInteractor) RegisterUser(ctx context.Context, req domain.RegisterRequest) (domain.User, error) {
+	if req.Username == "" || req.Password == "" || req.Email == "" {
+		return domain.User{}, errors.New("auth_interactor: username, email and password are required")
+	}
+	if len(req.Password) < 8 {
+		return domain.User{}, errors.New("auth_interactor: password must be at least 8 characters")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("auth_interactor: failed to hash password: %w", err)
+	}
+
+	nonce := make([]byte, 8)
+	rand.Read(nonce)
+	user := domain.User{
+		ID:        fmt.Sprintf("usr_%x", nonce),
+		Username:  req.Username,
+		Email:     req.Email,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Phone:     req.Phone,
+		Avatar:    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop",
+		CreatedAt: time.Now().Unix(),
+	}
+
+	if err := a.repo.RegisterUser(ctx, user, string(hash)); err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
 }
 
 // AuthenticateUser verifies user credentials against the repository.

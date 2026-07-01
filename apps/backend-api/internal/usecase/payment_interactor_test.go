@@ -45,7 +45,7 @@ func TestPaymentInteractor_ProcessOrder(t *testing.T) {
 
 		interactor := usecase.NewPaymentInteractor(gw, repo)
 
-		res, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{}, nil)
+		res, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{}, nil, "online")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -66,7 +66,7 @@ func TestPaymentInteractor_ProcessOrder(t *testing.T) {
 
 		interactor := usecase.NewPaymentInteractor(gw, repo)
 
-		_, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{}, nil)
+		_, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{}, nil, "online")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}

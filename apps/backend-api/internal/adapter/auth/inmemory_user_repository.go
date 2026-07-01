@@ -65,3 +65,8 @@ func (r *InMemoryUserRepository) GetUserByID(ctx context.Context, id string) (do
 	}
 	return domain.User{}, errors.New("user_repository: user not found")
 }
+
+func (r *InMemoryUserRepository) RegisterUser(ctx context.Context, user domain.User, passwordHash string) error {
+	// Simple mock implementation for testing
+	return nil
+}

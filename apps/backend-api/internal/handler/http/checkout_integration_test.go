@@ -21,6 +21,7 @@ import (
 
 	"sovereign-core/backend-api/internal/domain"
 	apiHTTP "sovereign-core/backend-api/internal/handler/http"
+	"sovereign-core/backend-api/internal/handler/middleware"
 	"sovereign-core/backend-api/internal/usecase"
 )
 

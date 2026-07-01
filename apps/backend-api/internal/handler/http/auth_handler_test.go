@@ -22,6 +22,10 @@ type mockAuthRepo struct {
 	err      error
 }
 
+func (m *mockAuthRepo) RegisterUser(ctx context.Context, user domain.User, passwordHash string) error {
+	return nil
+}
+
 func (m *mockAuthRepo) GetUserByUsername(ctx context.Context, username string) (domain.User, string, error) {
 	if m.err != nil {
 		return domain.User{}, "", m.err

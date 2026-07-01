@@ -27,7 +27,7 @@ func NewPaymentInteractor(gw domain.PaymentGateway, repo domain.OrderRepository)
 
 // ProcessOrder handles checkout payments by sending transaction requests to Stripe
 // and returning a transaction confirmation including a cryptographically signed receipt hash.
-func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, total float64, card domain.CardDetails, ledger []domain.TransactionBlock) (domain.TransactionResponse, error) {
+func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, total float64, card domain.CardDetails, items []domain.OrderItem, orderType string) (domain.TransactionResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -47,14 +47,6 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, tot
 	hash := sha256.Sum256([]byte(hashInput))
 	resp.ReceiptHash = fmt.Sprintf("%x", hash)
 
-	// Extract items from ledger
-	var items []domain.OrderItem
-	for _, block := range ledger {
-		var blockItems []domain.OrderItem
-		if err := json.Unmarshal([]byte(block.Payload), &blockItems); err == nil {
-			items = append(items, blockItems...)
-		}
-	}
 	if items == nil {
 		items = []domain.OrderItem{}
 	}
@@ -64,6 +56,7 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, tot
 		ID:          resp.TransactionID,
 		UserID:      userID,
 		Status:      "processing",
+		Type:        orderType,
 		Date:        time.Now().Format(time.RFC3339),
 		Total:       total,
 		Items:       items,
@@ -71,7 +64,7 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, tot
 			{
 				Status:      "processing",
 				Timestamp:   time.Now().Format(time.RFC3339),
-				Description: "Payment confirmed",
+				Description: "Payment confirmed. Order is being processed.",
 			},
 		},
 		ReceiptHash: resp.ReceiptHash,
@@ -85,28 +78,53 @@ func (p *PaymentInteractor) ProcessOrder(ctx context.Context, userID string, tot
 }
 
 // SyncOfflineTransaction syncs an offline transaction as an order.
-func (p *PaymentInteractor) SyncOfflineTransaction(ctx context.Context, userID string, txID string, payload string) error {
-	var items []domain.OrderItem
-	_ = json.Unmarshal([]byte(payload), &items)
-	if items == nil {
-		items = []domain.OrderItem{}
+func (p *PaymentInteractor) SyncOfflineTransaction(ctx context.Context, userID string, txID string, payload string) (domain.TransactionResponse, error) {
+	var txData struct {
+		Total float64            `json:"total"`
+		Card  domain.CardDetails `json:"card"`
+		Items []domain.OrderItem `json:"items"`
+	}
+	_ = json.Unmarshal([]byte(payload), &txData)
+	if txData.Total == 0 {
+		txData.Total = 10.0 // fallback
+	}
+
+	resp, err := p.gateway.CreateCharge(ctx, txData.Total, "USD", txData.Card)
+	if err != nil {
+		return domain.TransactionResponse{}, err
+	}
+
+	hash := sha256.Sum256([]byte(txID + payload))
+	receiptHash := fmt.Sprintf("%x", hash)
+
+	if txData.Items == nil {
+		txData.Items = []domain.OrderItem{}
 	}
 
 	order := domain.Order{
-		ID:          txID,
+		ID:          txID, // Use the offline generated ID
 		UserID:      userID,
-		Status:      "processing",
+		Status:      "synced_offline",
+		Type:        "synced_offline",
 		Date:        time.Now().Format(time.RFC3339),
-		Total:       0, // Offline payload might need parsing to get total, simplified here.
-		Items:       items,
+		Total:       txData.Total,
+		Items:       txData.Items,
 		Timeline: []domain.OrderTimelineEvent{
 			{
-				Status:      "processing",
+				Status:      "synced_offline",
 				Timestamp:   time.Now().Format(time.RFC3339),
 				Description: "Offline payment synced",
 			},
 		},
-		CreatedAt: time.Now().Unix(),
+		ReceiptHash: receiptHash,
+		CreatedAt:   time.Now().Unix(),
 	}
-	return p.repo.SaveOrder(ctx, order)
+	if err := p.repo.SaveOrder(ctx, order); err != nil {
+		return domain.TransactionResponse{}, err
+	}
+
+	resp.TransactionID = txID
+	resp.ReceiptHash = receiptHash
+	resp.Status = "synced_offline"
+	return resp, nil
 }

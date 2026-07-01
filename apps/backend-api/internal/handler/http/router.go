@@ -50,6 +50,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	// 4. API v1 Group
 	r.Route("/api/v1", func(r chi.Router) {
+		// Public Registration
+		r.Post("/auth/register", cfg.AuthHandler.Register)
+
 		// Public Login
 		r.Post("/auth/login", cfg.AuthHandler.Login)
 

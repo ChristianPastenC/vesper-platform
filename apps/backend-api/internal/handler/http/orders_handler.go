@@ -1,49 +1,62 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
 
 	"sovereign-core/backend-api/internal/domain"
 	"sovereign-core/backend-api/internal/handler/middleware"
 )
 
 type OrdersHandler struct {
-	repo domain.OrderRepository
+	orderRepo domain.OrderRepository
 }
 
-func NewOrdersHandler(repo domain.OrderRepository) *OrdersHandler {
-	return &OrdersHandler{repo: repo}
+func NewOrdersHandler(orderRepo domain.OrderRepository) *OrdersHandler {
+	return &OrdersHandler{orderRepo: orderRepo}
 }
 
 func (h *OrdersHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
-		// As a fallback for tests or missing auth, we assume "1"
-		userID = "1"
-	}
-
-	orders, err := h.repo.GetOrdersByUserID(r.Context(), userID)
-	if err != nil {
-		http.Error(w, "Failed to get orders", http.StatusInternalServerError)
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User identity missing from context")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(orders)
+	orders, err := h.orderRepo.GetOrdersByUserID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to retrieve orders")
+		return
+	}
+
+	if orders == nil {
+		orders = []domain.Order{}
+	}
+
+	writeJSON(w, http.StatusOK, orders)
 }
 
 func (h *OrdersHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-
-	order, err := h.repo.GetOrderByID(r.Context(), idParam)
-	if err != nil {
-		http.Error(w, "Order not found", http.StatusNotFound)
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User identity missing from context")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(order)
+	idParam := chi.URLParam(r, "id")
+
+	order, err := h.orderRepo.GetOrderByID(r.Context(), idParam)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Order not found")
+		return
+	}
+
+	if order.UserID != userID {
+		writeError(w, http.StatusForbidden, "forbidden", "You do not have permission to view this order")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, order)
 }

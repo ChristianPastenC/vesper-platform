@@ -4,15 +4,30 @@ import "context"
 
 // User holds non-sensitive user identity details.
 type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+	Phone     string `json:"phone,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+	CreatedAt int64  `json:"createdAt,omitempty"`
 }
 
 // UserCredentials contains credentials for login verification.
 type UserCredentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+// RegisterRequest holds data for registering a new user.
+type RegisterRequest struct {
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Phone     string `json:"phone,omitempty"`
 }
 
 // RefreshRequest payload for refreshing tokens.
@@ -35,6 +50,7 @@ type TokenClaims struct {
 
 // AuthRepository defines the outbound port for querying user authorization details.
 type AuthRepository interface {
+	RegisterUser(ctx context.Context, user User, passwordHash string) error
 	GetUserByUsername(ctx context.Context, username string) (User, string, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 }

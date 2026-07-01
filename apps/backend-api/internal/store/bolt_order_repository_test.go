@@ -20,9 +20,13 @@ func TestBoltOrderRepository(t *testing.T) {
 	dbPath := filepath.Join(tmpDir, "test.db")
 	db, err := OpenDB(dbPath)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to open test db: %v", err)
 	}
 	defer db.Close()
+
+	if err := InitBuckets(db); err != nil {
+		t.Fatalf("failed to init buckets: %v", err)
+	}
 
 	repo := NewBoltOrderRepository(db)
 	ctx := context.Background()

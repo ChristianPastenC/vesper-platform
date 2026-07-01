@@ -20,6 +20,7 @@ type Order struct {
 	ID          string               `json:"id"`
 	UserID      string               `json:"userId"`
 	Status      string               `json:"status"`
+	Type        string               `json:"type"` // "online" | "instore" | "synced_offline"
 	Date        string               `json:"date"`
 	Total       float64              `json:"total"`
 	Items       []OrderItem          `json:"items"`

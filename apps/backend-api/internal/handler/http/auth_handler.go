@@ -21,6 +21,45 @@ func NewAuthHandler(interactor *usecase.AuthInteractor) *AuthHandler {
 	}
 }
 
+// Register handles POST /api/v1/auth/register.
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
+		return
+	}
+
+	var req domain.RegisterRequest
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		return
+	}
+
+	user, err := h.interactor.RegisterUser(r.Context(), req)
+	if err != nil {
+		if err.Error() == "user_repository: username already taken" {
+			writeError(w, http.StatusConflict, "conflict", "Username already taken")
+			return
+		}
+		writeError(w, http.StatusBadRequest, "bad_request", err.Error())
+		return
+	}
+
+	jkt, _ := middleware.GetJKTFromContext(r.Context())
+	accessToken, refreshToken, err := h.interactor.GenerateTokenPair(r.Context(), user, jkt)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "token_generation_failed", err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"user":         user,
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
+	})
+}
+
 // Login handles POST /api/v1/auth/login. It parses incoming credentials,
 // authenticates the user against the database, and issues an ECDSA JWT.
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

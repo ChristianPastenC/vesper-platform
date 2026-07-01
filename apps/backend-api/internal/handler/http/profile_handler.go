@@ -1,78 +1,36 @@
 package http
 
 import (
-	"encoding/json"
-	"io"
-	"log"
 	"net/http"
-	"time"
+
+	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/handler/middleware"
 )
 
-type ProfileHandler struct{}
+type ProfileHandler struct {
+	userRepo domain.AuthRepository
+}
 
-func NewProfileHandler() *ProfileHandler {
-	return &ProfileHandler{}
+func NewProfileHandler(userRepo domain.AuthRepository) *ProfileHandler {
+	return &ProfileHandler{userRepo: userRepo}
 }
 
 func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get("https://fakestoreapi.com/users/1")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Printf("profile_handler: failed to fetch user profile: %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(getFallbackProfile())
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "User identity missing from context")
 		return
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	user, err := h.userRepo.GetUserByID(r.Context(), userID)
 	if err != nil {
-		log.Printf("profile_handler: failed to read response: %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(getFallbackProfile())
+		if err.Error() == "user_repository: user not found" {
+			writeError(w, http.StatusNotFound, "not_found", "User not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to retrieve user profile")
 		return
 	}
 
-	var fakeStoreUser struct {
-		ID       int    `json:"id"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Name     struct {
-			Firstname string `json:"firstname"`
-			Lastname  string `json:"lastname"`
-		} `json:"name"`
-		Phone string `json:"phone"`
-	}
-
-	if err := json.Unmarshal(body, &fakeStoreUser); err != nil {
-		log.Printf("profile_handler: failed to parse profile data: %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(getFallbackProfile())
-		return
-	}
-
-	response := map[string]interface{}{
-		"id":        fakeStoreUser.ID,
-		"email":     fakeStoreUser.Email,
-		"username":  fakeStoreUser.Username,
-		"firstName": fakeStoreUser.Name.Firstname,
-		"lastName":  fakeStoreUser.Name.Lastname,
-		"phone":     fakeStoreUser.Phone,
-		"avatar":    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-func getFallbackProfile() map[string]interface{} {
-	return map[string]interface{}{
-		"id":        1,
-		"email":     "john.doe@sovereign-core.internal",
-		"username":  "johndoe",
-		"firstName": "John",
-		"lastName":  "Doe",
-		"phone":     "1-570-236-7033",
-		"avatar":    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop",
-	}
+	writeJSON(w, http.StatusOK, user)
 }

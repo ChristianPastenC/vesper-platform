@@ -1,16 +1,46 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"sovereign-core/backend-api/internal/domain"
+	"sovereign-core/backend-api/internal/handler/middleware"
 )
 
+type mockAuthRepo struct {
+	user domain.User
+	err  error
+}
+
+func (m *mockAuthRepo) RegisterUser(ctx context.Context, user domain.User, passwordHash string) error {
+	return nil
+}
+
+func (m *mockAuthRepo) GetUserByUsername(ctx context.Context, username string) (domain.User, string, error) {
+	return m.user, "", m.err
+}
+
+func (m *mockAuthRepo) GetUserByID(ctx context.Context, id string) (domain.User, error) {
+	return m.user, m.err
+}
+
 func TestProfileHandler_GetProfile(t *testing.T) {
-	handler := NewProfileHandler()
+	repo := &mockAuthRepo{
+		user: domain.User{
+			ID:    "1",
+			Email: "test@example.com",
+		},
+	}
+	handler := NewProfileHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/profile/me", nil)
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "1")
+	req = req.WithContext(ctx)
+
 	rr := httptest.NewRecorder()
 
 	handler.GetProfile(rr, req)

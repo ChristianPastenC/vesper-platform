@@ -9,15 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "email": "support@sovereign-core.local"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -45,25 +37,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.HandshakeResponse"
+                            "$ref": "#/definitions/handlers.HandshakeResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -89,25 +81,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.HandshakeResponse"
+                            "$ref": "#/definitions/handlers.HandshakeResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.ErrorResponse"
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -133,7 +125,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.UserCredentials"
+                            "$ref": "#/definitions/domain.UserCredentials"
                         }
                     }
                 ],
@@ -148,19 +140,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -186,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.RefreshRequest"
+                            "$ref": "#/definitions/domain.RefreshRequest"
                         }
                     }
                 ],
@@ -201,19 +193,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -239,7 +231,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.RegisterRequest"
+                            "$ref": "#/definitions/domain.RegisterRequest"
                         }
                     }
                 ],
@@ -254,19 +246,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -302,20 +294,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.Product"
+                                "$ref": "#/definitions/domain.Product"
                             }
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -346,7 +338,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.CheckoutRequest"
+                            "$ref": "#/definitions/http.CheckoutRequest"
                         }
                     }
                 ],
@@ -361,25 +353,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "402": {
                         "description": "Payment Required",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -410,7 +402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.CheckoutRequest"
+                            "$ref": "#/definitions/http.CheckoutRequest"
                         }
                     }
                 ],
@@ -425,25 +417,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "402": {
                         "description": "Payment Required",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -474,7 +466,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.CheckoutRequest"
+                            "$ref": "#/definitions/http.CheckoutRequest"
                         }
                     }
                 ],
@@ -489,25 +481,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "402": {
                         "description": "Payment Required",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -538,7 +530,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.SyncRequest"
+                            "$ref": "#/definitions/http.SyncRequest"
                         }
                     }
                 ],
@@ -546,25 +538,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.SyncResponse"
+                            "$ref": "#/definitions/http.SyncResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "405": {
                         "description": "Method Not Allowed",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -619,20 +611,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.Order"
+                                "$ref": "#/definitions/domain.Order"
                             }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -666,25 +658,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.Order"
+                            "$ref": "#/definitions/domain.Order"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -709,25 +701,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.User"
+                            "$ref": "#/definitions/domain.User"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -756,7 +748,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.UserUpdate"
+                            "$ref": "#/definitions/domain.UserUpdate"
                         }
                     }
                 ],
@@ -764,25 +756,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.User"
+                            "$ref": "#/definitions/domain.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.ErrorResponse"
+                            "$ref": "#/definitions/http.ErrorResponse"
                         }
                     }
                 }
@@ -802,7 +794,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler_http.StoresResponse"
+                            "$ref": "#/definitions/http.StoresResponse"
                         }
                     }
                 }
@@ -810,33 +802,260 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_handler_http.CheckoutRequest": {
+        "challenge.Token": {
             "type": "object",
             "properties": {
-                "card": {
-                    "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.CardDetails"
+                "challenge_id": {
+                    "description": "ChallengeID is a human-readable compact identifier derived from the first\n8 bytes of the nonce — useful for correlation in distributed traces.",
+                    "type": "string"
+                },
+                "expires_at": {
+                    "description": "ExpiresAt is the UTC Unix epoch second at which this challenge becomes invalid.",
+                    "type": "integer"
+                },
+                "issued_at": {
+                    "description": "IssuedAt is the UTC Unix epoch second at which the challenge was generated.",
+                    "type": "integer"
+                },
+                "nonce": {
+                    "description": "Nonce is the hex-encoded random 32-byte value unique to this challenge.",
+                    "type": "string"
+                },
+                "signature": {
+                    "description": "Signature is the hex-encoded HMAC-SHA256 over \"nonce:expires_at\".",
+                    "type": "string"
+                }
+            }
+        },
+        "domain.CardDetails": {
+            "type": "object",
+            "properties": {
+                "cvc": {
+                    "type": "string"
+                },
+                "expMonth": {
+                    "type": "integer"
+                },
+                "expYear": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Order": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
                 },
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.OrderItem"
+                        "$ref": "#/definitions/domain.OrderItem"
                     }
                 },
-                "ledger": {
+                "receiptHash": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timeline": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.TransactionBlock"
+                        "$ref": "#/definitions/domain.OrderTimelineEvent"
                     }
                 },
                 "total": {
                     "type": "number"
                 },
-                "use_mock": {
-                    "type": "boolean"
+                "type": {
+                    "description": "\"online\" | \"instore\" | \"synced_offline\"",
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
                 }
             }
         },
-        "internal_handler_http.ErrorResponse": {
+        "domain.OrderItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "qty": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.OrderTimelineEvent": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Product": {
+            "type": "object",
+            "properties": {
+                "barcode": {
+                    "description": "Simulated EAN-13/UPC barcode",
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.RefreshRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.TransactionBlock": {
+            "type": "object",
+            "properties": {
+                "hash": {
+                    "type": "string"
+                },
+                "index": {
+                    "type": "integer"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "precedingHash": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.User": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserCredentials": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UserUpdate": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -847,7 +1066,69 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler_http.StoreFeature": {
+        "handlers.HandshakeResponse": {
+            "type": "object",
+            "properties": {
+                "challenge": {
+                    "description": "Challenge carries the time-variant token the client must echo back.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/challenge.Token"
+                        }
+                    ]
+                },
+                "encoded_challenge": {
+                    "description": "EncodedChallenge is the compact wire-format of the challenge for clients\nthat prefer a single opaque string over the structured JSON fields.",
+                    "type": "string"
+                },
+                "server_time": {
+                    "description": "ServerTime is the current UTC time at which the challenge was issued.",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status is \"challenge_issued\" on success.",
+                    "type": "string"
+                }
+            }
+        },
+        "http.CheckoutRequest": {
+            "type": "object",
+            "properties": {
+                "card": {
+                    "$ref": "#/definitions/domain.CardDetails"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.OrderItem"
+                    }
+                },
+                "ledger": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.TransactionBlock"
+                    }
+                },
+                "total": {
+                    "type": "number"
+                },
+                "use_mock": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.StoreFeature": {
             "type": "object",
             "properties": {
                 "geometry": {
@@ -892,13 +1173,13 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler_http.StoresResponse": {
+        "http.StoresResponse": {
             "type": "object",
             "properties": {
                 "features": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_handler_http.StoreFeature"
+                        "$ref": "#/definitions/http.StoreFeature"
                     }
                 },
                 "type": {
@@ -906,18 +1187,18 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler_http.SyncRequest": {
+        "http.SyncRequest": {
             "type": "object",
             "properties": {
                 "transactions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_handler_http.SyncTransaction"
+                        "$ref": "#/definitions/http.SyncTransaction"
                     }
                 }
             }
         },
-        "internal_handler_http.SyncResponse": {
+        "http.SyncResponse": {
             "type": "object",
             "properties": {
                 "failed": {
@@ -926,7 +1207,7 @@ const docTemplate = `{
                 "results": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_handler_http.SyncResult"
+                        "$ref": "#/definitions/http.SyncResult"
                     }
                 },
                 "synced": {
@@ -934,7 +1215,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler_http.SyncResult": {
+        "http.SyncResult": {
             "type": "object",
             "properties": {
                 "error": {
@@ -951,7 +1232,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler_http.SyncTransaction": {
+        "http.SyncTransaction": {
             "type": "object",
             "properties": {
                 "hash": {
@@ -973,314 +1254,18 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "internal_handlers.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.HandshakeResponse": {
-            "type": "object",
-            "properties": {
-                "challenge": {
-                    "description": "Challenge carries the time-variant token the client must echo back.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/sovereign-core_backend-api_internal_challenge.Token"
-                        }
-                    ]
-                },
-                "encoded_challenge": {
-                    "description": "EncodedChallenge is the compact wire-format of the challenge for clients\nthat prefer a single opaque string over the structured JSON fields.",
-                    "type": "string"
-                },
-                "server_time": {
-                    "description": "ServerTime is the current UTC time at which the challenge was issued.",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Status is \"challenge_issued\" on success.",
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_challenge.Token": {
-            "type": "object",
-            "properties": {
-                "challenge_id": {
-                    "description": "ChallengeID is a human-readable compact identifier derived from the first\n8 bytes of the nonce — useful for correlation in distributed traces.",
-                    "type": "string"
-                },
-                "expires_at": {
-                    "description": "ExpiresAt is the UTC Unix epoch second at which this challenge becomes invalid.",
-                    "type": "integer"
-                },
-                "issued_at": {
-                    "description": "IssuedAt is the UTC Unix epoch second at which the challenge was generated.",
-                    "type": "integer"
-                },
-                "nonce": {
-                    "description": "Nonce is the hex-encoded random 32-byte value unique to this challenge.",
-                    "type": "string"
-                },
-                "signature": {
-                    "description": "Signature is the hex-encoded HMAC-SHA256 over \"nonce:expires_at\".",
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.CardDetails": {
-            "type": "object",
-            "properties": {
-                "cvc": {
-                    "type": "string"
-                },
-                "expMonth": {
-                    "type": "integer"
-                },
-                "expYear": {
-                    "type": "integer"
-                },
-                "number": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.Order": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.OrderItem"
-                    }
-                },
-                "receiptHash": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timeline": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sovereign-core_backend-api_internal_domain.OrderTimelineEvent"
-                    }
-                },
-                "total": {
-                    "type": "number"
-                },
-                "type": {
-                    "description": "\"online\" | \"instore\" | \"synced_offline\"",
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.OrderItem": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "qty": {
-                    "type": "integer"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.OrderTimelineEvent": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.Product": {
-            "type": "object",
-            "properties": {
-                "barcode": {
-                    "description": "Simulated EAN-13/UPC barcode",
-                    "type": "string"
-                },
-                "category": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.RefreshRequest": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.RegisterRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.TransactionBlock": {
-            "type": "object",
-            "properties": {
-                "hash": {
-                    "type": "string"
-                },
-                "index": {
-                    "type": "integer"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "precedingHash": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.User": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "integer"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.UserCredentials": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "sovereign-core_backend-api_internal_domain.UserUpdate": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Sovereign Core Platform API",
-	Description:      "Zero-trust backend API for Sovereign Core Platform.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

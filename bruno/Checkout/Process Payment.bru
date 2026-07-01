@@ -1,3 +1,10 @@
+docs {
+  # NOTE: The backend requires the DPoP header generated with an ECDSA ES256 key.
+  # For manual testing, generate a DPoP token using the test script:
+  # apps/backend-api/internal/handler/http/checkout_integration_test.go:generateValidDPoP()
+  # and paste it manually into the DPoP header before running this request.
+}
+
 meta {
   name: Process Payment
   type: http
@@ -14,6 +21,7 @@ headers {
   Content-Type: application/json
   Authorization: Bearer {{jwt}}
   X-Idempotency-Key: idemp_test_124
+  DPoP: <manually-set-before-running>
 }
 
 body:json {
@@ -58,4 +66,12 @@ script:pre-request {
   const hash = CryptoJS.HmacSHA256(bodyStr, secret).toString(CryptoJS.enc.Hex);
   
   req.setHeader("X-Sovereign-Hash", hash);
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.transactionId) {
+    bru.setVar("lastOrderId", res.body.transactionId);
+  } else if (res.status === 200 && res.body.orderId) {
+    bru.setVar("lastOrderId", res.body.orderId);
+  }
 }

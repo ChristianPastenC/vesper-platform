@@ -25,3 +25,12 @@ body:json {
 vars:pre-request {
   baseUrl: http://localhost:8080
 }
+
+script:pre-request {
+  const CryptoJS = require("crypto-js");
+  const secret = bru.getEnvVar("PAYLOAD_SECRET_KEY") || "sovereign-core-secret-hmac-key-20260701";
+  const body = req.getBody();
+  const bodyStr = typeof body === "string" ? body : JSON.stringify(body);
+  const hash = CryptoJS.HmacSHA256(bodyStr, secret).toString(CryptoJS.enc.Hex);
+  req.setHeader("X-Sovereign-Hash", hash);
+}

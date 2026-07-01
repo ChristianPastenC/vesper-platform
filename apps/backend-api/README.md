@@ -1,14 +1,58 @@
 # Sovereign Core Platform - Backend API
 
-This is the backend API for the Sovereign Core Platform. It provides a highly secure, Zero-Trust Architecture based implementation using Go and BoltDB.
+Welcome to the Backend API for the Sovereign Core Platform. This service is built in Go (Golang) and designed under a strict **Zero-Trust Architecture**.
 
-## Environment Variables
+## API Architecture
 
-The following environment variables are required to run the service:
+The API follows Clean Architecture principles, divided into discrete layers to maintain decoupling and high cohesion:
 
-- `PORT` (optional): Port for the HTTP server to listen on (default `8080`).
-- `DB_PATH` (optional): Path to the BoltDB file (default `./data/sovereign.db`).
-- `PAYLOAD_SECRET_KEY` (required): Secret key used for `X-Sovereign-Hash` payload integrity validation. Must be at least 32 characters.
-- `ECDSA_PRIVATE_KEY_PEM` (optional): Base64url-encoded DER-format ECDSA P-256 private key.
-  If not provided, the server generates an ephemeral key on each startup and logs it.
-  Copy the logged key value to this variable to keep JWT sessions valid across restarts.
+- **Domain (`internal/domain`):** The core business logic. Contains the interfaces and data structures (Entities) that model the system, with zero external dependencies.
+- **Usecase (`internal/usecase`):** The application logic layer. Contains the business rules (such as blockchain validation) and entity interactions.
+- **Handler / Transport (`internal/handler`):** Manages incoming HTTP requests, JSON parsing, security middlewares, and communication with the web/mobile client.
+- **Adapters (`internal/adapter` and `internal/store`):** Concrete technological implementations (BoltDB databases, external integrations, cryptography services).
+- **Entrypoint (`cmd`):** Application startup point and dependency injection wiring.
+
+> **For more details on each layer, refer to the `README.md` file inside each respective subfolder.**
+
+## Local Development
+
+To run this backend in your local environment, ensure you have Go 1.22+ installed.
+
+1. **Environment Variables**: Rename `.env.example` to `.env` (if it does not already exist) in the root of `apps/backend-api`.
+2. **Dependencies**: Install the required packages by running:
+   ```bash
+   go mod tidy
+   ```
+3. **Run the Server**:
+   ```bash
+   go run cmd/server/main.go
+   ```
+   The server will start on the configured port (default `8080`).
+
+## Configured Commands & Tools
+
+- **Generate Swagger Documentation:**
+  ```bash
+  swag init -g internal/handler/http/router.go
+  ```
+- **Clean and format modules:**
+  ```bash
+  go mod tidy
+  ```
+- **Run Tests (Integration & Unit):**
+  ```bash
+  go test ./...
+  ```
+
+## API Documentation (Swagger UI)
+
+The API features an integrated Swagger UI. Once the server is running, you can visit:
+**http://localhost:8080/swagger/index.html**
+
+## Development Security Bypasses
+
+Special environment variables are provided to allow seamless local testing (e.g., using Bruno/Postman) without triggering strict cryptographic security blocks:
+- `DEV_DPOP_BYPASS=true`: Bypasses the ECDSA signature verification (DPoP).
+- `DEV_HASH_BYPASS=true`: Bypasses payload integrity verification (HMAC-SHA256).
+
+> **Warning:** These variables must never be injected or present in a production environment.

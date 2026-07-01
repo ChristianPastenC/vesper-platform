@@ -22,6 +22,16 @@ func NewCatalogHandler(interactor *usecase.CatalogInteractor) *CatalogHandler {
 
 // GetCatalog handles GET /api/v1/catalog. It extracts query parameters for limit
 // and category, calls the interactor to fetch products, and writes the JSON response.
+// @Summary Get Product Catalog
+// @Description Fetches products from the catalog (with fallback logic).
+// @Tags Catalog
+// @Produce json
+// @Param category query string false "Category filter"
+// @Param limit query int false "Result limit"
+// @Success 200 {array} domain.Product
+// @Failure 405 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /catalog [get]
 func (h *CatalogHandler) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only GET requests are allowed on this endpoint")

@@ -1,0 +1,37 @@
+meta {
+  name: Process Payment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/checkout/pay
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{jwt}}
+  X-Idempotency-Key: idemp_test_123
+}
+
+body:json {
+  {
+    "total": 150.50,
+    "card": {
+      "number": "4242424242424242",
+      "expMonth": "12",
+      "expYear": "2026",
+      "cvc": "123"
+    },
+    "items": [
+      {
+        "id": "1",
+        "title": "Test Product",
+        "price": 150.50,
+        "quantity": 1
+      }
+    ]
+  }
+}

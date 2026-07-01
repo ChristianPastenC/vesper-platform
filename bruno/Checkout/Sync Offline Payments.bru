@@ -1,0 +1,47 @@
+meta {
+  name: Sync Offline Payments
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/checkout/sync
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{jwt}}
+  X-Idempotency-Key: sync_test_123
+}
+
+body:json {
+  {
+    "transactions": [
+      {
+        "transactionId": "offline_txn_1",
+        "hash": "abc123hash",
+        "previousHash": "genesis",
+        "timestamp": "2026-07-01T12:00:00Z",
+        "payload": {
+          "total": 50.0,
+          "card": {
+            "number": "4242424242424242",
+            "expMonth": "10",
+            "expYear": "2028",
+            "cvc": "111"
+          },
+          "items": [
+            {
+              "id": "2",
+              "title": "Offline Product",
+              "price": 50.0,
+              "quantity": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

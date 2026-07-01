@@ -10,6 +10,13 @@ import (
 // HealthHandler returns a minimal liveness probe suitable for load balancers
 // and container orchestration health checks. It intentionally avoids JSON
 // serialisation overhead for maximum throughput.
+// @Summary Health Check
+// @Description Returns a minimal liveness probe.
+// @Tags Infrastructure
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 405 {object} map[string]interface{}
+// @Router /health [get]
 func HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

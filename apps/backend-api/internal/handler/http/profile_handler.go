@@ -16,6 +16,17 @@ func NewProfileHandler(userRepo domain.AuthRepository) *ProfileHandler {
 	return &ProfileHandler{userRepo: userRepo}
 }
 
+// GetProfile handles GET /api/v1/profile/me.
+// @Summary Get User Profile
+// @Description Returns the profile details of the authenticated user.
+// @Tags Profile
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.User
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /profile/me [get]
 func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -36,6 +47,19 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
+// UpdateProfile handles PUT /api/v1/profile/me.
+// @Summary Update User Profile
+// @Description Updates the profile details of the authenticated user.
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body domain.UserUpdate true "User Update Details"
+// @Success 200 {object} domain.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /profile/me [put]
 func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {

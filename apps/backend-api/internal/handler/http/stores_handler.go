@@ -32,6 +32,13 @@ type StoresResponse struct {
 	Features []StoreFeature `json:"features"`
 }
 
+// GetStores handles GET /api/v1/stores.
+// @Summary Get Stores List
+// @Description Retrieves a GeoJSON feature collection of physical stores.
+// @Tags Stores
+// @Produce json
+// @Success 200 {object} StoresResponse
+// @Router /stores [get]
 func (h *StoresHandler) GetStores(w http.ResponseWriter, r *http.Request) {
 	stores := StoresResponse{
 		Type: "FeatureCollection",

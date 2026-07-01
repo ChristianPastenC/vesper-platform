@@ -1,0 +1,834 @@
+basePath: /api/v1
+definitions:
+  internal_handler_http.CheckoutRequest:
+    properties:
+      card:
+        $ref: '#/definitions/sovereign-core_backend-api_internal_domain.CardDetails'
+      items:
+        items:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.OrderItem'
+        type: array
+      ledger:
+        items:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.TransactionBlock'
+        type: array
+      total:
+        type: number
+      use_mock:
+        type: boolean
+    type: object
+  internal_handler_http.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  internal_handler_http.StoreFeature:
+    properties:
+      geometry:
+        properties:
+          coordinates:
+            items:
+              type: number
+            type: array
+          type:
+            type: string
+        type: object
+      properties:
+        properties:
+          address:
+            type: string
+          distance:
+            type: string
+          hours:
+            type: string
+          id:
+            type: string
+          image:
+            type: string
+          name:
+            type: string
+        type: object
+      type:
+        type: string
+    type: object
+  internal_handler_http.StoresResponse:
+    properties:
+      features:
+        items:
+          $ref: '#/definitions/internal_handler_http.StoreFeature'
+        type: array
+      type:
+        type: string
+    type: object
+  internal_handler_http.SyncRequest:
+    properties:
+      transactions:
+        items:
+          $ref: '#/definitions/internal_handler_http.SyncTransaction'
+        type: array
+    type: object
+  internal_handler_http.SyncResponse:
+    properties:
+      failed:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/internal_handler_http.SyncResult'
+        type: array
+      synced:
+        type: integer
+    type: object
+  internal_handler_http.SyncResult:
+    properties:
+      error:
+        type: string
+      receiptHash:
+        type: string
+      status:
+        type: string
+      transactionId:
+        type: string
+    type: object
+  internal_handler_http.SyncTransaction:
+    properties:
+      hash:
+        type: string
+      index:
+        type: integer
+      payload:
+        type: string
+      precedingHash:
+        type: string
+      timestamp:
+        type: integer
+      transactionId:
+        type: string
+    type: object
+  internal_handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  internal_handlers.HandshakeResponse:
+    properties:
+      challenge:
+        allOf:
+        - $ref: '#/definitions/sovereign-core_backend-api_internal_challenge.Token'
+        description: Challenge carries the time-variant token the client must echo
+          back.
+      encoded_challenge:
+        description: |-
+          EncodedChallenge is the compact wire-format of the challenge for clients
+          that prefer a single opaque string over the structured JSON fields.
+        type: string
+      server_time:
+        description: ServerTime is the current UTC time at which the challenge was
+          issued.
+        type: string
+      status:
+        description: Status is "challenge_issued" on success.
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_challenge.Token:
+    properties:
+      challenge_id:
+        description: |-
+          ChallengeID is a human-readable compact identifier derived from the first
+          8 bytes of the nonce — useful for correlation in distributed traces.
+        type: string
+      expires_at:
+        description: ExpiresAt is the UTC Unix epoch second at which this challenge
+          becomes invalid.
+        type: integer
+      issued_at:
+        description: IssuedAt is the UTC Unix epoch second at which the challenge
+          was generated.
+        type: integer
+      nonce:
+        description: Nonce is the hex-encoded random 32-byte value unique to this
+          challenge.
+        type: string
+      signature:
+        description: Signature is the hex-encoded HMAC-SHA256 over "nonce:expires_at".
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.CardDetails:
+    properties:
+      cvc:
+        type: string
+      expMonth:
+        type: integer
+      expYear:
+        type: integer
+      number:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.Order:
+    properties:
+      createdAt:
+        type: integer
+      date:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.OrderItem'
+        type: array
+      receiptHash:
+        type: string
+      status:
+        type: string
+      timeline:
+        items:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.OrderTimelineEvent'
+        type: array
+      total:
+        type: number
+      type:
+        description: '"online" | "instore" | "synced_offline"'
+        type: string
+      userId:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.OrderItem:
+    properties:
+      id:
+        type: string
+      image:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      qty:
+        type: integer
+    type: object
+  sovereign-core_backend-api_internal_domain.OrderTimelineEvent:
+    properties:
+      description:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.Product:
+    properties:
+      barcode:
+        description: Simulated EAN-13/UPC barcode
+        type: string
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      price:
+        type: number
+      title:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.TransactionBlock:
+    properties:
+      hash:
+        type: string
+      index:
+        type: integer
+      payload:
+        type: string
+      precedingHash:
+        type: string
+      timestamp:
+        type: integer
+    type: object
+  sovereign-core_backend-api_internal_domain.User:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: integer
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.UserCredentials:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  sovereign-core_backend-api_internal_domain.UserUpdate:
+    properties:
+      avatar:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@sovereign-core.local
+    name: API Support
+  description: Zero-trust backend API for Sovereign Core Platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Sovereign Core Platform API
+  version: "1.0"
+paths:
+  /api/handshake:
+    get:
+      description: GET issues a new challenge. POST verifies a challenge.
+      parameters:
+      - description: Required for POST
+        in: header
+        name: X-Challenge-Token
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handlers.HandshakeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Issue/Verify Challenge
+      tags:
+      - Infrastructure
+    post:
+      description: GET issues a new challenge. POST verifies a challenge.
+      parameters:
+      - description: Required for POST
+        in: header
+        name: X-Challenge-Token
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handlers.HandshakeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handlers.ErrorResponse'
+      summary: Issue/Verify Challenge
+      tags:
+      - Infrastructure
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns JWT access and refresh tokens.
+      parameters:
+      - description: User Credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.UserCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      summary: User Login
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Issues a new access token and rotating refresh token using a valid
+        refresh token.
+      parameters:
+      - description: Refresh Token Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      summary: Refresh Tokens
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user and returns access and refresh tokens.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Auth
+  /catalog:
+    get:
+      description: Fetches products from the catalog (with fallback logic).
+      parameters:
+      - description: Category filter
+        in: query
+        name: category
+        type: string
+      - description: Result limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sovereign-core_backend-api_internal_domain.Product'
+            type: array
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      summary: Get Product Catalog
+      tags:
+      - Catalog
+  /checkout/instore:
+    post:
+      consumes:
+      - application/json
+      description: Processes a new online or in-store payment.
+      parameters:
+      - description: Checkout Request Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "402":
+          description: Payment Required
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Process Payment
+      tags:
+      - Checkout
+  /checkout/online:
+    post:
+      consumes:
+      - application/json
+      description: Processes a new online or in-store payment.
+      parameters:
+      - description: Checkout Request Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "402":
+          description: Payment Required
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Process Payment
+      tags:
+      - Checkout
+  /checkout/pay:
+    post:
+      consumes:
+      - application/json
+      description: Processes a new online or in-store payment.
+      parameters:
+      - description: Checkout Request Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "402":
+          description: Payment Required
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Process Payment
+      tags:
+      - Checkout
+  /checkout/sync:
+    post:
+      consumes:
+      - application/json
+      description: Synchronizes a batch of offline payments with the central ledger.
+      parameters:
+      - description: Offline Sync Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler_http.SyncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler_http.SyncResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Sync Offline Payments
+      tags:
+      - Checkout
+  /health:
+    get:
+      description: Returns a minimal liveness probe.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "405":
+          description: Method Not Allowed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health Check
+      tags:
+      - Infrastructure
+  /orders:
+    get:
+      description: Retrieves all orders for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sovereign-core_backend-api_internal_domain.Order'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User Orders
+      tags:
+      - Orders
+  /orders/{id}:
+    get:
+      description: Retrieves a specific order by ID for the authenticated user.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sovereign-core_backend-api_internal_domain.Order'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Order by ID
+      tags:
+      - Orders
+  /profile/me:
+    get:
+      description: Returns the profile details of the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sovereign-core_backend-api_internal_domain.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User Profile
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Updates the profile details of the authenticated user.
+      parameters:
+      - description: User Update Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/sovereign-core_backend-api_internal_domain.UserUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sovereign-core_backend-api_internal_domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handler_http.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update User Profile
+      tags:
+      - Profile
+  /stores:
+    get:
+      description: Retrieves a GeoJSON feature collection of physical stores.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler_http.StoresResponse'
+      summary: Get Stores List
+      tags:
+      - Stores
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

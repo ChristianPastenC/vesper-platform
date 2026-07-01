@@ -11,6 +11,9 @@ import (
 	"sovereign-core/backend-api/internal/domain"
 	"sovereign-core/backend-api/internal/handler/middleware"
 	oldhandlers "sovereign-core/backend-api/internal/handlers"
+
+	_ "sovereign-core/backend-api/docs"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 // RouterConfig gathers dependencies required to spin up the HTTP router.
@@ -47,6 +50,11 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	// 3. Infrastructure and Legacy Compatibility routes
 	r.HandleFunc("/health", oldhandlers.HealthHandler())
 	r.HandleFunc("/api/handshake", oldhandlers.HandshakeHandler(cfg.ChallengeIssuer, cfg.Log))
+
+	// Swagger UI
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	// 4. API v1 Group
 	r.Route("/api/v1", func(r chi.Router) {

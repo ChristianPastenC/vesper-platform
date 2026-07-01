@@ -44,6 +44,17 @@ type ErrorResponse struct {
 //   - GET  /api/handshake  → Issues a new time-variant challenge.
 //   - POST /api/handshake  → Verifies a previously-issued challenge token
 //     supplied in the X-Challenge-Token header.
+// @Summary Issue/Verify Challenge
+// @Description GET issues a new challenge. POST verifies a challenge.
+// @Tags Infrastructure
+// @Produce json
+// @Param X-Challenge-Token header string false "Required for POST"
+// @Success 200 {object} HandshakeResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 405 {object} ErrorResponse
+// @Router /api/handshake [get]
+// @Router /api/handshake [post]
 func HandshakeHandler(iss *challenge.Issuer, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

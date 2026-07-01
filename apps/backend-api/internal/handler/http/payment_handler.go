@@ -34,6 +34,21 @@ type CheckoutRequest struct {
 
 // ProcessPayment handles POST /api/v1/checkout/pay. It extracts the authenticated
 // user ID from context, parses the cart total and card details, and calls the interactor.
+// @Summary Process Payment
+// @Description Processes a new online or in-store payment.
+// @Tags Checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CheckoutRequest true "Checkout Request Details"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 402 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
+// @Router /checkout/pay [post]
+// @Router /checkout/online [post]
+// @Router /checkout/instore [post]
 func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
@@ -121,6 +136,19 @@ type SyncResponse struct {
 	Results []SyncResult `json:"results"`
 }
 
+// SyncOfflinePayments handles POST /api/v1/checkout/sync.
+// @Summary Sync Offline Payments
+// @Description Synchronizes a batch of offline payments with the central ledger.
+// @Tags Checkout
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body SyncRequest true "Offline Sync Request"
+// @Success 200 {object} SyncResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 405 {object} ErrorResponse
+// @Router /checkout/sync [post]
 func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
@@ -149,7 +177,7 @@ func (h *PaymentHandler) SyncOfflinePayments(w http.ResponseWriter, r *http.Requ
 	var synced, failed int
 
 	for i, tx := range req.Transactions {
-		// 1. Valida la cadena criptográfica
+		// 1. Validate cryptographic chain
 		if !usecase.ValidateLedgerChain(blocks[:i+1]) {
 			results = append(results, SyncResult{
 				TransactionID: tx.TransactionID,

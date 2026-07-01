@@ -22,6 +22,17 @@ func NewAuthHandler(interactor *usecase.AuthInteractor) *AuthHandler {
 }
 
 // Register handles POST /api/v1/auth/register.
+// @Summary Register a new user
+// @Description Creates a new user and returns access and refresh tokens.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.RegisterRequest true "User Registration Details"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 405 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
@@ -61,6 +72,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login handles POST /api/v1/auth/login. It parses incoming credentials,
 // authenticates the user against the database, and issues an ECDSA JWT.
+// @Summary User Login
+// @Description Authenticates a user and returns JWT access and refresh tokens.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body domain.UserCredentials true "User Credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 405 {object} ErrorResponse
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")
@@ -98,6 +120,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Refresh handles POST /api/v1/auth/refresh.
+// @Summary Refresh Tokens
+// @Description Issues a new access token and rotating refresh token using a valid refresh token.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.RefreshRequest true "Refresh Token Request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 405 {object} ErrorResponse
+// @Router /auth/refresh [post]
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST requests are allowed on this endpoint")

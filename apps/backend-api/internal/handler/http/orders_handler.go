@@ -18,6 +18,16 @@ func NewOrdersHandler(orderRepo domain.OrderRepository) *OrdersHandler {
 	return &OrdersHandler{orderRepo: orderRepo}
 }
 
+// GetOrders handles GET /api/v1/orders.
+// @Summary Get User Orders
+// @Description Retrieves all orders for the authenticated user.
+// @Tags Orders
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} domain.Order
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders [get]
 func (h *OrdersHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {
@@ -38,6 +48,18 @@ func (h *OrdersHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, orders)
 }
 
+// GetOrder handles GET /api/v1/orders/{id}.
+// @Summary Get Order by ID
+// @Description Retrieves a specific order by ID for the authenticated user.
+// @Tags Orders
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Order ID"
+// @Success 200 {object} domain.Order
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /orders/{id} [get]
 func (h *OrdersHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserIDFromContext(r.Context())
 	if !ok {

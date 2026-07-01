@@ -73,7 +73,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 3. Invoke the business logic interactor
-	resp, err := h.interactor.ProcessOrder(r.Context(), req.Total, req.Card)
+	resp, err := h.interactor.ProcessOrder(r.Context(), userID, req.Total, req.Card)
 	if err != nil {
 		writeError(w, http.StatusPaymentRequired, "payment_failed", err.Error())
 		return

@@ -1,14 +1,30 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"sovereign-core/backend-api/internal/domain"
 )
 
+type mockOrderRepo struct{}
+
+func (m *mockOrderRepo) SaveOrder(ctx context.Context, order domain.Order) error { return nil }
+func (m *mockOrderRepo) GetOrderByID(ctx context.Context, orderID string) (domain.Order, error) {
+	return domain.Order{}, nil
+}
+func (m *mockOrderRepo) GetOrdersByUserID(ctx context.Context, userID string) ([]domain.Order, error) {
+	return []domain.Order{
+		{ID: "ORD-123"},
+	}, nil
+}
+
 func TestOrdersHandler_GetOrders(t *testing.T) {
-	handler := NewOrdersHandler()
+	repo := &mockOrderRepo{}
+	handler := NewOrdersHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/orders", nil)
 	rr := httptest.NewRecorder()
@@ -19,7 +35,7 @@ func TestOrdersHandler_GetOrders(t *testing.T) {
 		t.Errorf("expected status OK, got %v", rr.Code)
 	}
 
-	var response []Order
+	var response []domain.Order
 	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}

@@ -28,6 +28,16 @@ func (m *mockPaymentGateway) CreateCharge(ctx context.Context, amount float64, c
 	return m.resp, nil
 }
 
+type mockOrderRepo struct{}
+
+func (m *mockOrderRepo) SaveOrder(ctx context.Context, order domain.Order) error { return nil }
+func (m *mockOrderRepo) GetOrderByID(ctx context.Context, orderID string) (domain.Order, error) {
+	return domain.Order{}, nil
+}
+func (m *mockOrderRepo) GetOrdersByUserID(ctx context.Context, userID string) ([]domain.Order, error) {
+	return nil, nil
+}
+
 func TestPaymentHandler_ProcessPayment(t *testing.T) {
 	gw := &mockPaymentGateway{
 		resp: domain.TransactionResponse{
@@ -35,7 +45,8 @@ func TestPaymentHandler_ProcessPayment(t *testing.T) {
 			Status:        "success",
 		},
 	}
-	interactor := usecase.NewPaymentInteractor(gw)
+	repo := &mockOrderRepo{}
+	interactor := usecase.NewPaymentInteractor(gw, repo)
 	handler := apiHTTP.NewPaymentHandler(interactor)
 
 	// compute valid genesis block hash

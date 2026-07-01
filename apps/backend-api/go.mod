@@ -7,3 +7,8 @@ require (
 	golang.org/x/crypto v0.53.0
 	golang.org/x/time v0.15.0
 )
+
+require (
+	go.etcd.io/bbolt v1.3.9 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+)

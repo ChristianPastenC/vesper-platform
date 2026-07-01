@@ -21,6 +21,16 @@ func (m *mockPaymentGateway) CreateCharge(ctx context.Context, amount float64, c
 	return m.resp, nil
 }
 
+type mockOrderRepo struct{}
+
+func (m *mockOrderRepo) SaveOrder(ctx context.Context, order domain.Order) error { return nil }
+func (m *mockOrderRepo) GetOrderByID(ctx context.Context, orderID string) (domain.Order, error) {
+	return domain.Order{}, nil
+}
+func (m *mockOrderRepo) GetOrdersByUserID(ctx context.Context, userID string) ([]domain.Order, error) {
+	return nil, nil
+}
+
 func TestPaymentInteractor_ProcessOrder(t *testing.T) {
 	ctx := context.Background()
 
@@ -31,10 +41,11 @@ func TestPaymentInteractor_ProcessOrder(t *testing.T) {
 				Status:        "success",
 			},
 		}
+		repo := &mockOrderRepo{}
 
-		interactor := usecase.NewPaymentInteractor(gw)
+		interactor := usecase.NewPaymentInteractor(gw, repo)
 
-		res, err := interactor.ProcessOrder(ctx, 100.0, domain.CardDetails{})
+		res, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -51,10 +62,11 @@ func TestPaymentInteractor_ProcessOrder(t *testing.T) {
 		gw := &mockPaymentGateway{
 			err: errors.New("insufficient funds"),
 		}
+		repo := &mockOrderRepo{}
 
-		interactor := usecase.NewPaymentInteractor(gw)
+		interactor := usecase.NewPaymentInteractor(gw, repo)
 
-		_, err := interactor.ProcessOrder(ctx, 100.0, domain.CardDetails{})
+		_, err := interactor.ProcessOrder(ctx, "user-1", 100.0, domain.CardDetails{})
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}

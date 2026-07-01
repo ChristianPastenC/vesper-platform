@@ -38,6 +38,18 @@ func (m *mockIntegrationTokenService) ValidateRefreshToken(ctx context.Context, 
 	return domain.User{ID: "test_user"}, nil
 }
 
+type mockIntegrationOrderRepo struct{}
+
+func (m *mockIntegrationOrderRepo) SaveOrder(ctx context.Context, order domain.Order) error {
+	return nil
+}
+func (m *mockIntegrationOrderRepo) GetOrderByID(ctx context.Context, orderID string) (domain.Order, error) {
+	return domain.Order{}, nil
+}
+func (m *mockIntegrationOrderRepo) GetOrdersByUserID(ctx context.Context, userID string) ([]domain.Order, error) {
+	return nil, nil
+}
+
 func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 	// 1. Build an httptest.Server with the full router (without middleware mocks).
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -49,7 +61,8 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 			Status:        "success",
 		},
 	}
-	interactor := usecase.NewPaymentInteractor(gw)
+	repo := &mockIntegrationOrderRepo{}
+	interactor := usecase.NewPaymentInteractor(gw, repo)
 	paymentHandler := apiHTTP.NewPaymentHandler(interactor)
 
 	cfg := apiHTTP.RouterConfig{

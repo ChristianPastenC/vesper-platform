@@ -29,7 +29,6 @@ type RouterConfig struct {
 	OrdersHandler      *OrdersHandler
 	StoresHandler      *StoresHandler
 	IdempotencyManager *middleware.IdempotencyManager
-	TelemetryHandler   *TelemetryHandler
 }
 
 // NewRouter constructs a configured chi.Mux handler with security interceptors.
@@ -113,10 +112,6 @@ func NewRouter(cfg RouterConfig) http.Handler {
 			if cfg.OrdersHandler != nil {
 				r.Get("/orders", cfg.OrdersHandler.GetOrders)
 				r.Get("/orders/{id}", cfg.OrdersHandler.GetOrder)
-			}
-
-			if cfg.TelemetryHandler != nil {
-				r.Post("/telemetry/ingest", cfg.TelemetryHandler.Ingest)
 			}
 		})
 	})

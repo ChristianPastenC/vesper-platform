@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"sovereign-core/telemetry-api/internal/middleware"
+
 	"github.com/go-chi/chi/v5"
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 )
@@ -21,6 +23,11 @@ func main() {
 	r.Use(chi_middleware.RealIP)
 	r.Use(chi_middleware.Logger)
 	r.Use(chi_middleware.Recoverer)
+	
+	// B2B SaaS Auth
+	r.Use(middleware.ApiKeyValidator)
+	// Zero-Trust Data Sanitizer
+	r.Use(middleware.LogSanitizer)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

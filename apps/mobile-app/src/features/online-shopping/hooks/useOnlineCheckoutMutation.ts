@@ -5,7 +5,7 @@ import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
 import { encodeJsonBody, encodeHeaders } from '@sovereign/secure-client';
 import { randomUUID } from 'react-native-quick-crypto';
-import { getApiUrl } from '../../../core/config';
+import { getApiUrl, getTestCardNumber } from '../../../core/config';
 
 interface CheckoutPayload {
   items: Array<{ id: string; name: string; price: number; quantity: number }>;
@@ -37,7 +37,8 @@ export const useOnlineCheckoutMutation = () => {
 
       const requestBody = {
         total,
-        card: { number: '4242424242424242', expMonth: 12, expYear: 2028, cvc: '123' },
+        items: payload.items,
+        card: { number: getTestCardNumber(), expMonth: 12, expYear: 2028, cvc: '123' },
         ledger,
       };
 

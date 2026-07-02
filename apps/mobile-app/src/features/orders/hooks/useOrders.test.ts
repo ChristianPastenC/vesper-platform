@@ -15,7 +15,7 @@ const mockOrders: Order[] = [
   {
     id: 'ORD-1',
     status: 'processing',
-    date: '2023-11-20T08:45:00Z',
+    createdAt: 1700469900,
     total: 100,
     items: [],
     timeline: [],
@@ -23,7 +23,7 @@ const mockOrders: Order[] = [
   {
     id: 'ORD-2',
     status: 'delivered',
-    date: '2023-10-15T14:30:00Z',
+    createdAt: 1697380200,
     total: 200,
     items: [],
     timeline: [],

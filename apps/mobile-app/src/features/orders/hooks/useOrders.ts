@@ -4,26 +4,30 @@ import { useAppStore } from '../../../store/useAppStore';
 
 export interface OrderItem {
   id: string;
-  name: string;
-  qty: number;
+  title: string;
   price: number;
+  quantity: number;
   image?: string;
 }
 
 export interface OrderTimelineEvent {
-  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'succeeded' | 'failed' | 'synced';
   timestamp: string;
   description: string;
 }
 
 export interface Order {
   id: string;
-  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  date: string;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'succeeded' | 'failed' | 'synced';
+  createdAt: number;
   total: number;
   items: OrderItem[];
   timeline: OrderTimelineEvent[];
+  type?: string;
 }
+
+export const formatOrderDate = (createdAt: number) =>
+  new Date(createdAt * 1000).toLocaleDateString();
 
 export const useOrders = () => {
   const { execute } = useAuthenticatedRequest();

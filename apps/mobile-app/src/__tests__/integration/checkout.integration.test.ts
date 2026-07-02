@@ -34,6 +34,7 @@ jest.mock('../../core/crypto/NativeCryptoProvider', () => ({
 
 jest.mock('../../core/config', () => ({
   getApiUrl: () => 'https://api.test',
+  getTestCardNumber: () => '4242424242424242',
 }));
 
 describe('Integration: Checkout Flow', () => {

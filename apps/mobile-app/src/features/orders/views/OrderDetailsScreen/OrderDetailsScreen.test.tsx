@@ -20,6 +20,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 
 jest.mock('../../hooks/useOrders', () => ({
   useOrders: jest.fn(),
+  formatOrderDate: (date: number) => new Date(date * 1000).toLocaleDateString(),
 }));
 
 jest.mock('@react-navigation/native', () => ({
@@ -47,7 +48,7 @@ describe('OrderDetailsScreen', () => {
       getOrderById: () => ({
         id: 'ord-123',
         status: 'processing',
-        date: new Date().toISOString(),
+        createdAt: 1672531200,
         timeline: [],
         items: [],
         total: 100,
@@ -67,7 +68,7 @@ describe('OrderDetailsScreen', () => {
       getOrderById: () => ({
         id: 'ord-123',
         status: 'shipped',
-        date: new Date().toISOString(),
+        createdAt: 1672531200,
         timeline: [],
         items: [],
         total: 100,
@@ -86,7 +87,7 @@ describe('OrderDetailsScreen', () => {
       getOrderById: () => ({
         id: 'ord-123',
         status: 'delivered',
-        date: new Date().toISOString(),
+        createdAt: 1672531200,
         timeline: [],
         items: [],
         total: 100,
@@ -105,7 +106,7 @@ describe('OrderDetailsScreen', () => {
       getOrderById: () => ({
         id: 'ord-123',
         status: 'cancelled',
-        date: new Date().toISOString(),
+        createdAt: 1672531200,
         timeline: [],
         items: [],
         total: 100,
@@ -124,7 +125,7 @@ describe('OrderDetailsScreen', () => {
       getOrderById: () => ({
         id: 'ord-123',
         status: 'unknown-status',
-        date: new Date().toISOString(),
+        createdAt: 1672531200,
         timeline: [],
         items: [],
         total: 100,

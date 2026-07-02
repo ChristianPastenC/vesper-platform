@@ -7,6 +7,7 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
 }));
 
 jest.mock('../../../../core/theme/useTheme', () => ({
@@ -26,7 +27,7 @@ describe('OrdersList', () => {
       {
         id: 'ORD-1',
         status: 'processing',
-        date: '2023-10-15T14:30:00Z',
+        createdAt: 1697380200,
         total: 100,
         items: [],
         timeline: [],

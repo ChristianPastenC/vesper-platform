@@ -15,3 +15,5 @@ export const getApiUrl = (): string => {
   }
   throw new Error('[Config] EXPO_PUBLIC_API_URL is required in production.');
 };
+
+export const getTestCardNumber = () => process.env.TEST_CARD_NUMBER ?? '4242424242424242';

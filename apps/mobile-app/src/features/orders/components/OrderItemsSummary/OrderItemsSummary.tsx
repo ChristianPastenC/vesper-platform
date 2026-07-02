@@ -23,8 +23,8 @@ export const OrderItemsSummary: React.FC<OrderItemsSummaryProps> = ({ items, tot
       {items.map((item) => (
         <View key={item.id} style={styles.itemRow} testID={`order-item-${item.id}`}>
           <View style={styles.itemInfo}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemQty}>Qty: {item.qty}</Text>
+            <Text style={styles.itemName}>{item.title}</Text>
+            <Text style={styles.itemQty}>Qty: {item.quantity}</Text>
           </View>
           <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
         </View>

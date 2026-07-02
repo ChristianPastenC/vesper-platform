@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../core/theme/useTheme';
-import { Order } from '../../hooks/useOrders';
+import { Order, formatOrderDate } from '../../hooks/useOrders';
 import { stylesFactory } from './OrderListItem.styles';
 import { Text } from '../../../../components/Text';
 
@@ -23,8 +23,11 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
       case 'shipped':
         return '#2196F3';
       case 'delivered':
+      case 'succeeded':
+      case 'synced':
         return '#4CAF50';
       case 'cancelled':
+      case 'failed':
         return '#F44336';
       default:
         return theme.colors.text;
@@ -47,8 +50,8 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
   };
 
   const statusColor = getStatusColor(order.status);
-  const formattedDate = new Date(order.date).toLocaleDateString();
-  const itemsCount = order.items.reduce((acc, item) => acc + item.qty, 0);
+  const formattedDate = formatOrderDate(order.createdAt);
+  const itemsCount = order.items.reduce((acc, item) => acc + item.quantity, 0);
 
   // Take up to 3 images to display in the thumbnail list
   const itemImages = order.items
@@ -64,7 +67,9 @@ export const OrderListItem: React.FC<OrderListItemProps> = ({ order, onPress }) 
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <Text style={styles.orderId}>{`${t('orders.orderId')}${order.id.split('-')[1]}`}</Text>
+        <Text
+          style={styles.orderId}
+        >{`${t('orders.orderId')}${order.id.split('-')[1] || order.id.substring(0, 8)}`}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
             {getStatusTranslation(order.status)}

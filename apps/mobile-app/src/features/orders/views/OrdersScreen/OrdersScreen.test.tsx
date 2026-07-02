@@ -30,10 +30,11 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../hooks/useOrders', () => ({
   useOrders: () => ({
     activeOrders: [
-      { id: 'ORD-1', status: 'processing', date: '2023-01-01', total: 100, items: [] },
+      { id: 'ORD-1', status: 'processing', createdAt: 1672531200, total: 100, items: [] },
     ],
-    pastOrders: [{ id: 'ORD-2', status: 'delivered', date: '2023-01-02', total: 50, items: [] }],
+    pastOrders: [{ id: 'ORD-2', status: 'delivered', createdAt: 1672617600, total: 50, items: [] }],
   }),
+  formatOrderDate: (date: number) => new Date(date * 1000).toLocaleDateString(),
 }));
 
 describe('OrdersScreen', () => {

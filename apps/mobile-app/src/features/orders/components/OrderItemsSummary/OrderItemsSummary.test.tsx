@@ -21,7 +21,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 
 describe('OrderItemsSummary', () => {
   it('renders order items correctly', () => {
-    const mockItems = [{ id: '1', name: 'Item 1', qty: 2, price: 50.0 }];
+    const mockItems = [{ id: '1', title: 'Item 1', quantity: 2, price: 50.0 }];
 
     const { getByTestId, getByText } = render(<OrderItemsSummary items={mockItems} total={100} />);
 

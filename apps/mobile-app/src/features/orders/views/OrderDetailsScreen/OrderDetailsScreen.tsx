@@ -37,8 +37,11 @@ export const OrderDetailsScreen: React.FC = () => {
       case 'shipped':
         return '#2196F3';
       case 'delivered':
+      case 'succeeded':
+      case 'synced':
         return '#4CAF50';
       case 'cancelled':
+      case 'failed':
         return '#F44336';
       default:
         return theme.colors.text;
@@ -61,7 +64,7 @@ export const OrderDetailsScreen: React.FC = () => {
   };
 
   const statusColor = getStatusColor(order.status);
-  const formattedDate = new Date(order.date).toLocaleDateString();
+  const formattedDate = new Date(order.createdAt * 1000).toLocaleDateString();
 
   return (
     <View style={styles.container}>

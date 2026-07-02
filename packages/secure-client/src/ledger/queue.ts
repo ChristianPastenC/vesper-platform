@@ -225,4 +225,10 @@ export class SovereignMemoryQueue {
   public toggleNetworkSim(online: boolean): void {
     getNativeClient().toggleNetworkSim(online);
   }
+
+  public getTelemetrySnapshot(): Uint8Array {
+    const raw = getNativeClient().getTelemetrySnapshot();
+    if (!raw) return new Uint8Array(0);
+    return new Uint8Array(raw);
+  }
 }

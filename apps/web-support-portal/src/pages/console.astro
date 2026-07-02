@@ -1,0 +1,209 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+---
+
+<Layout title="Sovereign Telemetry | Support Console">
+  <main class="h-screen bg-[#0d1117] flex flex-col font-sans hidden" id="app-container">
+    
+    <Header activeTab="console" />
+
+    <!-- WORKSPACE -->
+    <div class="flex flex-1 min-h-0">
+      
+      <!-- MAIN CONSOLE -->
+      <div class="flex-1 flex flex-col min-w-0 border-r border-slate-800 bg-[#0d1117]">
+        <!-- TOOLBAR -->
+        <div class="h-14 border-b border-slate-800 bg-slate-900/50 flex items-center px-4 gap-4 shrink-0">
+          <div class="flex items-center flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-slate-500 mr-2">
+              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+            </svg>
+            <input type="text" id="log-filter" placeholder="Filter by event type or ID..." class="bg-transparent border-none outline-none text-sm text-slate-200 placeholder-slate-600 w-full" />
+          </div>
+          
+          <button id="toggle-stream-btn" class="px-4 py-1.5 rounded text-sm font-medium transition-colors bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span> Pause Stream
+          </button>
+        </div>
+
+        <!-- LOG VIEWER -->
+        <div class="flex-1 overflow-auto p-4 font-mono text-sm leading-relaxed" id="log-container">
+          <div class="h-full flex flex-col items-center justify-center text-slate-600" id="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 mb-3 opacity-20">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <p>Conectando al stream de telemetría de Sovereign...</p>
+          </div>
+          <!-- Logs will be injected here -->
+        </div>
+      </div>
+
+      <!-- SIDE PANEL (INSPECTOR) -->
+      <aside class="w-96 bg-slate-900 flex flex-col shrink-0 hidden" id="inspector-panel">
+        <div class="h-14 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 bg-slate-800/50">
+          <h2 class="font-semibold text-slate-100 flex items-center gap-2 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 text-blue-400"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" /></svg>
+            Inspector de Trazas
+          </h2>
+          <button id="close-inspector-btn" class="text-slate-500 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+          </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto flex-1" id="inspector-content">
+          <!-- Populated via JS -->
+        </div>
+      </aside>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('sovereign_session_token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
+    document.getElementById('app-container')!.classList.remove('hidden');
+
+    const logContainer = document.getElementById('log-container')!;
+    const emptyState = document.getElementById('empty-state')!;
+    const inspectorPanel = document.getElementById('inspector-panel')!;
+    const inspectorContent = document.getElementById('inspector-content')!;
+    const toggleStreamBtn = document.getElementById('toggle-stream-btn')!;
+    
+    let isLive = true;
+    let seenMetrics = new Set();
+    let currentLogs: any[] = [];
+
+    // Toggles the stream
+    toggleStreamBtn.addEventListener('click', () => {
+      isLive = !isLive;
+      if (isLive) {
+        toggleStreamBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Pause Stream';
+        toggleStreamBtn.className = 'px-4 py-1.5 rounded text-sm font-medium transition-colors bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 flex items-center gap-2';
+        pollMetrics();
+      } else {
+        toggleStreamBtn.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Resume Stream';
+        toggleStreamBtn.className = 'px-4 py-1.5 rounded text-sm font-medium transition-colors bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2';
+      }
+    });
+
+    document.getElementById('close-inspector-btn')!.addEventListener('click', () => {
+      inspectorPanel.classList.add('hidden');
+      document.querySelectorAll('.log-row').forEach(row => row.classList.remove('bg-slate-800/80'));
+    });
+
+    // Helper to format metric to text log
+    const getLogDetails = (m: any) => {
+      switch(m.metric_type) {
+        case 1: 
+          return { level: 'FATAL', source: 'CPP_CORE', msg: 'ZEROIZATION_TRIGGERED: RAM wiped to protect crypto material.', valHex: `0x${Math.floor(m.value).toString(16).toUpperCase()}`, hasTrace: true };
+        case 2:
+          return { level: 'ERROR', source: 'TS_WRAPPER', msg: `INTEGRITY_COMPROMISED: Ledger hash mismatch detected. Offset: ${m.value}`, valHex: '0x0002A3F', hasTrace: true };
+        case 3:
+          return { level: 'INFO', source: 'CPP_CORE', msg: `COMPUTE_HASH_LATENCY: DPoP token computed successfully.`, valHex: `${m.value.toFixed(2)}ms`, hasTrace: false };
+        default:
+          return { level: 'DEBUG', source: 'UNKNOWN', msg: `Generic Telemetry Event [Type: ${m.metric_type}]`, valHex: m.value, hasTrace: false };
+      }
+    };
+
+    const renderInspector = (m: any, details: any, timestamp: string) => {
+      inspectorPanel.classList.remove('hidden');
+      
+      const traceHTML = details.hasTrace ? `
+        <div class="mt-6">
+          <h3 class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2 flex items-center gap-1">
+            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> 
+            Exception Trace (C++ Nitro)
+          </h3>
+          <div class="bg-red-950/20 border border-red-900/50 p-3 rounded font-mono text-xs text-red-300 overflow-x-auto whitespace-pre">Exception in sovereign::secure::VolatileQueue::verifyIntegrity()
+  at MemoryArena.cpp:142
+  at SovereignLedger.cpp:89
+[SIGABRT] Execution halted. Integrity rules violated.</div>
+        </div>
+      ` : '';
+
+      inspectorContent.innerHTML = `
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-2">Metadata del Evento</h3>
+            <div class="bg-slate-950 rounded border border-slate-800 p-3 text-sm space-y-2 font-mono">
+              <div class="flex justify-between"><span class="text-slate-500">Event ID:</span> <span class="text-slate-300 truncate w-32" title="${m.id}">${m.id.split('-')[0]}...</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Timestamp:</span> <span class="text-slate-300">${timestamp}</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Event Code:</span> <span class="text-emerald-400">0x00${m.metric_type}</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">Component:</span> <span>${details.source}</span></div>
+              <div class="flex justify-between border-t border-slate-800 pt-2 mt-2">
+                <span class="text-slate-500">Raw Value:</span> 
+                <span class="text-blue-400">${details.valHex}</span>
+              </div>
+            </div>
+          </div>
+          ${traceHTML}
+        </div>
+      `;
+    };
+
+    const appendLog = (m: any) => {
+      emptyState.style.display = 'none';
+      const details = getLogDetails(m);
+      const date = new Date(m.timestamp);
+      const timeStr = date.toISOString().split('T')[1].replace('Z', '');
+      
+      const row = document.createElement('div');
+      row.className = `log-row cursor-pointer hover:bg-slate-800/50 py-1 px-2 rounded -mx-2 flex gap-4 border-l-2 transition-colors ${
+        details.level === 'FATAL' || details.level === 'ERROR' ? 'border-red-500 text-red-300' : 
+        details.level === 'WARN' ? 'border-amber-500 text-amber-300' : 'border-transparent text-slate-400'
+      }`;
+      
+      row.innerHTML = `
+        <span class="text-slate-600 shrink-0 w-24">${timeStr}</span>
+        <span class="shrink-0 w-16 font-bold ${
+          details.level === 'FATAL' || details.level === 'ERROR' ? 'text-red-500' : 
+          details.level === 'WARN' ? 'text-amber-500' : 'text-blue-400'
+        }">${details.level}</span>
+        <span class="text-slate-500 shrink-0 w-24">[${details.source}]</span>
+        <span class="truncate">${details.msg}</span>
+      `;
+
+      row.addEventListener('click', () => {
+        document.querySelectorAll('.log-row').forEach(r => r.classList.remove('bg-slate-800/80'));
+        row.classList.add('bg-slate-800/80');
+        renderInspector(m, details, timeStr);
+      });
+
+      // Insert at top
+      logContainer.insertBefore(row, logContainer.children[1]);
+    };
+
+    const pollMetrics = async () => {
+      if (!isLive) return;
+      try {
+        const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/metrics', {
+          headers: { 'Authorization': token }
+        });
+        if (!res.ok) return;
+        const metrics = await res.json();
+        
+        metrics.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        metrics.forEach((m: any) => {
+          if (!seenMetrics.has(m.id)) {
+            seenMetrics.add(m.id);
+            appendLog(m);
+          }
+        });
+      } catch (e) {
+        console.error("Stream error", e);
+      } finally {
+        if (isLive) setTimeout(pollMetrics, 2000);
+      }
+    };
+
+    pollMetrics();
+  });
+</script>

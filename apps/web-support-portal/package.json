@@ -8,16 +8,12 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/react": "^3.0.10",
     "@astrojs/tailwind": "^5.1.0",
     "@headlessui/react": "^1.7.18",
-    "@heroicons/react": "^2.1.1",
     "@remixicon/react": "^4.1.0",
-    "@tremor/react": "^3.13.4",
     "astro": "^4.4.15",
+    "chart.js": "^4.5.1",
     "clsx": "^2.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "recharts": "^2.12.2",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.1"

@@ -1,7 +1,25 @@
 #include "SovereignTelemetryEngine.h"
+#include "MmapTelemetryStorage.h"
 #include <chrono>
+#include <random>
 
 namespace sovereign::secure {
+
+SovereignTelemetryEngine::SovereignTelemetryEngine() {
+    storage_ = std::make_unique<MmapTelemetryStorage>();
+    std::random_device rd;
+    std::vector<uint8_t> default_key(32);
+    for (int i = 0; i < 32; ++i) default_key[i] = static_cast<uint8_t>(rd());
+    storage_->init("sovereign_telemetry.bin", default_key);
+}
+
+SovereignTelemetryEngine::~SovereignTelemetryEngine() = default;
+
+void SovereignTelemetryEngine::init(const std::string& filepath, const std::vector<uint8_t>& sessionKey) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    storage_ = std::make_unique<MmapTelemetryStorage>();
+    storage_->init(filepath, sessionKey);
+}
 
 void SovereignTelemetryEngine::recordEvent(TelemetryEventType type, double value) {
     auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -9,30 +27,13 @@ void SovereignTelemetryEngine::recordEvent(TelemetryEventType type, double value
     ).count();
 
     std::lock_guard<std::mutex> lock(mutex_);
-    
-    buffer_[head_] = TelemetryEvent{type, static_cast<uint64_t>(now), value};
-    head_ = (head_ + 1) % MAX_EVENTS;
-    if (count_ < MAX_EVENTS) {
-        count_++;
-    }
+    TelemetryEvent event{type, static_cast<uint64_t>(now), value};
+    storage_->writeEvent(event);
 }
 
 std::vector<TelemetryEvent> SovereignTelemetryEngine::getSnapshotAndClear() {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::vector<TelemetryEvent> snapshot;
-    snapshot.reserve(count_);
-
-    if (count_ > 0) {
-        size_t start = (count_ == MAX_EVENTS) ? head_ : 0;
-        for (size_t i = 0; i < count_; ++i) {
-            snapshot.push_back(buffer_[(start + i) % MAX_EVENTS]);
-        }
-    }
-
-    head_ = 0;
-    count_ = 0;
-
-    return snapshot;
+    return storage_->readAllAndClear();
 }
 
 } // namespace sovereign::secure

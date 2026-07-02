@@ -3,7 +3,8 @@
 #include <vector>
 #include <mutex>
 #include <cstdint>
-#include <array>
+#include <string>
+#include <memory>
 
 namespace sovereign::secure {
 
@@ -21,6 +22,8 @@ struct TelemetryEvent {
 };
 #pragma pack(pop)
 
+class MmapTelemetryStorage;
+
 class SovereignTelemetryEngine {
 public:
     static SovereignTelemetryEngine& getInstance() {
@@ -28,20 +31,19 @@ public:
         return instance;
     }
 
+    void init(const std::string& filepath, const std::vector<uint8_t>& sessionKey);
+
     void recordEvent(TelemetryEventType type, double value = 1.0);
     std::vector<TelemetryEvent> getSnapshotAndClear();
 
 private:
-    SovereignTelemetryEngine() : head_(0), count_(0) {}
-    ~SovereignTelemetryEngine() = default;
+    SovereignTelemetryEngine();
+    ~SovereignTelemetryEngine();
 
     SovereignTelemetryEngine(const SovereignTelemetryEngine&) = delete;
     SovereignTelemetryEngine& operator=(const SovereignTelemetryEngine&) = delete;
 
-    static constexpr size_t MAX_EVENTS = 1024;
-    std::array<TelemetryEvent, MAX_EVENTS> buffer_;
-    size_t head_;
-    size_t count_;
+    std::unique_ptr<MmapTelemetryStorage> storage_;
     std::mutex mutex_;
 };
 

@@ -3,6 +3,7 @@ package http
 import (
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -58,6 +59,11 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	// 4. API v1 Group
 	r.Route("/api/v1", func(r chi.Router) {
+		if os.Getenv("BUILD_ENV") == "development" {
+			devHandler := &DevHandler{}
+			r.Post("/dev/dpop-token", devHandler.GenerateDPoPToken)
+		}
+
 		// Public Registration
 		r.Post("/auth/register", cfg.AuthHandler.Register)
 

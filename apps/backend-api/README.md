@@ -49,9 +49,10 @@ To run this backend in your local environment, ensure you have Go 1.22+ installe
 The API features an integrated Swagger UI. Once the server is running, you can visit:
 **http://localhost:8080/swagger/index.html**
 
-## Development Security Bypasses
+## Development Security Bypasses & Tools
 
 Special environment variables are provided to allow seamless local testing (e.g., using Bruno/Postman) without triggering strict cryptographic security blocks:
+- `BUILD_ENV=development`: Enables development-only routes, such as the `POST /api/v1/dev/dpop-token` endpoint which generates valid DPoP tokens automatically for API clients.
 - `DEV_DPOP_BYPASS=true`: Bypasses the ECDSA signature verification (DPoP).
 - `DEV_HASH_BYPASS=true`: Bypasses payload integrity verification (HMAC-SHA256).
 

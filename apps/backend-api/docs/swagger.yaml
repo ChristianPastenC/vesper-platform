@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   challenge.Token:
     properties:
@@ -304,8 +305,25 @@ definitions:
       transactionId:
         type: string
     type: object
+  http.dpopRequest:
+    properties:
+      method:
+        type: string
+      url:
+        type: string
+    type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@sovereign-core.local
+    name: API Support
+  description: Zero-trust backend API for Sovereign Core Platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Sovereign Core Platform API
+  version: "1.0"
 paths:
   /api/handshake:
     get:
@@ -366,6 +384,31 @@ paths:
       summary: Issue/Verify Challenge
       tags:
       - Infrastructure
+  /api/v1/dev/dpop-token:
+    post:
+      consumes:
+      - application/json
+      description: Generates a DPoP+JWT token signed with a static ECDSA P-256 test
+        key. This endpoint is only available when BUILD_ENV=development.
+      parameters:
+      - description: Request method and URL
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.dpopRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate a DPoP token for development
+      tags:
+      - dev
   /auth/login:
     post:
       consumes:
@@ -815,4 +858,9 @@ paths:
       summary: Get Stores List
       tags:
       - Stores
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

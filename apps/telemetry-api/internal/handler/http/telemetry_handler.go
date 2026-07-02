@@ -1,0 +1,72 @@
+package http
+
+import (
+	"encoding/binary"
+	"io"
+	"log/slog"
+	"math"
+	"net/http"
+
+	"sovereign-core/telemetry-api/internal/domain"
+	"sovereign-core/telemetry-api/internal/middleware"
+)
+
+type TelemetryHandler struct {
+	logger    *slog.Logger
+	forwarder domain.TelemetryForwarder
+}
+
+func NewTelemetryHandler(logger *slog.Logger, forwarder domain.TelemetryForwarder) *TelemetryHandler {
+	return &TelemetryHandler{
+		logger:    logger,
+		forwarder: forwarder,
+	}
+}
+
+// Ingest handles binary telemetry dumps from the mobile SDK.
+// It assumes the LogSanitizer middleware has already purged PII from the body.
+func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
+	// Extract TenantID securely injected by the ApiKeyValidator
+	tenantID, ok := r.Context().Value(middleware.TenantIDKey).(string)
+	if !ok || tenantID == "" {
+		http.Error(w, "Tenant identity missing", http.StatusUnauthorized)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.logger.Error("Failed to read telemetry body", "error", err)
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	const structSize = 17 // 1 byte type + 8 bytes timestamp + 8 bytes float64 value
+	if len(body) == 0 || len(body)%structSize != 0 {
+		h.logger.Warn("Invalid telemetry payload size", "size", len(body), "tenant", tenantID)
+		http.Error(w, "Invalid payload format", http.StatusBadRequest)
+		return
+	}
+
+	for i := 0; i < len(body); i += structSize {
+		chunk := body[i : i+structSize]
+		
+		eventType := domain.TelemetryType(chunk[0])
+		timestamp := int64(binary.LittleEndian.Uint64(chunk[1:9]))
+		valueBits := binary.LittleEndian.Uint64(chunk[9:17])
+		value := math.Float64frombits(valueBits)
+
+		event := domain.TelemetryEvent{
+			Type:      eventType,
+			Timestamp: timestamp,
+			Value:     value,
+			TenantID:  tenantID,
+		}
+
+		if err := h.forwarder.ForwardEvent(r.Context(), event); err != nil {
+			h.logger.Error("Failed to forward telemetry event", "error", err, "tenant", tenantID)
+		}
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}

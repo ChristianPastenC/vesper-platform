@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	"sovereign-core/telemetry-api/internal/adapter/telemetry"
+	myhttp "sovereign-core/telemetry-api/internal/handler/http"
 	"sovereign-core/telemetry-api/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
@@ -28,6 +31,15 @@ func main() {
 	r.Use(middleware.ApiKeyValidator)
 	// Zero-Trust Data Sanitizer
 	r.Use(middleware.LogSanitizer)
+
+	otelClient, err := telemetry.NewOtelClient(logger)
+	if err != nil {
+		logger.Error("Failed to initialize OpenTelemetry client, telemetry will be disabled", "error", err)
+	} else {
+		defer otelClient.Shutdown(context.Background())
+		telemetryHandler := myhttp.NewTelemetryHandler(logger, otelClient)
+		r.Post("/api/v1/support/telemetry", telemetryHandler.Ingest)
+	}
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

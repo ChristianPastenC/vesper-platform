@@ -48,6 +48,7 @@ export class SovereignClientCore {
   private readonly dpopAlgorithm: DPoPAlgorithm | undefined;
   private dpopSigner?: DPoPSigner;
   private dpopBootstrapPromise?: Promise<JsonWebKey | null>;
+  private telemetryTimer?: unknown;
 
   private constructor(config: SovereignClientCoreConfig) {
     configureQueueEngine({ mock: config.mock });
@@ -75,6 +76,39 @@ export class SovereignClientCore {
         return null;
       });
     }
+
+    if (config.telemetry) {
+      this.startTelemetrySync(config.telemetry);
+    }
+  }
+
+  private startTelemetrySync(telemetryConfig: NonNullable<SovereignClientCoreConfig['telemetry']>) {
+    const endpoint = telemetryConfig.endpoint ?? 'http://127.0.0.1:8081/api/v1/support/telemetry';
+    const intervalMs = telemetryConfig.syncIntervalMs ?? 15000;
+    const apiKey = telemetryConfig.apiKey;
+
+    const sync = async () => {
+      try {
+        const payload = this.memoryQueue.getTelemetrySnapshot();
+        if (payload && payload.length > 0) {
+          // Send raw binary to telemetry-api using a simple fetch
+          await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'X-Sovereign-API-Key': apiKey,
+              'Content-Type': 'application/octet-stream'
+            },
+            body: payload.buffer as unknown as BodyInit
+          });
+        }
+      } catch (err) {
+        console.warn('[SovereignCore] Telemetry sync failed', err);
+      } finally {
+        this.telemetryTimer = setTimeout(sync, intervalMs);
+      }
+    };
+
+    this.telemetryTimer = setTimeout(sync, intervalMs);
   }
 
   public static getInstance(config: SovereignClientCoreConfig): SovereignClientCore {

@@ -1,8 +1,9 @@
 docs {
-  # NOTE: The backend requires the DPoP header generated with an ECDSA ES256 key.
-  # For manual testing, generate a DPoP token using the test script:
-  # apps/backend-api/internal/handler/http/checkout_integration_test.go:generateValidDPoP()
-  # and paste it manually into the DPoP header before running this request.
+  # Automated DPoP flow:
+  # 1. Run Dev/Get DPoP Token (Sync).bru first — it calls POST /api/v1/dev/dpop-token
+  #    with htu=/checkout/sync and saves the result as {{dpopSyncToken}}.
+  # 2. Run this request — DPoP header is set automatically from {{dpopSyncToken}}.
+  # Requires: BUILD_ENV=development on the backend server.
 }
 
 meta {
@@ -21,7 +22,7 @@ headers {
   Content-Type: application/json
   Authorization: Bearer {{jwt}}
   X-Idempotency-Key: sync_test_123
-  DPoP: <manually-set-before-running>
+  DPoP: {{dpopSyncToken}}
 }
 
 body:json {

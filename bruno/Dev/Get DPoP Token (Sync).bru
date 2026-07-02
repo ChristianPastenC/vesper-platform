@@ -1,0 +1,28 @@
+meta {
+  name: Get DPoP Token for Sync (DEV ONLY)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/dev/dpop-token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "method": "POST",
+    "url": "http://localhost:8080/api/v1/checkout/sync"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8080
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.dpopToken) {
+    bru.setVar("dpopSyncToken", res.body.dpopToken);
+  }
+}

@@ -17,6 +17,12 @@ jest.mock('../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
+jest.mock('../config', () => ({
+  getApiUrl: jest.fn(),
+}));
+
+import { getApiUrl } from '../config';
+
 describe('useAuthenticatedRequest', () => {
   const mockExecuteRequest = jest.fn();
   const mockLogout = jest.fn();
@@ -28,6 +34,7 @@ describe('useAuthenticatedRequest', () => {
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       return selector({ logout: mockLogout });
     });
+    (getApiUrl as jest.Mock).mockReturnValue('');
     globalThis.fetch = jest.fn();
   });
 
@@ -35,17 +42,45 @@ describe('useAuthenticatedRequest', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('executes request and returns data if successful', async () => {
+  it('executes request and returns data if successful, combining path and API_URL', async () => {
+    mockExecuteRequest.mockResolvedValue('success-data');
+    (getApiUrl as jest.Mock).mockReturnValue('https://api.mock.com');
+
+    const { result } = renderHook(() => useAuthenticatedRequest());
+
+    const response = await result.current.execute('req-1', {
+      method: 'GET',
+      path: '/api/test',
+      encodedHeaders: new Uint8Array([1, 2, 3]),
+    });
+
+    expect(response).toBe('success-data');
+    expect(mockExecuteRequest).toHaveBeenCalledTimes(1);
+    expect(mockExecuteRequest).toHaveBeenCalledWith('req-1', {
+      method: 'GET',
+      url: 'https://api.mock.com/api/test',
+      encodedHeaders: new Uint8Array([1, 2, 3]),
+    });
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('executes a successful request preferring absolute url if provided', async () => {
     mockExecuteRequest.mockResolvedValue('success-data');
 
     const { result } = renderHook(() => useAuthenticatedRequest());
 
-    const response = await result.current.execute('req-1', { method: 'GET', url: '/api/test' });
+    await result.current.execute('req-1.5', {
+      method: 'POST',
+      url: 'https://custom.com/test',
+      path: '/api/v1/ignored',
+    });
 
-    expect(response).toBe('success-data');
-    expect(mockExecuteRequest).toHaveBeenCalledTimes(1);
-    expect(mockExecuteRequest).toHaveBeenCalledWith('req-1', { method: 'GET', url: '/api/test' });
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(mockExecuteRequest).toHaveBeenCalledWith(
+      'req-1.5',
+      expect.objectContaining({
+        url: 'https://custom.com/test',
+      }),
+    );
   });
 
   it('throws original error if status is not 401', async () => {

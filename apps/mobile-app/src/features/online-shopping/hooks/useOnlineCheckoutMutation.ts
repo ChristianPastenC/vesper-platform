@@ -53,7 +53,7 @@ export const useOnlineCheckoutMutation = () => {
       const response = await execute<SovereignCheckoutResponse>(randomUUID(), {
         method: 'POST',
         url: `${API_URL}/api/v1/checkout/online`,
-        headers,
+        encodedHeaders: headers,
         body: bodyBytes,
       });
 

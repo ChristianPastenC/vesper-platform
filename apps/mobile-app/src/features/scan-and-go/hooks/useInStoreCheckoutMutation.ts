@@ -54,7 +54,7 @@ export const useInStoreCheckoutMutation = () => {
       const response = await execute<SovereignCheckoutResponse>(randomUUID(), {
         method: 'POST',
         url: `${API_URL}/api/v1/checkout/instore`,
-        headers,
+        encodedHeaders: headers,
         body: bodyBytes,
       });
 

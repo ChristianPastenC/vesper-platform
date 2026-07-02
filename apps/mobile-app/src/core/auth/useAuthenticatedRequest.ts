@@ -5,6 +5,15 @@ import { useAppStore } from '../../store/useAppStore';
 import type { SovereignAdapterRequest } from '@sovereign/secure-client';
 import { getApiUrl } from '../config';
 
+export interface ExecuteRequestConfig {
+  method: string;
+  path?: string;
+  url?: string;
+  headers?: Record<string, string>;
+  encodedHeaders?: Uint8Array;
+  body?: Uint8Array | null;
+}
+
 /**
  * useAuthenticatedRequest
  *
@@ -17,8 +26,18 @@ export const useAuthenticatedRequest = () => {
   const logout = useAppStore((state) => state.logout);
 
   const execute = useCallback(
-    async <T>(requestId: string, request: SovereignAdapterRequest): Promise<T> => {
+    async <T>(requestId: string, config: ExecuteRequestConfig): Promise<T> => {
       const API_URL = getApiUrl();
+      const finalUrl = config.url ?? `${API_URL}${config.path ?? ''}`;
+
+      const request: SovereignAdapterRequest = {
+        method: config.method,
+        url: finalUrl,
+        headers: config.headers,
+        encodedHeaders: config.encodedHeaders,
+        body: config.body,
+      };
+
       try {
         // 1. Execute original request
         return await client.executeRequest<T>(requestId, request);

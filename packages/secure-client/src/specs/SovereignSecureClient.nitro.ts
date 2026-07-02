@@ -62,4 +62,10 @@ export interface SovereignSecureClient extends HybridObject<{ ios: 'c++'; androi
    * Encodes a given ArrayBuffer to a Base64Url string in native C++.
    */
   base64UrlEncode(data: ArrayBuffer): string;
+
+  /**
+   * Retrieves a snapshot of the telemetry events ring buffer as a binary ArrayBuffer.
+   * Each event is packed into 17 bytes (uint8 type, uint64 timestamp, double value).
+   */
+  getTelemetrySnapshot(): ArrayBuffer;
 }

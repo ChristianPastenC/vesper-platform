@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include "CryptoUtils.h"
+#include "SovereignTelemetryEngine.h"
 
 namespace sovereign::secure {
 
@@ -84,6 +85,7 @@ public:
             if (!crypto::constantTimeEqual(block.previousHash, expectedPrevHash)) {
                 is_locked_ = true;
                 is_integrity_compromised_ = true;
+                SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
                 return false;
             }
             if (!block.isZeroized) {
@@ -91,6 +93,7 @@ public:
                 if (!crypto::constantTimeEqual(block.currentHash, recomputed)) {
                     is_locked_ = true;
                     is_integrity_compromised_ = true;
+                    SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
                     return false;
                 }
             }
@@ -139,6 +142,7 @@ private:
         std::fill(block.previousHash.begin(), block.previousHash.end(), 0);
         std::fill(block.currentHash.begin(), block.currentHash.end(), 0);
         block.isZeroized = true;
+        SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::ZEROIZATION_TRIGGERED);
     }
 
     std::vector<uint8_t> resolvePreviousHash() {
@@ -151,6 +155,8 @@ private:
         const std::vector<uint8_t>& previousHash,
         uint64_t timestamp
     ) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+
         std::vector<uint8_t> preImage;
         preImage.reserve(payload.size() + previousHash.size() + 32);
         preImage.insert(preImage.end(), payload.begin(), payload.end());
@@ -159,7 +165,13 @@ private:
         preImage.insert(preImage.end(), ts_str.begin(), ts_str.end());
         
         // Using the requested pure C++17 SHA-256 implementation located in CryptoUtils
-        return crypto::sha256(preImage);
+        auto hash = crypto::sha256(preImage);
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        double latency_ms = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::COMPUTE_HASH_LATENCY, latency_ms);
+        
+        return hash;
     }
 
     void rechain() {

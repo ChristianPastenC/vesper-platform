@@ -35,6 +35,7 @@ public:
     std::vector<std::string> getQueueIds() override;
     std::shared_ptr<ArrayBuffer> getTransactionPayload(const std::string& id) override;
     std::string base64UrlEncode(const std::shared_ptr<ArrayBuffer>& data) override;
+    std::shared_ptr<ArrayBuffer> getTelemetrySnapshot() override;
 
 private:
     VolatileQueue queue_;

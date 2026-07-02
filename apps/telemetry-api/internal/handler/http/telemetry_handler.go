@@ -6,6 +6,9 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
 
 	"sovereign-core/telemetry-api/internal/domain"
 	"sovereign-core/telemetry-api/internal/middleware"
@@ -14,12 +17,14 @@ import (
 type TelemetryHandler struct {
 	logger    *slog.Logger
 	forwarder domain.TelemetryForwarder
+	repo      domain.AuthRepository
 }
 
-func NewTelemetryHandler(logger *slog.Logger, forwarder domain.TelemetryForwarder) *TelemetryHandler {
+func NewTelemetryHandler(logger *slog.Logger, forwarder domain.TelemetryForwarder, repo domain.AuthRepository) *TelemetryHandler {
 	return &TelemetryHandler{
 		logger:    logger,
 		forwarder: forwarder,
+		repo:      repo,
 	}
 }
 
@@ -65,6 +70,18 @@ func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 
 		if err := h.forwarder.ForwardEvent(r.Context(), event); err != nil {
 			h.logger.Error("Failed to forward telemetry event", "error", err, "tenant", tenantID)
+		}
+
+		// Also persist locally in SQLite for the Support Portal Dashboard
+		dbMetric := domain.Metric{
+			ID:         uuid.NewString(),
+			TenantID:   tenantID,
+			MetricType: int(eventType),
+			Value:      value,
+			Timestamp:  time.UnixMilli(timestamp),
+		}
+		if err := h.repo.InsertMetric(r.Context(), dbMetric); err != nil {
+			h.logger.Error("Failed to save metric locally", "error", err)
 		}
 	}
 

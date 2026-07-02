@@ -53,6 +53,16 @@ func (r *SQLiteRepository) migrate() error {
 		last_used DATETIME,
 		FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 	);
+
+	CREATE TABLE IF NOT EXISTS metrics (
+		id TEXT PRIMARY KEY,
+		tenant_id TEXT NOT NULL,
+		metric_type INTEGER NOT NULL,
+		value REAL NOT NULL,
+		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+	);
+	CREATE INDEX IF NOT EXISTS idx_metrics_tenant ON metrics(tenant_id, timestamp DESC);
 	`
 	_, err := r.db.Exec(schema)
 	if err != nil {
@@ -145,4 +155,35 @@ func (r *SQLiteRepository) ValidateApiKey(ctx context.Context, key string) (*dom
 	}()
 
 	return &k, nil
+}
+
+func (r *SQLiteRepository) InsertMetric(ctx context.Context, metric domain.Metric) error {
+	_, err := r.db.ExecContext(ctx, 
+		`INSERT INTO metrics (id, tenant_id, metric_type, value, timestamp) VALUES (?, ?, ?, ?, ?)`,
+		metric.ID, metric.TenantID, metric.MetricType, metric.Value, metric.Timestamp)
+	return err
+}
+
+func (r *SQLiteRepository) GetMetricsByTenant(ctx context.Context, tenantID string, limit int) ([]domain.Metric, error) {
+	rows, err := r.db.QueryContext(ctx, 
+		`SELECT id, metric_type, value, timestamp FROM metrics WHERE tenant_id = ? ORDER BY timestamp DESC LIMIT ?`, 
+		tenantID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var metrics []domain.Metric
+	for rows.Next() {
+		var m domain.Metric
+		if err := rows.Scan(&m.ID, &m.MetricType, &m.Value, &m.Timestamp); err != nil {
+			return nil, err
+		}
+		metrics = append(metrics, m)
+	}
+	// Reverse to ascending order for charts
+	for i, j := 0, len(metrics)-1; i < j; i, j = i+1, j-1 {
+		metrics[i], metrics[j] = metrics[j], metrics[i]
+	}
+	return metrics, nil
 }

@@ -65,6 +65,54 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+type RegisterRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var req RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if req.Name == "" || req.Email == "" || req.Password == "" {
+		http.Error(w, "Fields cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	existing, _ := h.repo.GetTenantByEmail(r.Context(), req.Email)
+	if existing != nil {
+		http.Error(w, "Email already in use", http.StatusConflict)
+		return
+	}
+
+	newTenant := domain.Tenant{
+		ID:        "tenant_" + uuid.NewString(),
+		Name:      req.Name,
+		Email:     req.Email,
+		Password:  req.Password,
+		CreatedAt: time.Now(),
+	}
+
+	if err := h.repo.CreateTenant(r.Context(), newTenant); err != nil {
+		h.logger.Error("Failed to register tenant", "error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	res := LoginResponse{
+		Token:    "session_" + newTenant.ID,
+		TenantID: newTenant.ID,
+		Name:     newTenant.Name,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
 type CreateKeyRequest struct {
 	Name string `json:"name"`
 }
@@ -122,4 +170,27 @@ func (h *AuthHandler) ListKeys(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(keys)
+}
+
+func (h *AuthHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	if len(token) < 9 || token[:8] != "session_" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	tenantID := token[8:]
+
+	metrics, err := h.repo.GetMetricsByTenant(r.Context(), tenantID, 30) // max 30 points
+	if err != nil {
+		h.logger.Error("Failed to list metrics", "error", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if metrics == nil {
+		metrics = []domain.Metric{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(metrics)
 }

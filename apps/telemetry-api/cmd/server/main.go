@@ -29,13 +29,14 @@ func main() {
 	r.Use(chi_middleware.Logger)
 	r.Use(chi_middleware.Recoverer)
 
-	// Basic CORS
+	// Permissive CORS for local dev
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:4321", "http://127.0.0.1:4321"},
+		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key", "Origin"},
+		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		MaxAge:           300,
 	}))
 
 	// Init DB
@@ -49,8 +50,10 @@ func main() {
 
 	// B2B SaaS Auth Endpoints
 	r.Post("/api/v1/b2b/login", authHandler.Login)
+	r.Post("/api/v1/b2b/signup", authHandler.Register)
 	r.Post("/api/v1/b2b/keys", authHandler.CreateKey)
 	r.Get("/api/v1/b2b/keys", authHandler.ListKeys)
+	r.Get("/api/v1/b2b/metrics", authHandler.GetMetrics)
 
 	// Middleware for ingestion
 	ingestRouter := chi.NewRouter()
@@ -63,7 +66,7 @@ func main() {
 		logger.Error("Failed to initialize OpenTelemetry client, telemetry will be disabled", "error", err)
 	} else {
 		defer otelClient.Shutdown(context.Background())
-		telemetryHandler := myhttp.NewTelemetryHandler(logger, otelClient)
+		telemetryHandler := myhttp.NewTelemetryHandler(logger, otelClient, sqliteRepo)
 		ingestRouter.Post("/", telemetryHandler.Ingest)
 		r.Mount("/api/v1/support/telemetry", ingestRouter)
 	}

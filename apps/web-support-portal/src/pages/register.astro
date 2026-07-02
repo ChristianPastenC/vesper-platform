@@ -1,0 +1,118 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Sovereign Telemetry | Register">
+  <main class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+      
+      <div class="p-8 relative">
+        <div class="flex items-center justify-center mb-8">
+          <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg ring-1 ring-emerald-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+              <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-center text-white mb-2">Crear Cuenta B2B</h2>
+        <p class="text-slate-400 text-center mb-8 text-sm">Registre su organización para generar API Keys y monitorear telemetría de sus SDKs.</p>
+        
+        <form id="register-form" class="space-y-6">
+          <div id="error-alert" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg text-center">
+            Error al registrarse. Verifique los datos o si el correo ya existe.
+          </div>
+
+          <div>
+            <label for="name" class="block text-sm font-medium text-slate-300 mb-1">Nombre de la Empresa</label>
+            <input type="text" id="name" name="name" required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              placeholder="Acme Corp"
+            />
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-medium text-slate-300 mb-1">Correo Electrónico</label>
+            <input type="email" id="email" name="email" required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              placeholder="admin@acme.com"
+            />
+          </div>
+          
+          <div>
+            <label for="password" class="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
+            <input type="password" id="password" name="password" required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+          
+          <button type="submit" id="submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+            <span>Registrar y Entrar</span>
+            <svg id="spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </form>
+
+        <p class="text-center text-slate-400 mt-6 text-sm">
+          ¿Ya tiene una cuenta? <a href="/login" class="text-emerald-400 hover:text-emerald-300">Iniciar Sesión</a>
+        </p>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById('register-form') as HTMLFormElement;
+  const errorAlert = document.getElementById('error-alert')!;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const spinner = document.getElementById('spinner')!;
+  const btnText = submitBtn.querySelector('span')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    errorAlert.classList.add('hidden');
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
+    btnText.textContent = 'Creando cuenta...';
+    
+    const formData = new FormData(form);
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    try {
+      const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Registration failed');
+      }
+      
+      const data = await res.json();
+      
+      localStorage.setItem('sovereign_session_token', data.token);
+      localStorage.setItem('sovereign_tenant_id', data.tenant_id);
+      localStorage.setItem('sovereign_tenant_name', data.name);
+      
+      window.location.href = '/';
+      
+    } catch (err) {
+      console.error("Error en registro:", err);
+      errorAlert.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      spinner.classList.add('hidden');
+      btnText.textContent = 'Registrar y Entrar';
+    }
+  });
+</script>

@@ -66,8 +66,8 @@ import Layout from '../layouts/Layout.astro';
             <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"></div>
             <h2 class="text-lg font-semibold text-white mb-2">Integridad del Ledger</h2>
             <div class="flex items-baseline gap-3 mb-6">
-              <span class="text-3xl font-bold text-white">0</span>
-              <span class="text-xs font-medium px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">Estable</span>
+              <span class="text-3xl font-bold text-white" id="integrity-value">0</span>
+              <span class="text-xs font-medium px-2 py-1 rounded bg-emerald-500/20 text-emerald-400" id="integrity-status">Estable</span>
             </div>
             <div class="h-48">
               <canvas id="integrityChart"></canvas>
@@ -78,8 +78,8 @@ import Layout from '../layouts/Layout.astro';
             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
             <h2 class="text-lg font-semibold text-white mb-2">Latencia DPoP (ms)</h2>
             <div class="flex items-baseline gap-3 mb-6">
-              <span class="text-3xl font-bold text-white">12.5 ms</span>
-              <span class="text-xs font-medium px-2 py-1 rounded bg-blue-500/20 text-blue-400">Óptimo</span>
+              <span class="text-3xl font-bold text-white" id="latency-value">0 ms</span>
+              <span class="text-xs font-medium px-2 py-1 rounded bg-blue-500/20 text-blue-400" id="latency-status">Esperando datos</span>
             </div>
             <div class="h-48">
               <canvas id="latencyChart"></canvas>
@@ -183,40 +183,89 @@ import Layout from '../layouts/Layout.astro';
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
+      animation: { duration: 400 },
       scales: {
-        x: { grid: { display: false, color: '#334155' }, ticks: { color: '#94a3b8' } },
+        x: { grid: { display: false, color: '#334155' }, ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 } },
         y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
       }
     };
 
-    new Chart(document.getElementById('integrityChart') as HTMLCanvasElement, {
+    const integrityChart = new Chart(document.getElementById('integrityChart') as HTMLCanvasElement, {
       type: 'line',
-      data: {
-        labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'],
-        datasets: [{
-          data: [0, 0, 0, 0, 0, 0],
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: commonOptions
+      data: { labels: [], datasets: [{ data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }] },
+      options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0, suggestedMax: 2 } } }
     });
 
-    new Chart(document.getElementById('latencyChart') as HTMLCanvasElement, {
+    const latencyChart = new Chart(document.getElementById('latencyChart') as HTMLCanvasElement, {
       type: 'line',
-      data: {
-        labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'],
-        datasets: [{
-          data: [12.5, 13.0, 11.2, 14.1, 12.0, 12.5],
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: commonOptions
+      data: { labels: [], datasets: [{ data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }] },
+      options: { ...commonOptions, scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0 } } }
     });
+
+    // Real-time metrics polling
+    const fetchMetrics = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/metrics', {
+          headers: { 'Authorization': token }
+        });
+        if (!res.ok) return;
+        const metrics = await res.json();
+        
+        const integrityData: any[] = [];
+        const latencyData: any[] = [];
+
+        metrics.forEach((m: any) => {
+          const date = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          if (m.metric_type === 1) { // Integrity
+            integrityData.push({ x: date, y: m.value });
+          } else if (m.metric_type === 2) { // Latency
+            latencyData.push({ x: date, y: m.value });
+          }
+        });
+
+        if (integrityData.length > 0) {
+          integrityChart.data.labels = integrityData.map(d => d.x);
+          integrityChart.data.datasets[0].data = integrityData.map(d => d.y);
+          integrityChart.update('none');
+          
+          const latest = integrityData[integrityData.length - 1].y;
+          document.getElementById('integrity-value')!.textContent = latest.toString();
+          const statusEl = document.getElementById('integrity-status')!;
+          if (latest > 0) {
+            statusEl.textContent = 'Alerta';
+            statusEl.className = 'text-xs font-medium px-2 py-1 rounded bg-red-500/20 text-red-400';
+          } else {
+            statusEl.textContent = 'Estable';
+            statusEl.className = 'text-xs font-medium px-2 py-1 rounded bg-emerald-500/20 text-emerald-400';
+          }
+        }
+
+        if (latencyData.length > 0) {
+          latencyChart.data.labels = latencyData.map(d => d.x);
+          latencyChart.data.datasets[0].data = latencyData.map(d => d.y);
+          latencyChart.update('none');
+          
+          const latest = latencyData[latencyData.length - 1].y;
+          document.getElementById('latency-value')!.textContent = latest.toFixed(1) + ' ms';
+          const statusEl = document.getElementById('latency-status')!;
+          if (latest > 100) {
+            statusEl.textContent = 'Crítico';
+            statusEl.className = 'text-xs font-medium px-2 py-1 rounded bg-red-500/20 text-red-400';
+          } else if (latest > 50) {
+            statusEl.textContent = 'Lento';
+            statusEl.className = 'text-xs font-medium px-2 py-1 rounded bg-yellow-500/20 text-yellow-400';
+          } else {
+            statusEl.textContent = 'Óptimo';
+            statusEl.className = 'text-xs font-medium px-2 py-1 rounded bg-blue-500/20 text-blue-400';
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching metrics", err);
+      }
+    };
+
+    // Fetch immediately and then every 3 seconds
+    fetchMetrics();
+    setInterval(fetchMetrics, 3000);
   });
 </script>

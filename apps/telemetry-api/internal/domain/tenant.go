@@ -17,6 +17,7 @@ type ApiKey struct {
 	Key       string    `json:"key"`
 	TenantID  string    `json:"tenant_id"`
 	Name      string    `json:"name"`
+	BundleID  string    `json:"bundle_id"`
 	CreatedAt time.Time `json:"created_at"`
 	LastUsed  time.Time `json:"last_used"`
 }
@@ -35,6 +36,8 @@ type AuthRepository interface {
 	CreateApiKey(ctx context.Context, key ApiKey) error
 	GetApiKeysByTenant(ctx context.Context, tenantID string) ([]ApiKey, error)
 	ValidateApiKey(ctx context.Context, key string) (*ApiKey, error)
+	UpdateApiKeyBundleID(ctx context.Context, key string, bundleID string) error
+	DeleteApiKey(ctx context.Context, tenantID string, keyID string) error
 	InsertMetric(ctx context.Context, metric Metric) error
 	GetMetricsByTenant(ctx context.Context, tenantID string, limit int) ([]Metric, error)
 }

@@ -15,8 +15,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+
+	_ "sovereign-core/telemetry-api/docs" // Swagger docs
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title Sovereign Telemetry API
+// @version 1.0
+// @description Backend API for the Sovereign Developer Portal and Telemetry Ingestion.
+// @host localhost:8081
+// @BasePath /
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
@@ -53,7 +61,12 @@ func main() {
 	r.Post("/api/v1/b2b/signup", authHandler.Register)
 	r.Post("/api/v1/b2b/keys", authHandler.CreateKey)
 	r.Get("/api/v1/b2b/keys", authHandler.ListKeys)
+	r.Delete("/api/v1/b2b/keys", authHandler.DeleteKey)
 	r.Get("/api/v1/b2b/metrics", authHandler.GetMetrics)
+	r.Get("/api/v1/support/ping", authHandler.Ping)
+
+	// Swagger UI
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	// Middleware for ingestion
 	ingestRouter := chi.NewRouter()

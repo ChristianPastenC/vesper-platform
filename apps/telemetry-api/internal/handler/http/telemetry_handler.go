@@ -28,8 +28,18 @@ func NewTelemetryHandler(logger *slog.Logger, forwarder domain.TelemetryForwarde
 	}
 }
 
-// Ingest handles binary telemetry dumps from the mobile SDK.
-// It assumes the LogSanitizer middleware has already purged PII from the body.
+// @Summary Ingest Telemetry
+// @Description Ingest binary telemetry dumps from the mobile SDK
+// @Tags Telemetry
+// @Accept octet-stream
+// @Produce plain
+// @Param X-Sovereign-API-Key header string true "API Key"
+// @Param X-Bundle-ID header string true "Bundle ID of the mobile app"
+// @Param payload body []byte true "Binary telemetry payload"
+// @Success 202 {string} string "Accepted"
+// @Failure 400 {string} string "Invalid payload format"
+// @Failure 401 {string} string "Tenant identity missing"
+// @Router /api/v1/support/telemetry/ [post]
 func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	// Extract TenantID securely injected by the ApiKeyValidator
 	tenantID, ok := r.Context().Value(middleware.TenantIDKey).(string)

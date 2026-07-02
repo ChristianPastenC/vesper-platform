@@ -7,12 +7,14 @@ import (
 	"os"
 	"time"
 
+	"sovereign-core/telemetry-api/internal/adapter/db"
 	"sovereign-core/telemetry-api/internal/adapter/telemetry"
 	myhttp "sovereign-core/telemetry-api/internal/handler/http"
 	"sovereign-core/telemetry-api/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -26,11 +28,35 @@ func main() {
 	r.Use(chi_middleware.RealIP)
 	r.Use(chi_middleware.Logger)
 	r.Use(chi_middleware.Recoverer)
-	
-	// B2B SaaS Auth
-	r.Use(middleware.ApiKeyValidator)
+
+	// Basic CORS
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4321", "http://127.0.0.1:4321"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
+	// Init DB
+	sqliteRepo, err := db.NewSQLiteRepository(logger, "telemetry.db")
+	if err != nil {
+		logger.Error("Failed to init SQLite", "error", err)
+		os.Exit(1)
+	}
+
+	authHandler := myhttp.NewAuthHandler(logger, sqliteRepo)
+
+	// B2B SaaS Auth Endpoints
+	r.Post("/api/v1/b2b/login", authHandler.Login)
+	r.Post("/api/v1/b2b/keys", authHandler.CreateKey)
+	r.Get("/api/v1/b2b/keys", authHandler.ListKeys)
+
+	// Middleware for ingestion
+	ingestRouter := chi.NewRouter()
+	ingestRouter.Use(middleware.ApiKeyValidator(sqliteRepo))
 	// Zero-Trust Data Sanitizer
-	r.Use(middleware.LogSanitizer)
+	ingestRouter.Use(middleware.LogSanitizer)
 
 	otelClient, err := telemetry.NewOtelClient(logger)
 	if err != nil {
@@ -38,7 +64,8 @@ func main() {
 	} else {
 		defer otelClient.Shutdown(context.Background())
 		telemetryHandler := myhttp.NewTelemetryHandler(logger, otelClient)
-		r.Post("/api/v1/support/telemetry", telemetryHandler.Ingest)
+		ingestRouter.Post("/", telemetryHandler.Ingest)
+		r.Mount("/api/v1/support/telemetry", ingestRouter)
 	}
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {

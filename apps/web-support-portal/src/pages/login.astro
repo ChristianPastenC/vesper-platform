@@ -1,0 +1,107 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Sovereign Telemetry | Login">
+  <main class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none"></div>
+      
+      <div class="p-8 relative">
+        <div class="flex items-center justify-center mb-8">
+          <div class="bg-blue-500/10 text-blue-400 p-3 rounded-lg ring-1 ring-blue-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+              <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-center text-white mb-2">B2B Developer Portal</h2>
+        <p class="text-slate-400 text-center mb-8 text-sm">Ingrese sus credenciales corporativas para administrar sus integraciones SDK y monitorear telemetría.</p>
+        
+        <form id="login-form" class="space-y-6">
+          <div id="error-alert" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg text-center">
+            Credenciales inválidas.
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-medium text-slate-300 mb-1">Correo Electrónico</label>
+            <input type="email" id="email" name="email" required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="admin@empresa.com"
+            />
+          </div>
+          
+          <div>
+            <label for="password" class="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
+            <input type="password" id="password" name="password" required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+          
+          <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+            <span>Iniciar Sesión</span>
+            <svg id="spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // Vanilla JS logic for login
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const errorAlert = document.getElementById('error-alert')!;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const spinner = document.getElementById('spinner')!;
+  const btnText = submitBtn.querySelector('span')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    errorAlert.classList.add('hidden');
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
+    btnText.textContent = 'Autenticando...';
+    
+    const formData = new FormData(form);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    try {
+      const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const data = await res.json();
+      
+      // Store session securely (in a real app, use secure httpOnly cookies, for this SaaS demo localStorage is used for the API token)
+      localStorage.setItem('sovereign_session_token', data.token);
+      localStorage.setItem('sovereign_tenant_id', data.tenant_id);
+      localStorage.setItem('sovereign_tenant_name', data.name);
+      
+      // Redirect to dashboard
+      window.location.href = '/';
+      
+    } catch (err) {
+      errorAlert.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      spinner.classList.add('hidden');
+      btnText.textContent = 'Iniciar Sesión';
+    }
+  });
+</script>

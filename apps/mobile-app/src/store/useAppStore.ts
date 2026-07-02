@@ -32,8 +32,6 @@ interface AppState {
   onlineCart: OnlineCartItem[];
   inStoreCart: InStoreCartItem[];
 
-  login: (email: string, name: string) => Promise<void>;
-  signUp: (email: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   initAuth: () => Promise<void>;
   setIsAuthenticated: (auth: boolean, username?: string) => void;
@@ -69,12 +67,7 @@ export const useAppStore = create<AppState>()(
       onlineCart: [],
       inStoreCart: [],
 
-      login: async (_email, name) => {
-        set({ isAuthenticated: true, userName: name || 'User' });
-      },
-      signUp: async (_email, name) => {
-        set({ isAuthenticated: true, userName: name || 'User' });
-      },
+
       logout: async () => {
         await clearTokens();
         set({

@@ -63,7 +63,14 @@ export const useOrders = () => {
   }, [orders]);
 
   const pastOrders = useMemo(() => {
-    return orders.filter((o) => o.status === 'delivered' || o.status === 'cancelled');
+    return orders.filter(
+      (o) =>
+        o.status === 'delivered' ||
+        o.status === 'cancelled' ||
+        o.status === 'succeeded' ||
+        o.status === 'failed' ||
+        o.status === 'synced',
+    );
   }, [orders]);
 
   const getOrderById = useCallback(

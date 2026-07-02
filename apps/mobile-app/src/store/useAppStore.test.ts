@@ -60,8 +60,8 @@ describe('useAppStore', () => {
   it('logs in and out properly', async () => {
     const { result } = renderHook(() => useAppStore());
 
-    await act(async () => {
-      await result.current.login('test@test.com', 'Test User');
+    act(() => {
+      result.current.setIsAuthenticated(true, 'Test User');
     });
 
     expect(result.current.isAuthenticated).toBe(true);
@@ -160,32 +160,10 @@ describe('useAppStore', () => {
   it('useIsAuthenticated returns the auth state', () => {
     const { result: storeResult } = renderHook(() => useAppStore());
     act(() => {
-      storeResult.current.login('a@a.com', 'A');
+      storeResult.current.setIsAuthenticated(true, 'A');
     });
     const { result } = renderHook(() => useIsAuthenticated());
     expect(result.current).toBe(true);
   });
 
-  it('signs up and falls back to default user name', async () => {
-    const { result } = renderHook(() => useAppStore());
-
-    await act(async () => {
-      // @ts-expect-error testing missing name
-      await result.current.signUp('test@test.com', '');
-    });
-
-    expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.userName).toBe('User');
-  });
-
-  it('login falls back to default user name', async () => {
-    const { result } = renderHook(() => useAppStore());
-
-    await act(async () => {
-      // @ts-expect-error testing missing name
-      await result.current.login('test@test.com', null);
-    });
-
-    expect(result.current.userName).toBe('User');
-  });
 });

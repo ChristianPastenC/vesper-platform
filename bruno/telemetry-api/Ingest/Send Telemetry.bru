@@ -1,0 +1,22 @@
+meta {
+  name: Send Telemetry
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/support/telemetry
+  body: none
+  auth: none
+}
+
+headers {
+  X-Sovereign-API-Key: {{api_key}}
+}
+
+body:none {
+}
+
+docs {
+  This sends binary telemetry. Since Bruno body configuration for raw binary might be tricky, it's easier to use curl for testing ingestion, or you can attach a binary file in the Bruno UI.
+}

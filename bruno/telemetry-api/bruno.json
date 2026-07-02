@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Sovereign Telemetry API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

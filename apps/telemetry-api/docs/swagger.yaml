@@ -1,189 +1,321 @@
-openapi: 3.0.0
+basePath: /
+definitions:
+  domain.ApiKey:
+    properties:
+      bundle_id:
+        type: string
+      created_at:
+        type: string
+      key:
+        type: string
+      last_used:
+        type: string
+      name:
+        type: string
+      tenant_id:
+        type: string
+    type: object
+  domain.Metric:
+    properties:
+      id:
+        type: string
+      metric_type:
+        description: '1: Integrity, 2: Latency'
+        type: integer
+      timestamp:
+        type: string
+      value:
+        type: number
+    type: object
+  http.CreateKeyRequest:
+    properties:
+      bundle_id:
+        type: string
+      name:
+        type: string
+    type: object
+  http.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  http.LoginResponse:
+    properties:
+      name:
+        type: string
+      tenant_id:
+        type: string
+      token:
+        type: string
+    type: object
+  http.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8081
 info:
+  contact: {}
+  description: Backend API for the Sovereign Developer Portal and Telemetry Ingestion.
   title: Sovereign Telemetry API
-  description: Backend API for the Sovereign B2B Developer Portal and Mobile SDK Telemetry Ingestion.
-  version: 1.0.0
-servers:
-  - url: http://127.0.0.1:8081
-    description: Local development server
+  version: "1.0"
 paths:
-  /api/v1/b2b/signup:
-    post:
-      summary: Register a new tenant
-      requestBody:
+  /api/v1/b2b/keys:
+    delete:
+      description: Revoke an API key
+      parameters:
+      - description: Session token
+        in: header
+        name: Authorization
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthRequest'
+        type: string
+      - description: API Key to delete
+        in: query
+        name: key
+        required: true
+        type: string
       responses:
-        '200':
-          description: Successfully registered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          description: Invalid request
-        '409':
-          description: Email already in use
-
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Key is required
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Delete API Key
+      tags:
+      - Auth
+    get:
+      description: List all API keys for the tenant
+      parameters:
+      - description: Session token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ApiKey'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: List API Keys
+      tags:
+      - Auth
+    post:
+      consumes:
+      - application/json
+      description: Create a new API key for the tenant (Max 1)
+      parameters:
+      - description: Session token (e.g. session_tenantID)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: API Key details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "409":
+          description: API Key limit reached
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Create API Key
+      tags:
+      - Auth
   /api/v1/b2b/login:
     post:
-      summary: Login to an existing tenant
-      requestBody:
+      consumes:
+      - application/json
+      description: Authenticate a tenant and receive a session token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthRequest'
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
+      produces:
+      - application/json
       responses:
-        '200':
-          description: Successfully logged in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
-          description: Unauthorized
-
-  /api/v1/b2b/keys:
-    get:
-      summary: List all API keys for the tenant
-      security:
-        - SessionAuth: []
-      responses:
-        '200':
-          description: List of keys
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ApiKey'
-    post:
-      summary: Generate a new API key
-      security:
-        - SessionAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: "Production SDK Key"
-      responses:
-        '201':
-          description: Successfully created key
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiKey'
-
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.LoginResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            type: string
+        "401":
+          description: Invalid credentials
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Login tenant
+      tags:
+      - Auth
   /api/v1/b2b/metrics:
     get:
-      summary: Retrieve real-time telemetry metrics
-      security:
-        - SessionAuth: []
-      responses:
-        '200':
-          description: List of metrics
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Metric'
-
-  /api/v1/support/telemetry:
-    post:
-      summary: Ingest binary telemetry from the Sovereign SDK
-      security:
-        - ApiKeyAuth: []
-      requestBody:
+      description: Get telemetry metrics for the tenant
+      parameters:
+      - description: Session token
+        in: header
+        name: Authorization
         required: true
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-              description: 17-byte struct (1 byte type, 8 bytes timestamp, 8 bytes float64 value)
+        type: string
+      produces:
+      - application/json
       responses:
-        '202':
-          description: Telemetry accepted
-        '400':
-          description: Invalid payload size
-        '401':
-          description: Missing or invalid API Key
-
-components:
-  securitySchemes:
-    SessionAuth:
-      type: apiKey
-      in: header
-      name: Authorization
-      description: Session token format "session_{tenant_id}"
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-Sovereign-API-Key
-
-  schemas:
-    AuthRequest:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-    
-    AuthResponse:
-      type: object
-      properties:
-        token:
-          type: string
-        tenant_id:
-          type: string
-        name:
-          type: string
-          
-    ApiKey:
-      type: object
-      properties:
-        key:
-          type: string
-        tenant_id:
-          type: string
-        name:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        last_used:
-          type: string
-          format: date-time
-          
-    Metric:
-      type: object
-      properties:
-        id:
-          type: string
-        metric_type:
-          type: integer
-          description: 1 for Integrity, 2 for Latency
-        value:
-          type: number
-          format: double
-        timestamp:
-          type: string
-          format: date-time
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Metric'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Get Metrics
+      tags:
+      - Metrics
+  /api/v1/b2b/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new B2B tenant
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.LoginResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            type: string
+        "409":
+          description: Email already in use
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Register tenant
+      tags:
+      - Auth
+  /api/v1/support/ping:
+    get:
+      description: Wake up or health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Server Ping
+      tags:
+      - System
+  /api/v1/support/telemetry/:
+    post:
+      consumes:
+      - application/octet-stream
+      description: Ingest binary telemetry dumps from the mobile SDK
+      parameters:
+      - description: API Key
+        in: header
+        name: X-Sovereign-API-Key
+        required: true
+        type: string
+      - description: Bundle ID of the mobile app
+        in: header
+        name: X-Bundle-ID
+        required: true
+        type: string
+      - description: Binary telemetry payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          items:
+            type: integer
+          type: array
+      produces:
+      - text/plain
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+        "400":
+          description: Invalid payload format
+          schema:
+            type: string
+        "401":
+          description: Tenant identity missing
+          schema:
+            type: string
+      summary: Ingest Telemetry
+      tags:
+      - Telemetry
+swagger: "2.0"

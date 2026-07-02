@@ -35,6 +35,17 @@ type LoginResponse struct {
 	Name     string         `json:"name"`
 }
 
+// @Summary Login tenant
+// @Description Authenticate a tenant and receive a session token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {string} string "Invalid request format"
+// @Failure 401 {string} string "Invalid credentials"
+// @Failure 500 {string} string "Internal server error"
+// @Router /api/v1/b2b/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -71,6 +82,17 @@ type RegisterRequest struct {
 	Password string `json:"password"`
 }
 
+// @Summary Register tenant
+// @Description Register a new B2B tenant
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration details"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {string} string "Invalid request format"
+// @Failure 409 {string} string "Email already in use"
+// @Failure 500 {string} string "Internal server error"
+// @Router /api/v1/b2b/signup [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -89,11 +111,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Failed to process password", http.StatusInternalServerError)
+		return
+	}
+
 	newTenant := domain.Tenant{
 		ID:        "tenant_" + uuid.NewString(),
 		Name:      req.Name,
 		Email:     req.Email,
-		Password:  req.Password,
+		Password:  string(hash),
 		CreatedAt: time.Now(),
 	}
 
@@ -114,9 +142,22 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateKeyRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	BundleID string `json:"bundle_id"`
 }
 
+// @Summary Create API Key
+// @Description Create a new API key for the tenant (Max 1)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Session token (e.g. session_tenantID)"
+// @Param request body CreateKeyRequest true "API Key details"
+// @Success 200 {string} string "Created"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 409 {string} string "API Key limit reached"
+// @Failure 500 {string} string "Internal error"
+// @Router /api/v1/b2b/keys [post]
 func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 	// Simple auth check from "session_" token
 	token := r.Header.Get("Authorization")
@@ -125,6 +166,13 @@ func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tenantID := token[8:]
+
+	// Limit to 1 Key
+	keys, err := h.repo.GetApiKeysByTenant(r.Context(), tenantID)
+	if err == nil && len(keys) >= 1 {
+		http.Error(w, "API Key limit reached. Please revoke existing key.", http.StatusConflict)
+		return
+	}
 
 	var req CreateKeyRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -136,6 +184,7 @@ func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 		Key:       "sk_" + uuid.NewString(),
 		TenantID:  tenantID,
 		Name:      req.Name,
+		BundleID:  "", // TOFU: Blank until first use
 		CreatedAt: time.Now(),
 	}
 
@@ -149,6 +198,15 @@ func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newKey)
 }
 
+// @Summary List API Keys
+// @Description List all API keys for the tenant
+// @Tags Auth
+// @Produce json
+// @Param Authorization header string true "Session token"
+// @Success 200 {array} domain.ApiKey
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal error"
+// @Router /api/v1/b2b/keys [get]
 func (h *AuthHandler) ListKeys(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	if len(token) < 9 || token[:8] != "session_" {
@@ -172,6 +230,15 @@ func (h *AuthHandler) ListKeys(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(keys)
 }
 
+// @Summary Get Metrics
+// @Description Get telemetry metrics for the tenant
+// @Tags Metrics
+// @Produce json
+// @Param Authorization header string true "Session token"
+// @Success 200 {array} domain.Metric
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal error"
+// @Router /api/v1/b2b/metrics [get]
 func (h *AuthHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 	if len(token) < 9 || token[:8] != "session_" {
@@ -193,4 +260,52 @@ func (h *AuthHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(metrics)
+}
+
+type DeleteKeyRequest struct {
+	Key string `json:"key"`
+}
+
+// @Summary Delete API Key
+// @Description Revoke an API key
+// @Tags Auth
+// @Param Authorization header string true "Session token"
+// @Param key query string true "API Key to delete"
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Key is required"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal error"
+// @Router /api/v1/b2b/keys [delete]
+func (h *AuthHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	if len(token) < 9 || token[:8] != "session_" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	tenantID := token[8:]
+
+	keyID := r.URL.Query().Get("key")
+	if keyID == "" {
+		http.Error(w, "Key is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.DeleteApiKey(r.Context(), tenantID, keyID); err != nil {
+		h.logger.Error("Failed to delete key", "error", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// @Summary Server Ping
+// @Description Wake up or health check
+// @Tags System
+// @Produce json
+// @Success 200 {string} string "OK"
+// @Router /api/v1/support/ping [get]
+func (h *AuthHandler) Ping(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"ok"}`))
 }

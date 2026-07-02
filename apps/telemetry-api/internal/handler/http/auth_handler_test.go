@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"sovereign-core/telemetry-api/internal/domain"
@@ -31,6 +30,8 @@ func NewMockAuthRepo() *MockAuthRepo {
 }
 
 func (m *MockAuthRepo) CreateTenant(ctx context.Context, tenant domain.Tenant) error {
+	// Not hashing here since the handler should hash it, but wait: the handler DOES hash it.
+	// So we just store whatever the handler gives us.
 	m.tenants[tenant.Email] = tenant
 	return nil
 }
@@ -60,6 +61,29 @@ func (m *MockAuthRepo) ValidateApiKey(ctx context.Context, key string) (*domain.
 		}
 	}
 	return nil, nil
+}
+
+func (m *MockAuthRepo) UpdateApiKeyBundleID(ctx context.Context, key string, bundleID string) error {
+	for tID, keys := range m.keys {
+		for i, k := range keys {
+			if k.Key == key {
+				m.keys[tID][i].BundleID = bundleID
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+func (m *MockAuthRepo) DeleteApiKey(ctx context.Context, tenantID string, keyID string) error {
+	var newKeys []domain.ApiKey
+	for _, k := range m.keys[tenantID] {
+		if k.Key != keyID {
+			newKeys = append(newKeys, k)
+		}
+	}
+	m.keys[tenantID] = newKeys
+	return nil
 }
 
 func (m *MockAuthRepo) InsertMetric(ctx context.Context, metric domain.Metric) error {
@@ -99,14 +123,11 @@ func TestRegisterAndLogin(t *testing.T) {
 	}
 
 	// Test Login
-	loginReqBody := `{"email":"test@test.com","password":"123"}` // Actually mock password doesn't check hash
+	loginReqBody := `{"email":"test@test.com","password":"123"}` 
 	reqLogin, _ := http.NewRequest("POST", "/login", bytes.NewBufferString(loginReqBody))
 	reqLogin.Header.Set("Content-Type", "application/json")
 	
 	rrLogin := httptest.NewRecorder()
 	r.ServeHTTP(rrLogin, reqLogin)
-
-	// In real DB it checks bcrypt hash. Our mock just returns the tenant. Wait, auth handler compares bcrypt!
-	// Our mock didn't hash the password. So bcrypt.CompareHashAndPassword will fail in auth_handler.
-	// But it tests the route at least. For proper testing, MockAuthRepo should hash the password on CreateTenant.
+	// It should pass since handler now hashes before CreateTenant and compares correctly
 }

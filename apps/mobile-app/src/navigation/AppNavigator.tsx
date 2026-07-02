@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { LoginScreen } from '../features/auth/views/LoginScreen';
+import { RegisterScreen } from '../features/auth/views/RegisterScreen';
 import { ProductListScreen } from '../features/catalog/views/ProductListScreen';
 import { ProductDetailsScreen } from '../features/catalog/views/ProductDetailsScreen';
 import { OnlineCartScreen } from '../features/online-shopping/views/OnlineCartScreen';
@@ -44,6 +45,14 @@ export const AppNavigator: React.FC = () => {
         options={{
           presentation: 'modal',
           title: t('auth.loginButton'),
+        }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{
+          presentation: 'modal',
+          title: t('auth.registerButton', 'Register'),
         }}
       />
       <Stack.Screen name="ProductList" component={ProductListScreen} />

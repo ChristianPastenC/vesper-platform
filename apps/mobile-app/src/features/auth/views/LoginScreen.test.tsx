@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { LoginScreen } from './LoginScreen';
 import { useSovereignLogin } from '../hooks/useSovereignLogin';
 import { useTheme } from '../../../core/theme/useTheme';
+import { useNavigation } from '@react-navigation/native';
 
 jest.mock('../hooks/useSovereignLogin', () => ({
   useSovereignLogin: jest.fn(),
@@ -12,14 +13,20 @@ jest.mock('../../../core/theme/useTheme', () => ({
   useTheme: jest.fn(),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(),
+}));
+
 describe('LoginScreen View', () => {
   const mockLogin = jest.fn();
   const mockSetName = jest.fn();
   const mockSetEmail = jest.fn();
   const mockSetPassword = jest.fn();
+  const mockNavigate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useNavigation as jest.Mock).mockReturnValue({ navigate: mockNavigate });
     (useTheme as jest.Mock).mockReturnValue({
       colors: {
         background: '#FFFFFF',

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "VolatileQueue.hpp"
+#include "SovereignTelemetryEngine.h"
 #include <vector>
 #include <thread>
 #include <chrono>
@@ -12,6 +13,7 @@ protected:
 
     void SetUp() override {
         queue.clearQueue();
+        SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
     }
 };
 
@@ -89,6 +91,37 @@ TEST_F(VolatileQueueTest, ThreadSafetyExecution) {
 
     EXPECT_EQ(queue.size(), 100);
     EXPECT_TRUE(queue.verifyIntegrity());
+}
+
+TEST_F(VolatileQueueTest, TelemetryEngineRecordsEvents) {
+    std::vector<uint8_t> payload = {0x01};
+    queue.enqueue("txn_telemetry_1", payload, 5000.0);
+    
+    auto snapshot = SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+    EXPECT_FALSE(snapshot.empty());
+    
+    bool foundComputeHash = false;
+    for (const auto& event : snapshot) {
+        if (event.type == TelemetryEventType::COMPUTE_HASH_LATENCY) {
+            foundComputeHash = true;
+            // Value is latency, should be non-negative
+            EXPECT_GE(event.value, 0.0);
+        }
+    }
+    EXPECT_TRUE(foundComputeHash);
+
+    queue.zeroize("txn_telemetry_1");
+    
+    auto snapshot2 = SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+    EXPECT_FALSE(snapshot2.empty());
+    
+    bool foundZeroize = false;
+    for (const auto& event : snapshot2) {
+        if (event.type == TelemetryEventType::ZEROIZATION_TRIGGERED) {
+            foundZeroize = true;
+        }
+    }
+    EXPECT_TRUE(foundZeroize);
 }
 
 } // namespace sovereign::secure::test

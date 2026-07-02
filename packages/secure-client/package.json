@@ -2,7 +2,7 @@
   "name": "@sovereign/secure-client",
   "version": "0.1.0",
   "description": "Cryptographic resilience middleware: volatile RAM ledger, Error Trapping Matrix, DPoP asymmetric proof-of-possession signing, and platform-agnostic transport adapters.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,6 +31,7 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
+    "codegen": "nitro-codegen",
     "test": "yarn test:js && yarn test:cpp",
     "test:js": "jest",
     "test:cpp": "cmake -S . -B build -DBUILD_TESTING=ON && cmake --build build && cd build && ctest -V"

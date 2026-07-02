@@ -1,6 +1,7 @@
 #include "SovereignSecureClient.hpp"
 #include "CryptoUtils.h"
 #include <NitroModules/ArrayBuffer.hpp>
+#include "SovereignTelemetryEngine.h"
 
 namespace sovereign::secure {
 
@@ -71,6 +72,17 @@ std::string SovereignSecureClient::base64UrlEncode(const std::shared_ptr<ArrayBu
     size_t data_size = data->size();
     std::vector<uint8_t> vec(data_ptr, data_ptr + data_size);
     return crypto::base64UrlEncode(vec);
+}
+
+std::shared_ptr<ArrayBuffer> SovereignSecureClient::getTelemetrySnapshot() {
+    std::vector<TelemetryEvent> snapshot = SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+    if (snapshot.empty()) {
+        uint8_t dummy = 0;
+        return ArrayBuffer::copy(&dummy, 0);
+    }
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(snapshot.data());
+    size_t sizeInBytes = snapshot.size() * sizeof(TelemetryEvent);
+    return ArrayBuffer::copy(data, sizeInBytes);
 }
 
 } // namespace sovereign::secure

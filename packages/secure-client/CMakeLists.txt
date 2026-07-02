@@ -16,6 +16,8 @@ add_library(SovereignSecureCore STATIC
     cpp/SovereignLedger.h
     cpp/SovereignSecureCore.cpp
     cpp/SovereignSecureCore.h
+    cpp/SovereignTelemetryEngine.cpp
+    cpp/SovereignTelemetryEngine.h
 )
 
 # Configure include search paths for the static library

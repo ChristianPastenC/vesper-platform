@@ -18,6 +18,8 @@ add_library(SovereignSecureCore STATIC
     cpp/SovereignSecureCore.h
     cpp/SovereignTelemetryEngine.cpp
     cpp/SovereignTelemetryEngine.h
+    cpp/MmapTelemetryStorage.cpp
+    cpp/MmapTelemetryStorage.h
 )
 
 # Configure include search paths for the static library

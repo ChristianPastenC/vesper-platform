@@ -1,0 +1,20 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["secureclient"],
+  "ios": {
+    "iosModuleName": "SovereignSecureClient"
+  },
+  "android": {
+    "androidNamespace": ["secureclient"],
+    "androidCxxLibName": "SovereignSecureClient"
+  },
+  "autolinking": {
+    "SovereignSecureClient": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "SovereignSecureClient"
+      }
+    }
+  },
+  "ignorePaths": ["**/node_modules"]
+}

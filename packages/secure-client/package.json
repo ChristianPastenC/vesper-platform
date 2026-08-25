@@ -31,7 +31,7 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "codegen": "nitro-codegen",
+    "codegen": "nitrogen",
     "test": "yarn test:js && yarn test:cpp",
     "test:js": "jest",
     "test:cpp": "cmake -S . -B build -DBUILD_TESTING=ON && cmake --build build && cd build && ctest -V"
@@ -39,12 +39,15 @@
   "peerDependencies": {
     "react-native-nitro-modules": "*"
   },
+  "dependencies": {
+    "@babel/runtime": "^7.29.7"
+  },
   "devDependencies": {
-    "@babel/runtime": "^7.29.7",
     "@typescript-eslint/eslint-plugin": "^7.12.0",
     "@typescript-eslint/parser": "^7.12.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "nitrogen": "0.35.10",
     "prettier": "^3.3.1",
     "react-native-nitro-modules": "0.35.10",
     "typescript": "^5.4.5",

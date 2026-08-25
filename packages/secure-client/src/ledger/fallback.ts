@@ -124,6 +124,12 @@ export class SovereignSecureClientFallback {
     ) as ArrayBuffer;
   }
 
+  public getTelemetrySnapshot(): ArrayBuffer {
+    // This JS-only fallback has no native telemetry engine to drain, so it
+    // always reports an empty snapshot (matches queue.ts's payload.length > 0 check).
+    return new ArrayBuffer(0);
+  }
+
   public base64UrlEncode(data: ArrayBuffer): string {
     const bytes = new Uint8Array(data);
     let str = '';
@@ -188,3 +194,4 @@ export class SovereignSecureClientFallback {
     }
   }
 }
+

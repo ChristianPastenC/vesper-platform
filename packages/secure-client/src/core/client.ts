@@ -86,6 +86,7 @@ export class SovereignClientCore {
     const endpoint = telemetryConfig.endpoint ?? 'http://127.0.0.1:8081/api/v1/support/telemetry';
     const intervalMs = telemetryConfig.syncIntervalMs ?? 15000;
     const apiKey = telemetryConfig.apiKey;
+    const bundleId = telemetryConfig.bundleId;
 
     const sync = async () => {
       try {
@@ -96,6 +97,7 @@ export class SovereignClientCore {
             method: 'POST',
             headers: {
               'X-Sovereign-API-Key': apiKey,
+              'X-Bundle-ID': bundleId,
               'Content-Type': 'application/octet-stream'
             },
             body: payload.buffer as unknown as BodyInit
@@ -417,3 +419,4 @@ export class SovereignClientCore {
     this.observers?.onSessionPurge?.(purgeError);
   }
 }
+

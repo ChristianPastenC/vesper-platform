@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <variant>
 #include <NitroModules/ArrayBuffer.hpp>
+#include <NitroModules/Null.hpp>
 #include "HybridSovereignSecureClientSpec.hpp"
 #include "QueueStatus.hpp"
 #include "VolatileQueue.hpp"
@@ -33,7 +35,7 @@ public:
     void clearQueue() override;
     void zeroize(const std::string& id) override;
     std::vector<std::string> getQueueIds() override;
-    std::shared_ptr<ArrayBuffer> getTransactionPayload(const std::string& id) override;
+    std::variant<NullType, std::shared_ptr<ArrayBuffer>> getTransactionPayload(const std::string& id) override;
     std::string base64UrlEncode(const std::shared_ptr<ArrayBuffer>& data) override;
     std::shared_ptr<ArrayBuffer> getTelemetrySnapshot() override;
 
@@ -43,3 +45,9 @@ private:
 };
 
 } // namespace sovereign::secure
+
+namespace margelo::nitro::secureclient {
+  // Nitrogen's generated autolinking glue expects the implementation class to be
+  // reachable as `SovereignSecureClient` from this namespace (via `using namespace`).
+  using SovereignSecureClient = ::sovereign::secure::SovereignSecureClient;
+}

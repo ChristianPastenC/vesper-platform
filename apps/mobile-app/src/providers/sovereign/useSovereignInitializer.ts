@@ -7,9 +7,17 @@ import {
   stopNetworkTransitionsListener,
 } from '../../core/network/networkResolver';
 import { validateHandshake } from '../../core/network/handshakeValidator';
+import { getTelemetryApiKey, getTelemetryBundleId, getTelemetryEndpoint } from '../../core/config';
 
 // Import useAppStore correctly at runtime to avoid circular dependency issues at boot
 import { useAppStore } from '../../store/useAppStore';
+
+const telemetryApiKey = getTelemetryApiKey();
+if (!telemetryApiKey) {
+  console.warn(
+    '[SovereignClient] EXPO_PUBLIC_TELEMETRY_API_KEY is not set. Telemetry ingestion is disabled.',
+  );
+}
 
 // 1. Initialize the real SovereignClientCore instance
 export const secureClient = SovereignClientCore.getInstance({
@@ -18,6 +26,13 @@ export const secureClient = SovereignClientCore.getInstance({
   networkAdapter: new FetchAdapter(),
   enableAutoDPoP: true,
   mock: false,
+  telemetry: telemetryApiKey
+    ? {
+        apiKey: telemetryApiKey,
+        bundleId: getTelemetryBundleId(),
+        endpoint: getTelemetryEndpoint(),
+      }
+    : undefined,
   observers: {
     onSessionFreeze: () => {
       console.log('[SovereignClient] Session Frozen (Volatile RAM active)');

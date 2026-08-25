@@ -8,7 +8,10 @@ namespace sovereign::secure {
 using namespace margelo::nitro;
 
 SovereignSecureClient::SovereignSecureClient()
-    : HybridSovereignSecureClientSpec(), is_online_(true) {}
+    // HybridObject is a virtual base of HybridSovereignSecureClientSpec, so the
+    // most-derived class (this one) must initialize it explicitly with TAG,
+    // otherwise C++ silently default-constructs it instead.
+    : HybridObject(TAG), HybridSovereignSecureClientSpec(), is_online_(true) {}
 
 bool SovereignSecureClient::executeTransaction(
     const std::string& id,
@@ -59,10 +62,10 @@ std::vector<std::string> SovereignSecureClient::getQueueIds() {
     return queue_.getQueueIds();
 }
 
-std::shared_ptr<ArrayBuffer> SovereignSecureClient::getTransactionPayload(const std::string& id) {
+std::variant<NullType, std::shared_ptr<ArrayBuffer>> SovereignSecureClient::getTransactionPayload(const std::string& id) {
     std::vector<uint8_t> payload = queue_.getTransactionPayload(id);
     if (payload.empty()) {
-        return nullptr;
+        return NullType();
     }
     return ArrayBuffer::copy(payload.data(), payload.size());
 }

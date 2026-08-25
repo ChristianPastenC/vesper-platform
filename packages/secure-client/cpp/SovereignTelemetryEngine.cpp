@@ -1,16 +1,32 @@
 #include "SovereignTelemetryEngine.h"
 #include "MmapTelemetryStorage.h"
 #include <chrono>
+#include <cstdlib>
 #include <random>
 
 namespace sovereign::secure {
+
+namespace {
+// A bare relative filename resolves against the process's current working
+// directory, which on iOS/Android app sandboxes is not writable. TMPDIR is
+// guaranteed to be set to a writable, app-private directory on those
+// platforms; fall back to the bare filename elsewhere (e.g. desktop/CI tests).
+std::string defaultTelemetryFilePath() {
+    if (const char* tmpDir = std::getenv("TMPDIR")) {
+        std::string dir(tmpDir);
+        if (!dir.empty() && dir.back() != '/') dir += '/';
+        return dir + "sovereign_telemetry.bin";
+    }
+    return "sovereign_telemetry.bin";
+}
+}
 
 SovereignTelemetryEngine::SovereignTelemetryEngine() {
     storage_ = std::make_unique<MmapTelemetryStorage>();
     std::random_device rd;
     std::vector<uint8_t> default_key(32);
     for (int i = 0; i < 32; ++i) default_key[i] = static_cast<uint8_t>(rd());
-    storage_->init("sovereign_telemetry.bin", default_key);
+    storage_->init(defaultTelemetryFilePath(), default_key);
 }
 
 SovereignTelemetryEngine::~SovereignTelemetryEngine() = default;

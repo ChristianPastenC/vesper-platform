@@ -1,5 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
 import type { NetworkStatusResolver, SovereignClientCore } from '@sovereign/secure-client';
+import { SovereignMemoryQueue } from '@sovereign/secure-client';
 import { useAppStore } from '../../store/useAppStore';
 
 let isCurrentlyOnline = false;
@@ -39,6 +40,9 @@ export const startNetworkTransitionsListener = (
   networkResolver().then((online) => {
     isCurrentlyOnline = online;
     useAppStore.setState({ isOnline: online });
+    // Mirror real connectivity into the native ledger: it only queues/hashes
+    // requests (and thus only emits telemetry) while genuinely offline.
+    SovereignMemoryQueue.getInstance().toggleNetworkSim(online);
   });
 
   unsubscribe = NetInfo.addEventListener((state) => {
@@ -49,6 +53,7 @@ export const startNetworkTransitionsListener = (
     if (!isCurrentlyOnline && isOnlineNow) {
       isCurrentlyOnline = true;
       useAppStore.setState({ isOnline: true });
+      SovereignMemoryQueue.getInstance().toggleNetworkSim(true);
 
       // Trigger inactive queue synchronization (DPoP, Ledger, etc)
       client.processSynchronizedQueue(handshakeValidator).catch((err: unknown) => {
@@ -62,6 +67,7 @@ export const startNetworkTransitionsListener = (
     else if (isCurrentlyOnline && !isOnlineNow) {
       isCurrentlyOnline = false;
       useAppStore.setState({ isOnline: false });
+      SovereignMemoryQueue.getInstance().toggleNetworkSim(false);
     }
   });
 };

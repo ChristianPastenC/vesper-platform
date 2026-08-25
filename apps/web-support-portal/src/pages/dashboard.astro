@@ -238,9 +238,9 @@ import Header from '../components/Header.astro';
 
         metrics.forEach((m: any) => {
           const date = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          if (m.metric_type === 1) { // Integrity
+          if (m.metric_type === 2) { // Integrity (INTEGRITY_COMPROMISED)
             integrityData.push({ x: date, y: m.value });
-          } else if (m.metric_type === 2) { // Latency
+          } else if (m.metric_type === 3) { // Latency (COMPUTE_HASH_LATENCY)
             latencyData.push({ x: date, y: m.value });
           }
         });

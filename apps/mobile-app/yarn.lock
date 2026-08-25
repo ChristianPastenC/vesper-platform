@@ -730,7 +730,7 @@
     "@babel/plugin-transform-modules-commonjs" "^7.29.7"
     "@babel/plugin-transform-typescript" "^7.29.7"
 
-"@babel/runtime@^7.20.0", "@babel/runtime@^7.23.2", "@babel/runtime@^7.23.9", "@babel/runtime@^7.25.0":
+"@babel/runtime@^7.20.0", "@babel/runtime@^7.23.2", "@babel/runtime@^7.23.9", "@babel/runtime@^7.25.0", "@babel/runtime@^7.29.7":
   version "7.29.7"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.29.7.tgz#12022450c45a4da6d8d8287b18a4ff2ddb23f768"
   integrity sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==
@@ -7099,6 +7099,11 @@ react-is@^19.1.0:
   version "19.2.7"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.7.tgz#57668ee86a78574a542b0a539455212b2c086df2"
   integrity sha512-kZFnouyVv7eP/Phmrlo9FK+zcAdriZJvzxXHF1Sl1P377WSGe2G/JxVolhTrB/jeV47lKImhNUsijjHAAbcl/A==
+
+react-native-config@^1.6.2:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/react-native-config/-/react-native-config-1.6.2.tgz#a3e011899f0b8f9d5757cd6591d7f1a31b62dd2d"
+  integrity sha512-actR3voBDiqgrZVP9dEDbaJIy5clyH+Ea+SoyA5l0kMScO0z8SCpH+NFKVSMHol7O52xl894UblSmhbm0hfYyA==
 
 react-native-gesture-handler@~2.28.0:
   version "2.28.0"

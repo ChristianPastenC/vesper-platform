@@ -36,7 +36,7 @@ cd apps/web-support-portal
 npm install
 npm run dev
 ```
-*The portal will run on `http://localhost:4321`.*
+*The portal will run on `http://localhost:4000` (port fixed in `package.json`, not Astro's default 4321).*
 
 ## Database Management
 To clear the SQLite database and start fresh:

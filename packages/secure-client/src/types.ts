@@ -56,6 +56,8 @@ export interface SovereignClientCoreConfig {
   mock?: boolean;
   telemetry?: {
     apiKey: string;
+    /** Bundle/package identifier bound to the API key via TOFU on first ingest. */
+    bundleId: string;
     endpoint?: string;
     syncIntervalMs?: number;
   };
@@ -97,3 +99,4 @@ export interface PendingDPoPContext {
   method: string;
   url: string;
 }
+

@@ -12,3 +12,12 @@ build/
 Thumbs.db
 coverage/
 /apps/mobile-app/.agents
+
+# V.E.S.P.E.R. Local Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Go Binaries
+*.exe
+bin/

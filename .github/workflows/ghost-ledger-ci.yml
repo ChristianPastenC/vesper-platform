@@ -138,4 +138,4 @@ jobs:
 
       - name: Build iOS App Context (JSI Bindings Check)
         working-directory: ./examples/demo-mobile/ios
-        run: xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build CODE_SIGNING_ALLOWED=NO
+        run: xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO

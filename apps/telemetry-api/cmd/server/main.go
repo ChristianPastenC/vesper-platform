@@ -9,6 +9,7 @@ import (
 
 	"sovereign-core/telemetry-api/internal/adapter/db"
 	"sovereign-core/telemetry-api/internal/adapter/telemetry"
+	"sovereign-core/telemetry-api/internal/domain"
 	myhttp "sovereign-core/telemetry-api/internal/handler/http"
 	"sovereign-core/telemetry-api/internal/middleware"
 
@@ -74,15 +75,18 @@ func main() {
 	// Zero-Trust Data Sanitizer
 	ingestRouter.Use(middleware.LogSanitizer)
 
+	var forwarder domain.TelemetryForwarder
 	otelClient, err := telemetry.NewOtelClient(logger)
 	if err != nil {
-		logger.Error("Failed to initialize OpenTelemetry client, telemetry will be disabled", "error", err)
+		logger.Warn("OpenTelemetry collector unavailable — events will be stored locally in SQLite only", "error", err)
+		forwarder = &telemetry.NoopForwarder{}
 	} else {
 		defer otelClient.Shutdown(context.Background())
-		telemetryHandler := myhttp.NewTelemetryHandler(logger, otelClient, sqliteRepo)
-		ingestRouter.Post("/", telemetryHandler.Ingest)
-		r.Mount("/api/v1/support/telemetry", ingestRouter)
+		forwarder = otelClient
 	}
+	telemetryHandler := myhttp.NewTelemetryHandler(logger, forwarder, sqliteRepo)
+	ingestRouter.Post("/", telemetryHandler.Ingest)
+	r.Mount("/api/v1/support/telemetry", ingestRouter)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

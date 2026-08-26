@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"crypto/ecdsa"
@@ -24,16 +24,66 @@ import (
 
 // @title Demo Customer Backend API
 // @version 1.0
-// @description This is the Demo Backend that represents a 'final customer' server integrating the V.E.S.P.E.R. platform. Its main purpose is to illustrate how a traditional application communicates with the SDKs protected by V.E.S.P.E.R. and validates the security of user devices (Zero-Trust) before processing sensitive operations using Challenge-Response schemes.
-// @termsOfService http://swagger.io/terms/
+// @description # Vesper Platform - Backend API
+//
+// Welcome to the Backend API for the Vesper Platform. This service is built in Go (Golang) and designed under a strict **Zero-Trust Architecture**.
+//
+// ## API Architecture
+//
+// The API follows Clean Architecture principles, divided into discrete layers to maintain decoupling and high cohesion:
+//
+// - **Domain (`internal/domain`):** The core business logic. Contains the interfaces and data structures (Entities) that model the system, with zero external dependencies.
+// - **Usecase (`internal/usecase`):** The application logic layer. Contains the business rules (such as blockchain validation) and entity interactions.
+// - **Handler / Transport (`internal/handler`):** Manages incoming HTTP requests, JSON parsing, security middlewares, and communication with the web/mobile client.
+// - **Adapters (`internal/adapter` and `internal/store`):** Concrete technological implementations (BoltDB databases, external integrations, cryptography services).
+// - **Entrypoint (`cmd`):** Application startup point and dependency injection wiring.
+//
+// > **For more details on each layer, refer to the `README.md` file inside each respective subfolder.**
+//
+// ## Local Development
+//
+// To run this backend in your local environment, ensure you have Go 1.22+ installed.
+//
+//  1. **Environment Variables**: Rename `.env.example` to `.env` (if it does not already exist) in the root of `examples/demo-backend`.
+//  2. **Dependencies**: Install the required packages by running:
+//     ```bash
+//     go mod tidy
+//     ```
+//  3. **Run the Server**:
+//     ```bash
+//     go run cmd/server/main.go
+//     ```
+//     The server will start on the configured port (default `8080`).
+//
+// ## Configured Commands & Tools
+//
+//   - **Generate Swagger Documentation:**
+//     ```bash
+//     swag init -g internal/handler/http/router.go
+//     ```
+//   - **Clean and format modules:**
+//     ```bash
+//     go mod tidy
+//     ```
+//   - **Run Tests (Integration & Unit):**
+//     ```bash
+//     go test ./...
+//     ```
+//
+// ## Development Security Bypasses & Tools
+//
+// Special environment variables are provided to allow seamless local testing (e.g., using Bruno/Postman) without triggering strict cryptographic security blocks:
+// - `BUILD_ENV=development`: Enables development-only routes, such as the `POST /api/v1/dev/dpop-token` endpoint which generates valid DPoP tokens automatically for API clients.
+// - `DEV_DPOP_BYPASS=true`: Bypasses the ECDSA signature verification (DPoP).
+// - `DEV_HASH_BYPASS=true`: Bypasses payload integrity verification (HMAC-SHA256).
+//
+// > **Warning:** These variables must never be injected or present in a production environment.
+// 
+// ### âš ï¸ Important Note about Bruno/Postman in Production
+// 
+// Because this API implements a strict Zero-Trust architecture with cryptographic validations, **you cannot easily test the production endpoints using standard tools like Bruno or Postman**. Every request modifying data requires dynamically generated DPoP (Demonstrating Proof-of-Possession) ECDSA signatures and HMAC-SHA256 payload integrity headers. Without the C++ SDK or complex pre-request scripts to compute these cryptographic signatures, your requests will be rejected by the API.
+//
 
-// @contact.name API Support
-// @contact.email support@sovereign-core.local
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost:8080
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -46,7 +96,7 @@ func main() {
 	_ = godotenv.Load()
 
 	if os.Getenv("PAYLOAD_SECRET_KEY") == "" {
-		logger.Warn("PAYLOAD_SECRET_KEY is not set — HashValidator will reject all POST requests")
+		logger.Warn("PAYLOAD_SECRET_KEY is not set â€” HashValidator will reject all POST requests")
 	}
 
 	dbPath := os.Getenv("DB_PATH")
@@ -90,7 +140,7 @@ func main() {
 		}
 		derBytes, _ := x509.MarshalECPrivateKey(privateKey)
 		encodedKey := base64.RawURLEncoding.EncodeToString(derBytes)
-		logger.Warn("ECDSA_PRIVATE_KEY_PEM not set — generated ephemeral key. Set this env var to persist sessions across restarts.", "key", encodedKey)
+		logger.Warn("ECDSA_PRIVATE_KEY_PEM not set â€” generated ephemeral key. Set this env var to persist sessions across restarts.", "key", encodedKey)
 	}
 	tokenSvc := auth.NewEcdsaTokenService(privateKey, &privateKey.PublicKey, 15*time.Minute, userRepo, tokenRepo)
 

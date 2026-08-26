@@ -41,7 +41,7 @@ func main() {
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key", "Origin"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Vesper-API-Key", "Origin"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,

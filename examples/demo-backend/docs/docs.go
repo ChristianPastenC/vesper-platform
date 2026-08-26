@@ -9,15 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "email": "support@sovereign-core.local"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -1324,11 +1316,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Demo Customer Backend API",
-	Description:      "This is the Demo Backend that represents a 'final customer' server integrating the V.E.S.P.E.R. platform. Its main purpose is to illustrate how a traditional application communicates with the SDKs protected by V.E.S.P.E.R. and validates the security of user devices (Zero-Trust) before processing sensitive operations using Challenge-Response schemes.",
+	Description:      "# Vesper Platform - Backend API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

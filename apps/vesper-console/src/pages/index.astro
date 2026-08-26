@@ -65,7 +65,7 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative">
           <div class="absolute -top-3 -right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">cpp/VolatileQueue.hpp</div>
-          <pre class="text-sm font-mono text-slate-300 overflow-x-auto"><code><span class="text-slate-500">// Borrado seguro en hardware (Zeroization)</span>
+          <pre class="text-sm font-mono text-slate-300 overflow-x-auto"><code><span class="text-slate-500">// Secure hardware wipe (Zeroization)</span>
 void VolatileQueue::activeZeroization() &#123;
     std::lock_guard&lt;std::mutex&gt; lock(mutex_);
     
@@ -155,12 +155,12 @@ void VolatileQueue::activeZeroization() &#123;
   <span class="text-slate-400">defaultTTL</span>: <span class="text-orange-400">60000</span>
 &#125;);
 
-<span class="text-slate-500">// Atrapado en memoria C++ si no hay conexión</span>
+<span class="text-slate-500">// Trapped in C++ memory if disconnected</span>
 <span class="text-blue-400">const</span> res = client.executeRequest(<span class="text-emerald-300">'tx_101'</span>, &#123;
   method: <span class="text-emerald-300">'POST'</span>, url: <span class="text-emerald-300">'/v1/ledger'</span>, body: myPayload
 &#125;);
 
-<span class="text-slate-500">// Replay síncrono tras reconexión</span>
+<span class="text-slate-500">// Synchronous replay after reconnection</span>
 <span class="text-purple-400">await</span> client.processSynchronizedQueue(<span class="text-blue-400">async</span> () =&gt; <span class="text-blue-400">true</span>);</code></pre>
             </div>
           </div>
@@ -204,7 +204,7 @@ client.executeRequest(<span class="text-emerald-300">'tx_102'</span>, &#123;
 
 client.executeRequest(<span class="text-emerald-300">'tx_103'</span>, &#123; 
   method: <span class="text-emerald-300">'GET'</span>, 
-  url: <span class="text-emerald-300">'https://api.sovereign.local/v1/data'</span> 
+  url: <span class="text-emerald-300">'https://api.vesper.local/v1/data'</span> 
 &#125;);</code></pre>
             </div>
           </div>
@@ -219,7 +219,7 @@ client.executeRequest(<span class="text-emerald-300">'tx_103'</span>, &#123;
 
 <span class="text-blue-400">const</span> client = SovereignClientCore.getInstance(&#123;
   <span class="text-slate-400">networkAdapter</span>: <span class="text-blue-400">new</span> GraphQLAdapter(&#123; 
-    endpoint: <span class="text-emerald-300">'https://api.sovereign.local/graphql'</span> 
+    endpoint: <span class="text-emerald-300">'https://api.vesper.local/graphql'</span> 
   &#125;)
 &#125;);
 
@@ -248,22 +248,22 @@ client.executeRequest(<span class="text-emerald-300">'tx_104'</span>, &#123;
           <div class="p-6 overflow-x-auto">
             <pre class="text-sm font-mono text-slate-300 leading-relaxed"><code><span class="text-purple-400">import</span> &#123; SovereignClientCore &#125; <span class="text-purple-400">from</span> <span class="text-emerald-300">'@sovereign/secure-client'</span>;
 
-<span class="text-slate-500">// 1. Inicializa el Core conectando al Nitro JSI Bridge</span>
+<span class="text-slate-500">// 1. Initialize Core connecting to Nitro JSI Bridge</span>
 <span class="text-blue-400">const</span> client = <span class="text-blue-400">new</span> SovereignClientCore(&#123;
   <span class="text-slate-400">apiKey</span>: <span class="text-emerald-300">'sk_test_tu_api_key_aqui'</span>,
-  <span class="text-slate-400">endpoint</span>: <span class="text-emerald-300">'https://api.tuempresa.com'</span>,
+  <span class="text-slate-400">endpoint</span>: <span class="text-emerald-300">'https://api.yourcompany.com'</span>,
   <span class="text-slate-400">dpopOptions</span>: &#123; algorithm: <span class="text-emerald-300">'ES256'</span> &#125;
 &#125;);
 
-<span class="text-slate-500">// 2. Las peticiones son firmadas nativamente sin exponer la llave en JS</span>
+<span class="text-slate-500">// 2. Requests are natively signed without exposing the key in JS</span>
 <span class="text-blue-400">const</span> response = <span class="text-purple-400">await</span> client.execute(&#123;
   method: <span class="text-emerald-300">'POST'</span>,
   path: <span class="text-emerald-300">'/v1/secure/transactions'</span>,
   body: &#123; amount: <span class="text-orange-400">1500</span>, currency: <span class="text-emerald-300">'USD'</span> &#125;
 &#125;);
 
-<span class="text-slate-500">// 3. Si se detecta un memory dump o tampering, se dispara la telemetría</span>
-<span class="text-slate-500">// y la consola web recibirá la alerta FATAL automáticamente.</span></code></pre>
+<span class="text-slate-500">// 3. If memory dump or tampering is detected, telemetry is triggered</span>
+<span class="text-slate-500">// and the web console will receive the FATAL alert automatically.</span></code></pre>
           </div>
         </div>
       </div>

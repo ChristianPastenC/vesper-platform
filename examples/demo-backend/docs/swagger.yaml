@@ -312,20 +312,9 @@ definitions:
       url:
         type: string
     type: object
-host: localhost:8080
 info:
-  contact:
-    email: support@sovereign-core.local
-    name: API Support
-  description: This is the Demo Backend that represents a 'final customer' server
-    integrating the V.E.S.P.E.R. platform. Its main purpose is to illustrate how a
-    traditional application communicates with the SDKs protected by V.E.S.P.E.R. and
-    validates the security of user devices (Zero-Trust) before processing sensitive
-    operations using Challenge-Response schemes.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
+  contact: {}
+  description: '# Vesper Platform - Backend API'
   title: Demo Customer Backend API
   version: "1.0"
 paths:

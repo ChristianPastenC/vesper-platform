@@ -1,6 +1,6 @@
-# Sovereign Core Platform - Backend API
+# Vesper Platform - Backend API
 
-Welcome to the Backend API for the Sovereign Core Platform. This service is built in Go (Golang) and designed under a strict **Zero-Trust Architecture**.
+Welcome to the Backend API for the Vesper Platform. This service is built in Go (Golang) and designed under a strict **Zero-Trust Architecture**.
 
 ## API Architecture
 

@@ -2,6 +2,7 @@ services:
   - type: web
     name: vesper-ingestion
     env: go
+    plan: free
     rootDir: apps/vesper-ingestion
     buildCommand: "go mod download && go build -o server ./cmd/server"
     startCommand: "./server"

@@ -59,11 +59,10 @@ definitions:
       password:
         type: string
     type: object
-host: localhost:8081
 info:
   contact: {}
-  description: Backend API for the Sovereign Developer Portal and Telemetry Ingestion.
-  title: Sovereign Telemetry API
+  description: Backend API for the Vesper Console and Telemetry Ingestion.
+  title: Vesper Ingestion API
   version: "1.0"
 paths:
   /api/v1/b2b/keys:

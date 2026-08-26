@@ -495,11 +495,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8081",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Sovereign Telemetry API",
-	Description:      "Backend API for the Sovereign Developer Portal and Telemetry Ingestion.",
+	Title:            "Vesper Ingestion API",
+	Description:      "Backend API for the Vesper Console and Telemetry Ingestion.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

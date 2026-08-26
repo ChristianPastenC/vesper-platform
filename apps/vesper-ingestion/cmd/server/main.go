@@ -21,10 +21,9 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @title Sovereign Telemetry API
+// @title Vesper Ingestion API
 // @version 1.0
-// @description Backend API for the Sovereign Developer Portal and Telemetry Ingestion.
-// @host localhost:8081
+// @description Backend API for the Vesper Console and Telemetry Ingestion.
 // @BasePath /
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -72,6 +71,9 @@ func main() {
 
 	// Swagger UI
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusTemporaryRedirect)
+	})
 
 	// Middleware for ingestion
 	ingestRouter := chi.NewRouter()

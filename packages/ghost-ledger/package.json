@@ -34,7 +34,7 @@
     "codegen": "nitrogen",
     "test": "yarn test:js && yarn test:cpp",
     "test:js": "jest",
-    "test:cpp": "cmake -S . -B build -DBUILD_TESTING=ON && cmake --build build && cd build && ctest -V"
+    "test:cpp": "rimraf build && cmake -S . -B build -DBUILD_TESTING=ON && cmake --build build && cd build && ctest -V"
   },
   "peerDependencies": {
     "react-native-nitro-modules": "*"

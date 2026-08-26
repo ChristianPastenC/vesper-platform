@@ -1,9 +1,37 @@
 #include <jni.h>
 #include <fbjni/fbjni.h>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <string>
+#include <sys/stat.h>
 #include "SovereignSecureClientOnLoad.hpp"
 
 namespace {
+// Fallback for when the ActivityThread reflection below can't resolve a
+// cache dir (e.g. currentApplication() is still null because this .so loads
+// before Application is attached, or a device restricts reflective access to
+// this internal class). /proc/self/cmdline is always readable by a process
+// for itself and holds the NUL-terminated package/process name, which lines
+// up with Android's standard per-app cache dir convention - no Context or
+// framework reflection required.
+void exportTmpDirFromProcSelf() {
+  FILE* f = fopen("/proc/self/cmdline", "r");
+  if (f == nullptr) return;
+  char cmdline[256] = {0};
+  size_t n = fread(cmdline, 1, sizeof(cmdline) - 1, f);
+  fclose(f);
+  if (n == 0) return;
+  // cmdline is NUL-separated; the package/process name is the first token.
+  std::string package(cmdline);
+  if (package.empty()) return;
+  std::string path = "/data/data/" + package + "/cache";
+  struct stat st;
+  if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+    setenv("TMPDIR", path.c_str(), 1);
+  }
+}
+
 // Unlike iOS, Android app processes don't have TMPDIR set in their
 // environment. SovereignTelemetryEngine's default mmap path falls back to
 // getenv("TMPDIR"), so we resolve the app's real cache dir here (via the
@@ -50,6 +78,9 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
   JNIEnv* env = nullptr;
   if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK && env != nullptr) {
     exportTmpDirFromAndroidContext(env);
+  }
+  if (std::getenv("TMPDIR") == nullptr) {
+    exportTmpDirFromProcSelf();
   }
   return margelo::nitro::secureclient::initialize(vm);
 }

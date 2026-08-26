@@ -85,13 +85,9 @@ func (r *SQLiteRepository) seedDemoTenant() {
 }
 
 func (r *SQLiteRepository) CreateTenant(ctx context.Context, tenant domain.Tenant) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(tenant.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	_, err = r.db.ExecContext(ctx, 
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO tenants (id, name, email, password) VALUES (?, ?, ?, ?)`,
-		tenant.ID, tenant.Name, tenant.Email, string(hash))
+		tenant.ID, tenant.Name, tenant.Email, tenant.Password)
 	return err
 }
 

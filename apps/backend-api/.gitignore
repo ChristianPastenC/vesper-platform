@@ -4,8 +4,8 @@
 *.dll
 *.so
 *.dylib
-server
-server.exe
+/server
+/server.exe
 bin/
 
 # Test binaries and profiles

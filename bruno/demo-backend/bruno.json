@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Sovereign Core Platform API",
+  "name": "Vesper Demo Backend API",
   "type": "collection",
   "ignore": [
     "node_modules",

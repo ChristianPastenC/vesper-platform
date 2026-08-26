@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useSovereignLogin } from '../../features/auth/hooks/useSovereignLogin';
 import { useAppStore } from '../../store/useAppStore';
 import * as tokenStore from '../../core/auth/tokenStore';
-import { FetchAdapter, SovereignClientCore } from '@sovereign/secure-client';
+import { FetchAdapter, SovereignClientCore } from '@vesper/ghost-ledger';
 
 jest.mock('../../core/auth/tokenStore', () => ({
   saveTokens: jest.fn(),
@@ -42,7 +42,7 @@ const mockClient = SovereignClientCore.getInstance({
     encryptAesGcm: jest.fn(),
     decryptAesGcm: jest.fn(),
     wrapKeyRsaOaep: jest.fn(),
-  } as unknown as import('@sovereign/secure-client').IDPoPCryptoProvider,
+  } as unknown as import('@vesper/ghost-ledger').IDPoPCryptoProvider,
   networkResolver: async () => true,
   networkAdapter: mockAdapter,
   errorTrapping: { freezeOn503_504: false, freezeOn401: false },

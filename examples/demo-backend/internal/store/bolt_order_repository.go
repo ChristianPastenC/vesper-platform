@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 
 	"go.etcd.io/bbolt"
 )

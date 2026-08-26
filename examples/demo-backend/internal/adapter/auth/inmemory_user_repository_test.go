@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"sovereign-core/backend-api/internal/adapter/auth"
+	"vesper-core/demo-backend/internal/adapter/auth"
 )
 
 func TestInMemoryUserRepository(t *testing.T) {

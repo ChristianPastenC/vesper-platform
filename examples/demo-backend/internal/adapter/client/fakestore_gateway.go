@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // FakeStoreProduct represents the raw JSON structure returned by fakestoreapi.com.

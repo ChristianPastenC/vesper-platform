@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"sovereign-core/telemetry-api/internal/domain"
+	"vesper-core/vesper-ingestion/internal/domain"
 )
 
 type AuthHandler struct {

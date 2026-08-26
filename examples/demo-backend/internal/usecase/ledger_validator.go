@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // ValidateLedgerChain iterates over a series of transaction blocks and recalculates

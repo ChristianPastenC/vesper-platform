@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { SovereignClientCore } from '@sovereign/secure-client';
+import type { SovereignClientCore } from '@vesper/ghost-ledger';
 
 export interface SovereignContextType {
   client: SovereignClientCore;

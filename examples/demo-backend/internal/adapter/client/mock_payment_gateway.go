@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // MockPaymentGateway implements domain.PaymentGateway using a native Go mock engine.

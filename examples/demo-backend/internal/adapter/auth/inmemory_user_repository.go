@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // InMemoryUserRepository implements domain.AuthRepository.

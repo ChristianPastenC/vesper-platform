@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"sovereign-core/telemetry-api/internal/domain"
-	"sovereign-core/telemetry-api/internal/middleware"
+	"vesper-core/vesper-ingestion/internal/domain"
+	"vesper-core/vesper-ingestion/internal/middleware"
 )
 
 type TelemetryHandler struct {

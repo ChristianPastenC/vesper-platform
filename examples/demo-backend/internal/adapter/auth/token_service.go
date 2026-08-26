@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // JWTHeader holds the standard jose header for ES256 signatures.

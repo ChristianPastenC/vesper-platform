@@ -7,17 +7,17 @@ import (
 	"os"
 	"time"
 
-	"sovereign-core/telemetry-api/internal/adapter/db"
-	"sovereign-core/telemetry-api/internal/adapter/telemetry"
-	"sovereign-core/telemetry-api/internal/domain"
-	myhttp "sovereign-core/telemetry-api/internal/handler/http"
-	"sovereign-core/telemetry-api/internal/middleware"
+	"vesper-core/vesper-ingestion/internal/adapter/db"
+	"vesper-core/vesper-ingestion/internal/adapter/telemetry"
+	"vesper-core/vesper-ingestion/internal/domain"
+	myhttp "vesper-core/vesper-ingestion/internal/handler/http"
+	"vesper-core/vesper-ingestion/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	_ "sovereign-core/telemetry-api/docs" // Swagger docs
+	_ "vesper-core/vesper-ingestion/docs" // Swagger docs
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

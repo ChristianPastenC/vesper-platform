@@ -23,7 +23,7 @@ jest.mock('../../store/useAppStore', () => ({
 }));
 
 let capturedObservers: Record<string, () => void>;
-jest.mock('@sovereign/secure-client', () => {
+jest.mock('@vesper/ghost-ledger', () => {
   const mockClient = {
     bootstrap: jest.fn(),
   };

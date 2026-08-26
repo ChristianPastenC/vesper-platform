@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
-import type { NetworkStatusResolver, SovereignClientCore } from '@sovereign/secure-client';
-import { SovereignMemoryQueue } from '@sovereign/secure-client';
+import type { NetworkStatusResolver, SovereignClientCore } from '@vesper/ghost-ledger';
+import { SovereignMemoryQueue } from '@vesper/ghost-ledger';
 import { useAppStore } from '../../store/useAppStore';
 
 let isCurrentlyOnline = false;

@@ -3,7 +3,7 @@ import {
   SovereignMemoryQueue,
   serializeAdapterRequest,
   ISovereignCryptoProvider,
-} from '@sovereign/secure-client';
+} from '@vesper/ghost-ledger';
 
 describe('Sovereign Ledger Smoke Test (Mock Mode)', () => {
   let memoryQueue: SovereignMemoryQueue;

@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { getNativeClient } from '../../../../../../packages/secure-client/src/ledger/queue';
+import { getNativeClient } from '../../../../../../packages/ghost-ledger/src/ledger/queue';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 
 /**

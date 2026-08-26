@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // PaymentInteractor coordinates payment processing.

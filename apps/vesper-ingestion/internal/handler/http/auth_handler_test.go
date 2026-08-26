@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"sovereign-core/telemetry-api/internal/domain"
-	myhttp "sovereign-core/telemetry-api/internal/handler/http"
+	"vesper-core/vesper-ingestion/internal/domain"
+	myhttp "vesper-core/vesper-ingestion/internal/handler/http"
 )
 
 type MockAuthRepo struct {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/usecase"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/usecase"
 )
 
 type mockAuthRepo struct {

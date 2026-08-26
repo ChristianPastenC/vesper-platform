@@ -4,7 +4,7 @@ import { useOnlineCheckoutMutation } from '../../features/online-shopping/hooks/
 import { useAppStore } from '../../store/useAppStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { decodeHeaders } from '@sovereign/secure-client';
+import { decodeHeaders } from '@vesper/ghost-ledger';
 import crypto from 'crypto';
 
 const mockExecuteRequest = jest.fn();

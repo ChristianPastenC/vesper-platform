@@ -23,7 +23,7 @@ The project is structured as a monorepo containing two main applications:
 
 ### 1. Run the Telemetry API Backend
 ```bash
-cd apps/telemetry-api
+cd apps/vesper-ingestion
 go mod download
 go run ./cmd/server
 ```
@@ -32,7 +32,7 @@ go run ./cmd/server
 
 ### 2. Run the B2B Portal
 ```bash
-cd apps/web-support-portal
+cd apps/vesper-console
 npm install
 npm run dev
 ```
@@ -41,7 +41,7 @@ npm run dev
 ## Database Management
 To clear the SQLite database and start fresh:
 ```bash
-cd apps/telemetry-api
+cd apps/vesper-ingestion
 go run ./cmd/cli clean-db
 ```
 

@@ -10,7 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 
-	"sovereign-core/telemetry-api/internal/domain"
+	"vesper-core/vesper-ingestion/internal/domain"
 )
 
 type SQLiteRepository struct {

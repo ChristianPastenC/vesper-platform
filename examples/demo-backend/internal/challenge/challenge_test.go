@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"sovereign-core/backend-api/internal/challenge"
+	"vesper-core/demo-backend/internal/challenge"
 )
 
 func TestIssueAndVerify(t *testing.T) {

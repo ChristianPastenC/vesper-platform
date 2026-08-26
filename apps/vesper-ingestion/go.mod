@@ -1,4 +1,4 @@
-module sovereign-core/telemetry-api
+module vesper-core/vesper-ingestion
 
 go 1.26.3
 

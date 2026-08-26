@@ -1,4 +1,4 @@
-module sovereign-core/backend-api
+module vesper-core/demo-backend
 
 go 1.25.0
 

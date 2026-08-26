@@ -3,7 +3,7 @@ package telemetry
 import (
 	"context"
 
-	"sovereign-core/telemetry-api/internal/domain"
+	"vesper-core/vesper-ingestion/internal/domain"
 )
 
 // NoopForwarder implements domain.TelemetryForwarder as a silent no-op.

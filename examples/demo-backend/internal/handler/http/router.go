@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
-	"sovereign-core/backend-api/internal/challenge"
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/handler/middleware"
-	oldhandlers "sovereign-core/backend-api/internal/handlers"
+	"vesper-core/demo-backend/internal/challenge"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/handler/middleware"
+	oldhandlers "vesper-core/demo-backend/internal/handlers"
 
-	_ "sovereign-core/backend-api/docs"
+	_ "vesper-core/demo-backend/docs"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 

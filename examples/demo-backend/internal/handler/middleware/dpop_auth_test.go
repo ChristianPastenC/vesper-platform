@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"sovereign-core/backend-api/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/handler/middleware"
 )
 
 func generateTestDPoP(method, path string, driftSeconds int64) (string, error) {

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/handler/middleware"
-	"sovereign-core/backend-api/internal/usecase"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/usecase"
 )
 
 // PaymentHandler handles transacting payments and orders.

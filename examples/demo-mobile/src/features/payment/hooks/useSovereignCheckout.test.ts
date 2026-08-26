@@ -21,7 +21,7 @@ jest.mock('react-native-quick-crypto', () => ({
   randomUUID: jest.fn(),
 }));
 
-jest.mock('@sovereign/secure-client', () => ({
+jest.mock('@vesper/ghost-ledger', () => ({
   encodeJsonBody: jest.fn((body) => JSON.stringify(body)),
 }));
 

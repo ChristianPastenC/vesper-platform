@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"sovereign-core/backend-api/internal/challenge"
+	"vesper-core/demo-backend/internal/challenge"
 )
 
 // HandshakeResponse is the JSON body returned by a successful POST /api/handshake.

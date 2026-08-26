@@ -18,7 +18,7 @@ The API follows Clean Architecture principles, divided into discrete layers to m
 
 To run this backend in your local environment, ensure you have Go 1.22+ installed.
 
-1. **Environment Variables**: Rename `.env.example` to `.env` (if it does not already exist) in the root of `apps/backend-api`.
+1. **Environment Variables**: Rename `.env.example` to `.env` (if it does not already exist) in the root of `examples/demo-backend`.
 2. **Dependencies**: Install the required packages by running:
    ```bash
    go mod tidy

@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
-	"sovereign-core/telemetry-api/internal/domain"
+	"vesper-core/vesper-ingestion/internal/domain"
 )
 
 type OtelClient struct {

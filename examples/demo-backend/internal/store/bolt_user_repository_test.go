@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/store"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/store"
 )
 
 func TestBoltUserRepository(t *testing.T) {

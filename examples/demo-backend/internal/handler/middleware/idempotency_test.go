@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"sovereign-core/backend-api/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/handler/middleware"
 )
 
 func TestIdempotencyMiddleware(t *testing.T) {

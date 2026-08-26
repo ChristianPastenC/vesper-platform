@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"sovereign-core/backend-api/internal/adapter/auth"
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/adapter/auth"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 type mockRefreshTokenRepo struct {

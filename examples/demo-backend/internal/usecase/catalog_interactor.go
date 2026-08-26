@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 // CatalogInteractor coordinates product catalog operations.

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"golang.org/x/time/rate"
-	"sovereign-core/backend-api/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/handler/middleware"
 )
 
 func TestRateLimiterMiddleware(t *testing.T) {

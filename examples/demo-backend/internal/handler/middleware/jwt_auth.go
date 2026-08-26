@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 type contextKey string

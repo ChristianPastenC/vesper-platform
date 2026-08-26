@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/handler/middleware"
 )
 
 type mockAuthRepo struct {

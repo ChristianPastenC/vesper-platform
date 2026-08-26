@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"sovereign-core/backend-api/internal/domain"
-	"sovereign-core/backend-api/internal/usecase"
+	"vesper-core/demo-backend/internal/domain"
+	"vesper-core/demo-backend/internal/usecase"
 )
 
 // CatalogHandler handles catalog fetching requests.

@@ -1,5 +1,5 @@
 import { subtle, randomBytes } from 'react-native-quick-crypto';
-import type { IDPoPCryptoProvider } from '@sovereign/secure-client';
+import type { IDPoPCryptoProvider } from '@vesper/ghost-ledger';
 
 /**
  * NativeCryptoProvider

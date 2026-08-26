@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"sovereign-core/backend-api/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/handler/middleware"
 )
 
 func TestCORS(t *testing.T) {

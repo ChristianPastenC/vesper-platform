@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 func TestBoltOrderRepository(t *testing.T) {

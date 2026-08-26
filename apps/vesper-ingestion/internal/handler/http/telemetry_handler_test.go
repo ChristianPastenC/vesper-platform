@@ -11,9 +11,9 @@ import (
 	"os"
 	"testing"
 
-	"sovereign-core/telemetry-api/internal/domain"
-	myhttp "sovereign-core/telemetry-api/internal/handler/http"
-	"sovereign-core/telemetry-api/internal/middleware"
+	"vesper-core/vesper-ingestion/internal/domain"
+	myhttp "vesper-core/vesper-ingestion/internal/handler/http"
+	"vesper-core/vesper-ingestion/internal/middleware"
 )
 
 type MockForwarder struct {

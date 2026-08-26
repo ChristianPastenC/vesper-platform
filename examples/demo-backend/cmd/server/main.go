@@ -13,13 +13,13 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"sovereign-core/backend-api/internal/adapter/auth"
-	"sovereign-core/backend-api/internal/adapter/client"
-	"sovereign-core/backend-api/internal/challenge"
-	myhttp "sovereign-core/backend-api/internal/handler/http"
-	"sovereign-core/backend-api/internal/handler/middleware"
-	"sovereign-core/backend-api/internal/store"
-	"sovereign-core/backend-api/internal/usecase"
+	"vesper-core/demo-backend/internal/adapter/auth"
+	"vesper-core/demo-backend/internal/adapter/client"
+	"vesper-core/demo-backend/internal/challenge"
+	myhttp "vesper-core/demo-backend/internal/handler/http"
+	"vesper-core/demo-backend/internal/handler/middleware"
+	"vesper-core/demo-backend/internal/store"
+	"vesper-core/demo-backend/internal/usecase"
 )
 
 // @title Sovereign Core Platform API

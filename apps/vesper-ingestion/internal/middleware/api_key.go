@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"sovereign-core/telemetry-api/internal/domain"
+	"vesper-core/vesper-ingestion/internal/domain"
 )
 
 type contextKey string

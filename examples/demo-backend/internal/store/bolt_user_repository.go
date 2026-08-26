@@ -8,7 +8,7 @@ import (
 
 	"go.etcd.io/bbolt"
 
-	"sovereign-core/backend-api/internal/domain"
+	"vesper-core/demo-backend/internal/domain"
 )
 
 type storedUser struct {

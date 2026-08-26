@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"sovereign-core/backend-api/internal/domain"
-	apiHTTP "sovereign-core/backend-api/internal/handler/http"
-	"sovereign-core/backend-api/internal/usecase"
+	"vesper-core/demo-backend/internal/domain"
+	apiHTTP "vesper-core/demo-backend/internal/handler/http"
+	"vesper-core/demo-backend/internal/usecase"
 )
 
 type mockGateway struct {

@@ -5,7 +5,7 @@ import "context"
 type TelemetryType uint8
 
 // Values must match the native SDK's TelemetryEventType enum exactly
-// (packages/secure-client/cpp/SovereignTelemetryEngine.h), since the wire
+// (packages/ghost-ledger/cpp/SovereignTelemetryEngine.h), since the wire
 // format carries this byte unchanged from client to storage.
 const (
 	TypeZeroizationTriggered TelemetryType = 1

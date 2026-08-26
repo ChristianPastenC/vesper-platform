@@ -1,10 +1,10 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { usePaymentClearing } from './usePaymentClearing';
-import { getNativeClient } from '../../../../../../packages/secure-client/src/ledger/queue';
+import { getNativeClient } from '../../../../../../packages/ghost-ledger/src/ledger/queue';
 import { simulateNetworkRestore, simulateNetworkDrop } from '../__mocks__/network';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 
-jest.mock('../../../../../../packages/secure-client/src/ledger/queue', () => ({
+jest.mock('../../../../../../packages/ghost-ledger/src/ledger/queue', () => ({
   getNativeClient: jest.fn(),
 }));
 

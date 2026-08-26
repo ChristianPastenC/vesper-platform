@@ -47,7 +47,7 @@ describe('networkResolver', () => {
   describe('startNetworkTransitionsListener()', () => {
     const mockClient = {
       processSynchronizedQueue: jest.fn().mockResolvedValue(true),
-    } as unknown as import('@sovereign/secure-client').SovereignClientCore;
+    } as unknown as import('@vesper/ghost-ledger').SovereignClientCore;
     const mockValidator = jest.fn().mockResolvedValue(true);
 
     it('establishes baseline state and sets store to online when network is true', async () => {

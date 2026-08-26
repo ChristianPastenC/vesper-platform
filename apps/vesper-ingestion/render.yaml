@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: vesper-ingestion
+    env: go
+    rootDir: apps/vesper-ingestion
+    buildCommand: "go mod download && go build -o server ./cmd/server"
+    startCommand: "./server"
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DB_PATH
+        value: "/data/telemetry.db"

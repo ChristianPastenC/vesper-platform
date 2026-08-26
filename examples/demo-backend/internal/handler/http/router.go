@@ -56,6 +56,9 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusTemporaryRedirect)
+	})
 
 	// 4. API v1 Group
 	r.Route("/api/v1", func(r chi.Router) {

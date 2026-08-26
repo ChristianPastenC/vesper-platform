@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: demo-backend
     env: go
@@ -6,3 +6,8 @@
     rootDir: examples/demo-backend
     buildCommand: "go mod download && go build -o server ./cmd/server"
     startCommand: "./server"
+    envVars:
+      - key: PAYLOAD_SECRET_KEY
+        generateValue: true
+      - key: ECDSA_PRIVATE_KEY_PEM
+        sync: false

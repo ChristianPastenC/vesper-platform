@@ -183,7 +183,7 @@ import Header from '../components/Header.astro';
     const pollMetrics = async () => {
       if (!isLive) return;
       try {
-        const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/metrics', {
+        const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/metrics`, {
           headers: { 'Authorization': token }
         });
         if (!res.ok) return;

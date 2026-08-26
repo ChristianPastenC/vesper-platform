@@ -128,7 +128,7 @@ import Header from '../components/Header.astro';
 
     const fetchKeys = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/keys', {
+        const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/keys`, {
           headers: { 'Authorization': token }
         });
         if (res.status === 401) throw new Error('Unauthorized');
@@ -153,7 +153,7 @@ import Header from '../components/Header.astro';
               if(confirm("¿Estás seguro que deseas revocar esta API Key? Todas las peticiones con este Bundle ID fallarán hasta configurar una nueva.")) {
                 target.disabled = true;
                 target.textContent = 'Revocando...';
-                await fetch(`http://127.0.0.1:8081/api/v1/b2b/keys?key=${k}`, {
+                await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/keys?key=${k}`, {
                   method: 'DELETE',
                   headers: { 'Authorization': token }
                 });
@@ -179,7 +179,7 @@ import Header from '../components/Header.astro';
       btn.textContent = 'Generando...';
 
       try {
-        const r = await fetch('http://127.0.0.1:8081/api/v1/b2b/keys', {
+        const r = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/keys`, {
           method: 'POST',
           headers: {
             'Authorization': token,
@@ -227,7 +227,7 @@ import Header from '../components/Header.astro';
     // Real-time metrics polling
     const fetchMetrics = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8081/api/v1/b2b/metrics', {
+        const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/metrics`, {
           headers: { 'Authorization': token }
         });
         if (!res.ok) return;

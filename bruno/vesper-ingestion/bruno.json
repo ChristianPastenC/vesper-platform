@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Sovereign Telemetry API",
+  "name": "Vesper Ingestion API",
   "type": "collection",
   "ignore": [
     "node_modules",

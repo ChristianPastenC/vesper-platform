@@ -49,7 +49,11 @@ func main() {
 	}))
 
 	// Init DB
-	sqliteRepo, err := db.NewSQLiteRepository(logger, "telemetry.db")
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "telemetry.db"
+	}
+	sqliteRepo, err := db.NewSQLiteRepository(logger, dbPath)
 	if err != nil {
 		logger.Error("Failed to init SQLite", "error", err)
 		os.Exit(1)

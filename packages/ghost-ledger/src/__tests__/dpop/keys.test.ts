@@ -6,6 +6,7 @@ describe('DPoP Keys', () => {
   beforeAll(() => {
     // Mock crypto.subtle for node environment if needed
     if (typeof crypto === 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const crypto = require('crypto');
       (globalThis as { crypto?: unknown }).crypto = {
         subtle: crypto.webcrypto.subtle

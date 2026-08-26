@@ -75,7 +75,7 @@ describe('SovereignMemoryQueue', () => {
   it('should actively zeroize blocks on dequeue', async () => {
     const payload = new Uint8Array([9, 9, 9]);
     await queue.enqueue(mockCryptoProvider, 'txn-zero', payload, 1000, jest.fn());
-    const block = queue.getPayload('txn-zero');
+    queue.getPayload('txn-zero');
 
     await queue.activeZeroization(mockCryptoProvider, 'txn-zero');
 

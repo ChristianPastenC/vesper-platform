@@ -499,7 +499,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Vesper Ingestion API",
-	Description:      "Backend API for the Vesper Console and Telemetry Ingestion.",
+	Description:      "This API represents the core of the V.E.S.P.E.R. platform. Its main purpose is to provide B2B authentication services and high-security, low-latency telemetry collection. Unlike traditional JSON-based APIs, the telemetry endpoint uses a low-level approach to maximize efficiency and security at the Edge. The API expects a pure binary stream (application/octet-stream) with strict memory alignment (exactly 17 bytes per event).",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

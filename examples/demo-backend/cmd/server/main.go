@@ -22,9 +22,9 @@ import (
 	"vesper-core/demo-backend/internal/usecase"
 )
 
-// @title Sovereign Core Platform API
+// @title Demo Customer Backend API
 // @version 1.0
-// @description Zero-trust backend API for Sovereign Core Platform.
+// @description This is the Demo Backend that represents a 'final customer' server integrating the V.E.S.P.E.R. platform. Its main purpose is to illustrate how a traditional application communicates with the SDKs protected by V.E.S.P.E.R. and validates the security of user devices (Zero-Trust) before processing sensitive operations using Challenge-Response schemes.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

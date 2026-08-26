@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Zero-trust backend API for Sovereign Core Platform.",
-        "title": "Sovereign Core Platform API",
+        "description": "This is the Demo Backend that represents a 'final customer' server integrating the V.E.S.P.E.R. platform. Its main purpose is to illustrate how a traditional application communicates with the SDKs protected by V.E.S.P.E.R. and validates the security of user devices (Zero-Trust) before processing sensitive operations using Challenge-Response schemes.",
+        "title": "Demo Customer Backend API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",

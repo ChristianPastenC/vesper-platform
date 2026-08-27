@@ -145,7 +145,7 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
         device.resume(pid)
         
         # Trigger the tests inside the Frida JS engine
-        script.exports.run_tests(is_protected)
+        script.exports_sync.run_tests(is_protected)
         
         # Wait a moment for async hooks to resolve
         time.sleep(3)

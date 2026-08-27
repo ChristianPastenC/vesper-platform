@@ -201,9 +201,7 @@ jobs:
             cd examples/demo-mobile && python scripts/frida_dast_test.py
             
             # Render the report natively on the GitHub Actions Summary page
-            if [ -f examples/demo-mobile/security-report.md ]; then
-              cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY
-            fi
+            if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
           
       - name: Post Security Report to PR
         if: github.event_name == 'pull_request'

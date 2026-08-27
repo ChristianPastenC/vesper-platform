@@ -138,9 +138,19 @@ public:
 
 private:
     void zeroizeBlock(TransactionBlock& block) {
-        std::fill(block.payload.begin(), block.payload.end(), 0);
-        std::fill(block.previousHash.begin(), block.previousHash.end(), 0);
-        std::fill(block.currentHash.begin(), block.currentHash.end(), 0);
+        // Use secure_zero (volatile-pointer idiom) — el compilador no puede
+        // elide escrituras a través de un puntero volatile, incluso cuando el
+        // buffer se destruye inmediatamente. std::fill es inseguro aquí porque
+        // el optimizador lo trata como dead write a -O2/-O3.
+        if (!block.payload.empty()) {
+            crypto::secure_zero(block.payload.data(), block.payload.size());
+        }
+        if (!block.previousHash.empty()) {
+            crypto::secure_zero(block.previousHash.data(), block.previousHash.size());
+        }
+        if (!block.currentHash.empty()) {
+            crypto::secure_zero(block.currentHash.data(), block.currentHash.size());
+        }
         block.isZeroized = true;
         SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::ZEROIZATION_TRIGGERED);
     }
@@ -175,12 +185,27 @@ private:
     }
 
     void rechain() {
+        // DESIGN CONTRACT — ver SovereignLedger::rechainLedger() para el razonamiento
+        // completo. Resumen:
+        //
+        // VolatileQueue es una cola de transacciones PENDIENTES. Los bloques no han
+        // sido transmitidos al backend. Al eliminar un bloque (queue_.erase), los
+        // bloques restantes deben recadenarse desde el génesis para que
+        // verifyIntegrity() pueda validar la cadena completa sin falsos positivos.
+        //
+        // El payload sensible ya fue purgado con secure_zero() antes del erase.
+        // Este método opera únicamente sobre payloads de bloques vivos (!isZeroized).
+
         std::vector<uint8_t> runningPrevHash(32, 0);
         id_to_index_.clear();
         for (size_t i = 0; i < queue_.size(); ++i) {
             queue_[i].previousHash = runningPrevHash;
             if (!queue_[i].isZeroized) {
-                queue_[i].currentHash = computeBlockHash(queue_[i].payload, queue_[i].previousHash, queue_[i].timestamp);
+                queue_[i].currentHash = computeBlockHash(
+                    queue_[i].payload,
+                    queue_[i].previousHash,
+                    queue_[i].timestamp
+                );
             }
             runningPrevHash = queue_[i].currentHash;
             id_to_index_[queue_[i].id] = i;

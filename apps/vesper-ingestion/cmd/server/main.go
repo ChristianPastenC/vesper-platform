@@ -37,11 +37,17 @@ func main() {
 	r.Use(chi_middleware.Logger)
 	r.Use(chi_middleware.Recoverer)
 
-	// Permissive CORS for local dev
+	// Strict CORS for production, with fallback for local dev
 	r.Use(cors.Handler(cors.Options{
-		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			allowed := os.Getenv("ALLOWED_ORIGINS")
+			if allowed == "*" || allowed == "" {
+				return origin == "http://localhost:4000" || origin == "http://127.0.0.1:4000" || origin == "http://localhost:3000"
+			}
+			return origin == allowed
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Vesper-API-Key", "Origin"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Vesper-API-Key", "Origin", "X-Sovereign-Session-Key", "X-Sovereign-IV"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -60,13 +66,19 @@ func main() {
 
 	authHandler := myhttp.NewAuthHandler(logger, sqliteRepo)
 
-	// B2B SaaS Auth Endpoints
-	r.Post("/api/v1/b2b/login", authHandler.Login)
-	r.Post("/api/v1/b2b/signup", authHandler.Register)
-	r.Post("/api/v1/b2b/keys", authHandler.CreateKey)
-	r.Get("/api/v1/b2b/keys", authHandler.ListKeys)
-	r.Delete("/api/v1/b2b/keys", authHandler.DeleteKey)
-	r.Get("/api/v1/b2b/metrics", authHandler.GetMetrics)
+	// ── JSON / text endpoints — apply PII sanitizer ──────────────────────────
+	// LogSanitizer runs regex substitutions on the request body. It is ONLY
+	// safe for text-based (JSON) payloads. Never mount it on binary streams.
+	authRouter := chi.NewRouter()
+	authRouter.Use(middleware.LogSanitizer)
+	authRouter.Post("/login", authHandler.Login)
+	authRouter.Post("/signup", authHandler.Register)
+	authRouter.Post("/keys", authHandler.CreateKey)
+	authRouter.Get("/keys", authHandler.ListKeys)
+	authRouter.Delete("/keys", authHandler.DeleteKey)
+	authRouter.Get("/metrics", authHandler.GetMetrics)
+	r.Mount("/api/v1/b2b", authRouter)
+
 	r.Get("/api/v1/support/ping", authHandler.Ping)
 
 	// Swagger UI
@@ -77,11 +89,13 @@ func main() {
 		http.Redirect(w, r, "/swagger/index.html", http.StatusTemporaryRedirect)
 	})
 
-	// Middleware for ingestion
+	// ── Binary telemetry ingestion — NO text sanitizer ────────────────────────
+	// The mobile SDK emits a raw binary stream (application/octet-stream, 17 bytes
+	// per event, XOR-encrypted). Applying regex-based sanitization here would
+	// corrupt the binary payload and make XOR decoding produce garbage values.
 	ingestRouter := chi.NewRouter()
 	ingestRouter.Use(middleware.ApiKeyValidator(sqliteRepo))
-	// Zero-Trust Data Sanitizer
-	ingestRouter.Use(middleware.LogSanitizer)
+	// LogSanitizer is intentionally NOT mounted here — binary stream only.
 
 	var forwarder domain.TelemetryForwarder
 	otelClient, err := telemetry.NewOtelClient(logger)

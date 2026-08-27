@@ -76,9 +76,19 @@ const TransactionBlock* SovereignLedger::getBlock(const std::string& id) const {
 }
 
 void SovereignLedger::zeroizeBlock(TransactionBlock& block) {
-    std::fill(block.serializedRequest.begin(), block.serializedRequest.end(), 0);
-    std::fill(block.previousHash.begin(), block.previousHash.end(), 0);
-    std::fill(block.currentHash.begin(), block.currentHash.end(), 0);
+    // Use secure_zero (volatile-pointer idiom) to prevent the compiler from
+    // eliding these writes as "dead stores" when the buffer goes out of scope.
+    // std::fill is NOT safe here because the optimizer legally treats writes
+    // to a soon-to-be-destroyed buffer as dead writes at -O2/-O3.
+    if (!block.serializedRequest.empty()) {
+        crypto::secure_zero(block.serializedRequest.data(), block.serializedRequest.size());
+    }
+    if (!block.previousHash.empty()) {
+        crypto::secure_zero(block.previousHash.data(), block.previousHash.size());
+    }
+    if (!block.currentHash.empty()) {
+        crypto::secure_zero(block.currentHash.data(), block.currentHash.size());
+    }
     block.isZeroized = true;
 }
 
@@ -102,12 +112,38 @@ std::vector<uint8_t> SovereignLedger::resolvePreviousHash() const {
 }
 
 void SovereignLedger::rechainLedger() {
+    // DESIGN CONTRACT — por qué recadena es correcto y necesario:
+    //
+    // Esta es una COLA DE TRANSACCIONES PENDIENTES (offline queue). Los bloques
+    // aquí almacenados NO han sido transmitidos al backend todavía — se encolan
+    // cuando el dispositivo está offline y se procesan (desencolan) al reconectar.
+    //
+    // Los hashes de bloque son artefactos de integridad INTERNOS. No se exponen
+    // como pruebas criptográficas externas — el backend recibe el payload de la
+    // transacción, no el hash del bloque en la cadena local.
+    //
+    // Al eliminar un bloque físicamente (queue_.erase), la cadena queda con un
+    // "hueco" posicional. El bloque siguiente tiene previousHash apuntando al
+    // hash del bloque eliminado, que ya no existe. verifyIntegrity() fallaría
+    // al comparar contra su expectedPrevHash acumulado desde el génesis.
+    //
+    // Solución correcta: recadena los bloques restantes (aún PENDIENTES) desde
+    // el génesis para restaurar la consistencia de la cadena. Sus nuevos hashes
+    // serán los definitivos cuando se transmitan al backend.
+    //
+    // El payload de datos sensibles ya fue purgado con secure_zero() ANTES del
+    // erase — el rechaineado opera sobre los payloads de bloques vivos únicamente.
+
     std::vector<uint8_t> runningPrevHash(32, 0);
     id_to_index_.clear();
     for (size_t i = 0; i < queue_.size(); ++i) {
         queue_[i].previousHash = runningPrevHash;
         if (!queue_[i].isZeroized) {
-            queue_[i].currentHash = computeBlockHash(queue_[i].serializedRequest, queue_[i].previousHash, queue_[i].timestamp);
+            queue_[i].currentHash = computeBlockHash(
+                queue_[i].serializedRequest,
+                queue_[i].previousHash,
+                queue_[i].timestamp
+            );
         }
         runningPrevHash = queue_[i].currentHash;
         id_to_index_[queue_[i].id] = i;

@@ -29,6 +29,12 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: examples/demo-mobile/yarn.lock
       
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -62,6 +68,12 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
+          
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
           
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -102,6 +114,12 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
           working-directory: examples/demo-mobile/ios
+
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile

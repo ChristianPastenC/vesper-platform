@@ -161,7 +161,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Frida & Tools
-        run: pip install frida-tools
+        run: pip install frida==16.5.1 frida-tools
 
       - name: Download Protected APK
         uses: actions/download-artifact@v4

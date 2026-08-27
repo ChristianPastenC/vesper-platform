@@ -1,0 +1,163 @@
+name: Demo Mobile CI
+
+on:
+  push:
+    branches: [ "main", "develop", "feature/*" ]
+    paths:
+      - 'examples/demo-mobile/**'
+      - '.github/workflows/demo-mobile-ci.yml'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/demo-mobile/**'
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Linter
+        run: yarn lint
+
+      - name: Run Tests
+        run: yarn test
+
+  build-android:
+    name: Build Android (APK)
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+          
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+          
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        
+      - name: Build Android App
+        working-directory: examples/demo-mobile/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: examples/demo-mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-ios:
+    name: Build iOS (Simulator)
+    needs: lint-and-test
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+          
+      - name: Setup Ruby for Cocoapods
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/demo-mobile/ios
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Pods
+        working-directory: examples/demo-mobile/ios
+        run: pod install
+        
+      - name: Build iOS App
+        working-directory: examples/demo-mobile/ios
+        run: xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build CODE_SIGNING_ALLOWED=NO
+
+  security-dast:
+    name: Anti-Tampering (Frida) Cross-Test
+    needs: build-android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Frida & Tools
+        run: pip install frida-tools
+
+      - name: Download Protected APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-debug-apk
+          path: ./apks/protected
+
+      # Simulated step: To get an unprotected APK, you would ideally build it with a flag
+      # e.g., ./gradlew assembleDebug -PdisableGhostLedger=true
+      # For now, we simulate the logic assuming we have both APKs
+      - name: Run Frida Headless Emulation Script
+        working-directory: examples/demo-mobile
+        run: |
+          echo "Running Frida attachment tests on Protected vs Unprotected APK..."
+          # In a real environment, you use an action like reactivecircus/android-emulator-runner
+          # to boot the emulator, install the APKs, and then run this script:
+          python scripts/frida_dast_test.py
+          
+      - name: Post Security Report to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            // The python script generates this markdown file in the current working directory
+            const report = fs.readFileSync('examples/demo-mobile/security-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });

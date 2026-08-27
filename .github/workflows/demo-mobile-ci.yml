@@ -169,21 +169,46 @@ jobs:
           name: app-debug-apk
           path: ./apks/protected
 
-      # Simulated step: To get an unprotected APK, you would ideally build it with a flag
-      # e.g., ./gradlew assembleDebug -PdisableGhostLedger=true
-      # For now, we simulate the logic assuming we have both APKs
-      - name: Run Frida Headless Emulation Script
-        working-directory: examples/demo-mobile
+      - name: Enable KVM group perms
         run: |
-          echo "Running Frida attachment tests on Protected vs Unprotected APK..."
-          # In a real environment, you use an action like reactivecircus/android-emulator-runner
-          # to boot the emulator, install the APKs, and then run this script:
-          python scripts/frida_dast_test.py
-          
-          # Render the report natively on the GitHub Actions Summary page
-          if [ -f security-report.md ]; then
-            cat security-report.md >> $GITHUB_STEP_SUMMARY
-          fi
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Frida Headless Emulation Script (Real Attack)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: |
+            echo "🔥 Emulator booted! Setting up Frida Server..."
+            
+            # Install the Protected APK
+            adb install -r ./apks/protected/app-debug.apk
+            
+            # Download, push and start Frida Server as root
+            wget -qO frida-server.xz https://github.com/frida/frida/releases/download/16.5.1/frida-server-16.5.1-android-x86_64.xz
+            unxz frida-server.xz
+            adb root
+            sleep 2
+            adb push frida-server /data/local/tmp/
+            adb shell "chmod 755 /data/local/tmp/frida-server"
+            adb shell "nohup /data/local/tmp/frida-server >/dev/null 2>&1 &"
+            sleep 3
+            
+            echo "📱 Launching Vesper App..."
+            adb shell monkey -p mx.edu.sovereign.core -c android.intent.category.LAUNCHER 1
+            sleep 5
+            
+            echo "⚔️ Triggering DAST Python Script..."
+            cd examples/demo-mobile
+            python scripts/frida_dast_test.py
+            
+            # Render the report natively on the GitHub Actions Summary page
+            if [ -f security-report.md ]; then
+              cat security-report.md >> $GITHUB_STEP_SUMMARY
+            fi
           
       - name: Post Security Report to PR
         if: github.event_name == 'pull_request'

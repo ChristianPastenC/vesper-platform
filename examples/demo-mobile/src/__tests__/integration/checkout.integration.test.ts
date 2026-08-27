@@ -101,7 +101,7 @@ describe('Integration: Checkout Flow', () => {
     // c. Header Authorization: Bearer presente
     expect(decodedHeaders['Authorization']).toMatch(/^Bearer /);
 
-    // b. Body decodificable que contiene el array ledger
+    // b. Decodable body that contains the ledger array
     let bodyStr: string;
     if (requestArgs.body instanceof Uint8Array) {
       bodyStr = new TextDecoder().decode(requestArgs.body);

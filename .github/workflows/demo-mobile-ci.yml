@@ -1,0 +1,226 @@
+name: Demo Mobile CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/demo-mobile/**'
+      - '.github/workflows/demo-mobile-ci.yml'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/demo-mobile/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+      
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Linter
+        run: yarn lint
+
+      - name: Run Tests
+        run: yarn test
+
+  build-android:
+    name: Build Android (APK)
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+          
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+          
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        
+      - name: Build Android App
+        working-directory: examples/demo-mobile/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: examples/demo-mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-ios:
+    name: Build iOS (Simulator)
+    needs: lint-and-test
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/demo-mobile
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: examples/demo-mobile/yarn.lock
+          
+      - name: Setup Ruby for Cocoapods
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/demo-mobile/ios
+
+      - name: Build Vesper Ghost Ledger (Local Dependency)
+        working-directory: packages/ghost-ledger
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: examples/demo-mobile/ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('examples/demo-mobile/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Pods
+        working-directory: examples/demo-mobile/ios
+        run: pod install
+        
+      - name: Build iOS App
+        working-directory: examples/demo-mobile/ios
+        run: xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
+
+  security-dast:
+    name: Anti-Tampering (Frida) Cross-Test
+    needs: build-android
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Frida & Tools
+        run: pip install frida==16.5.1 frida-tools
+
+      - name: Download Protected APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-debug-apk
+          path: ./apks/protected
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Frida Headless Emulation Script (Real Attack)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: |
+            echo "🔥 Emulator booted! Setting up Frida Server..."
+            
+            # Install the Protected APK
+            adb install -r ./apks/protected/app-debug.apk
+            
+            # Download, push and start Frida Server as root
+            wget -qO frida-server.xz https://github.com/frida/frida/releases/download/16.5.1/frida-server-16.5.1-android-x86_64.xz
+            unxz frida-server.xz
+            adb root
+            sleep 2
+            adb push frida-server /data/local/tmp/
+            adb shell "chmod 755 /data/local/tmp/frida-server"
+            adb shell "nohup /data/local/tmp/frida-server >/dev/null 2>&1 &"
+            sleep 3
+            
+            echo "⚔️ Triggering DAST Python Script (Frida will spawn the app)..."
+            cd examples/demo-mobile && python scripts/frida_dast_test.py
+            
+            # Render the report natively on the GitHub Actions Summary page
+            if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
+          
+      - name: Post Security Report to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            // The python script generates this markdown file in the current working directory
+            const report = fs.readFileSync('examples/demo-mobile/security-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Upload Security Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frida-security-report
+          path: examples/demo-mobile/security-report.md

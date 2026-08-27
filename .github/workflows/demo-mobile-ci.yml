@@ -202,12 +202,11 @@ jobs:
             sleep 5
             
             echo "⚔️ Triggering DAST Python Script..."
-            cd examples/demo-mobile
-            python scripts/frida_dast_test.py
+            cd examples/demo-mobile && python scripts/frida_dast_test.py
             
             # Render the report natively on the GitHub Actions Summary page
-            if [ -f security-report.md ]; then
-              cat security-report.md >> $GITHUB_STEP_SUMMARY
+            if [ -f examples/demo-mobile/security-report.md ]; then
+              cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY
             fi
           
       - name: Post Security Report to PR

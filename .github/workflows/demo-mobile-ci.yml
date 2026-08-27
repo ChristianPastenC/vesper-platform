@@ -197,11 +197,7 @@ jobs:
             adb shell "nohup /data/local/tmp/frida-server >/dev/null 2>&1 &"
             sleep 3
             
-            echo "📱 Launching Vesper App..."
-            adb shell monkey -p mx.edu.sovereign.core -c android.intent.category.LAUNCHER 1
-            sleep 5
-            
-            echo "⚔️ Triggering DAST Python Script..."
+            echo "⚔️ Triggering DAST Python Script (Frida will spawn the app)..."
             cd examples/demo-mobile && python scripts/frida_dast_test.py
             
             # Render the report natively on the GitHub Actions Summary page

@@ -88,11 +88,12 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
     print(f"\n🚀 Starting Dynamic Analysis for {'PROTECTED' if is_protected else 'UNPROTECTED'} build: {package_name}")
     
     try:
-        # We assume the emulator is running and the app is installed/launched via CI steps
+        # We use spawn instead of attach to guarantee early instrumentation and launch
         device = frida.get_usb_device(timeout=5)
-        session = device.attach(package_name)
+        pid = device.spawn([package_name])
+        session = device.attach(pid)
         metrics.frida_attached = True
-        print("[+] Frida successfully attached to the process.")
+        print(f"[+] Frida successfully spawned and attached to process ID: {pid}")
         
         # This JavaScript payload represents the attacker's script
         # It attempts to hook standard React Native JSI methods and C++ Crypto functions
@@ -139,6 +140,9 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
         script = session.create_script(attacker_script)
         script.on('message', lambda msg, data: on_message(msg, data, metrics))
         script.load()
+        
+        # Resume the main thread AFTER injecting our script
+        device.resume(pid)
         
         # Trigger the tests inside the Frida JS engine
         script.exports.run_tests(is_protected)

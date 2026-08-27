@@ -4,6 +4,7 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
+    "nitro": "react-native nitrogen",
     "start": "react-native start --port 8082",
     "start:clear": "react-native start --reset-cache --port 8082",
     "android": "react-native run-android --port 8082",

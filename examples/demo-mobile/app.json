@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SovereignCore",
-    "slug": "sovereign-core-mobile",
+    "name": "VesperCore",
+    "slug": "vesper-core-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",

@@ -28,3 +28,8 @@ jest.mock('react-native-quick-crypto', () => {
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
+
+jest.mock('react-native-config', () => ({
+  API_URL: 'https://mock.api.com',
+  SOVEREIGN_ENVIRONMENT: 'development',
+}));

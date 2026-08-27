@@ -2,7 +2,7 @@ name: Demo Mobile CI
 
 on:
   push:
-    branches: [ "main", "develop", "feature/*" ]
+    branches: [ "main", "develop" ]
     paths:
       - 'examples/demo-mobile/**'
       - '.github/workflows/demo-mobile-ci.yml'
@@ -10,6 +10,10 @@ on:
     branches: [ "main", "develop" ]
     paths:
       - 'examples/demo-mobile/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-test:
@@ -187,3 +191,10 @@ jobs:
               repo: context.repo.repo,
               body: report
             });
+
+      - name: Upload Security Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frida-security-report
+          path: examples/demo-mobile/security-report.md

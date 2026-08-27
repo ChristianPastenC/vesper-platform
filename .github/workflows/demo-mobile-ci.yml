@@ -148,6 +148,9 @@ jobs:
     name: Anti-Tampering (Frida) Cross-Test
     needs: build-android
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -176,6 +179,11 @@ jobs:
           # In a real environment, you use an action like reactivecircus/android-emulator-runner
           # to boot the emulator, install the APKs, and then run this script:
           python scripts/frida_dast_test.py
+          
+          # Render the report natively on the GitHub Actions Summary page
+          if [ -f security-report.md ]; then
+            cat security-report.md >> $GITHUB_STEP_SUMMARY
+          fi
           
       - name: Post Security Report to PR
         if: github.event_name == 'pull_request'

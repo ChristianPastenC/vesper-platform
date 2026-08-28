@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
+	"vesper-core/vesper-ingestion/internal/auth"
 	"vesper-core/vesper-ingestion/internal/domain"
 )
 
@@ -64,10 +65,15 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// For simplicity in this demo, we'll return a pseudo-token (the tenant ID signed/encrypted in production)
-	// The frontend will pass this pseudo-token in Authorization header to manage keys.
+	token, err := auth.SignToken(tenant.ID)
+	if err != nil {
+		h.logger.Error("Failed to sign JWT", "error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	res := LoginResponse{
-		Token:    "session_" + tenant.ID, // Mock JWT
+		Token:    token,
 		TenantID: tenant.ID,
 		Name:     tenant.Name,
 	}
@@ -131,8 +137,15 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := auth.SignToken(newTenant.ID)
+	if err != nil {
+		h.logger.Error("Failed to sign JWT", "error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	res := LoginResponse{
-		Token:    "session_" + newTenant.ID,
+		Token:    token,
 		TenantID: newTenant.ID,
 		Name:     newTenant.Name,
 	}
@@ -159,13 +172,11 @@ type CreateKeyRequest struct {
 // @Failure 500 {string} string "Internal error"
 // @Router /api/v1/b2b/keys [post]
 func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
-	// Simple auth check from "session_" token
-	token := r.Header.Get("Authorization")
-	if len(token) < 9 || token[:8] != "session_" {
+	tenantID, err := auth.ValidateTenant(r.Header.Get("Authorization"))
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	tenantID := token[8:]
 
 	// Limit to 1 Key
 	keys, err := h.repo.GetApiKeysByTenant(r.Context(), tenantID)
@@ -208,12 +219,11 @@ func (h *AuthHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal error"
 // @Router /api/v1/b2b/keys [get]
 func (h *AuthHandler) ListKeys(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if len(token) < 9 || token[:8] != "session_" {
+	tenantID, err := auth.ValidateTenant(r.Header.Get("Authorization"))
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	tenantID := token[8:]
 
 	keys, err := h.repo.GetApiKeysByTenant(r.Context(), tenantID)
 	if err != nil {
@@ -240,12 +250,11 @@ func (h *AuthHandler) ListKeys(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal error"
 // @Router /api/v1/b2b/metrics [get]
 func (h *AuthHandler) GetMetrics(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if len(token) < 9 || token[:8] != "session_" {
+	tenantID, err := auth.ValidateTenant(r.Header.Get("Authorization"))
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	tenantID := token[8:]
 
 	metrics, err := h.repo.GetMetricsByTenant(r.Context(), tenantID, 30) // max 30 points
 	if err != nil {
@@ -277,12 +286,11 @@ type DeleteKeyRequest struct {
 // @Failure 500 {string} string "Internal error"
 // @Router /api/v1/b2b/keys [delete]
 func (h *AuthHandler) DeleteKey(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if len(token) < 9 || token[:8] != "session_" {
+	tenantID, err := auth.ValidateTenant(r.Header.Get("Authorization"))
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	tenantID := token[8:]
 
 	keyID := r.URL.Query().Get("key")
 	if keyID == "" {

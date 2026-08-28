@@ -29,6 +29,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
   const { t } = useTranslation();
 
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const animValue = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
@@ -47,14 +48,18 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ name, price, barcode, 
   return (
     <View style={styles.heroContainer} testID="product-hero-container">
       <View style={styles.imageContainer} testID="product-image-container">
-        {image ? (
+        {image && !imageError ? (
           <>
             <Image
+              testID="product-hero-image"
               source={{ uri: image }}
               style={[{ width: '100%', height: '100%', resizeMode: 'cover' }]}
               onLoadStart={() => setImageLoading(true)}
               onLoadEnd={() => setImageLoading(false)}
-              onError={() => setImageLoading(false)}
+              onError={() => {
+                setImageLoading(false);
+                setImageError(true);
+              }}
             />
             {imageLoading && (
               <Animated.View

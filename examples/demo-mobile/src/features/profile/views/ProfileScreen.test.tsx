@@ -132,4 +132,60 @@ describe('ProfileScreen View Settings Redesign', () => {
     fireEvent.press(getByTestId('profile-lang-row'));
     expect(mockToggleLanguage).toHaveBeenCalledTimes(1);
   });
+
+  it('shows a placeholder when no delivery address is stored', () => {
+    (useAppStore as unknown as jest.Mock).mockReturnValue('');
+    (useProfile as jest.Mock).mockReturnValue({
+      isAuthenticated: false,
+      userName: null,
+      themeMode: 'light',
+      toggleThemeMode: mockToggleTheme,
+      language: 'en',
+      toggleLanguage: mockToggleLanguage,
+      handleLogout: mockLogout,
+    });
+
+    const { getByText } = render(<ProfileScreen />);
+
+    expect(getByText('Add Address')).toBeTruthy();
+  });
+
+  it('opens and closes the delivery address modal', () => {
+    (useProfile as jest.Mock).mockReturnValue({
+      isAuthenticated: false,
+      userName: null,
+      themeMode: 'light',
+      toggleThemeMode: mockToggleTheme,
+      language: 'en',
+      toggleLanguage: mockToggleLanguage,
+      handleLogout: mockLogout,
+    });
+
+    const { getByTestId, queryByTestId } = render(<ProfileScreen />);
+
+    expect(queryByTestId('address-modal')).toBeNull();
+
+    fireEvent.press(getByTestId('profile-address-row'));
+    expect(getByTestId('address-modal').props.visible).toBe(true);
+
+    fireEvent.press(getByTestId('close-address-modal'));
+    expect(queryByTestId('address-modal')).toBeNull();
+  });
+
+  it('navigates to the developer menu in dev builds', () => {
+    (useProfile as jest.Mock).mockReturnValue({
+      isAuthenticated: false,
+      userName: null,
+      themeMode: 'light',
+      toggleThemeMode: mockToggleTheme,
+      language: 'en',
+      toggleLanguage: mockToggleLanguage,
+      handleLogout: mockLogout,
+    });
+
+    const { getByTestId } = render(<ProfileScreen />);
+
+    fireEvent.press(getByTestId('profile-dev-menu-row'));
+    expect(mockNavigate).toHaveBeenCalledWith('DevMenu');
+  });
 });

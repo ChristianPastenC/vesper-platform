@@ -19,7 +19,7 @@
 #  if defined(__APPLE__) || defined(__FreeBSD__)
 #    include <stdlib.h>                 // arc4random_buf (Apple/BSD)
 #  else
-#    include <sys/random.h>            // getrandom(2) (Linux/Android)
+#    include <sys/syscall.h>           // SYS_getrandom — invoked directly below
 #  endif
 #endif
 
@@ -197,9 +197,14 @@ void MmapTelemetryStorage::generateSecureRandom(uint8_t* buf, size_t size) {
     // arc4random_buf is seeded by the kernel; never fails; available on all Apple platforms.
     arc4random_buf(buf, size);
 #else
-    // Linux / Android: getrandom(2) (kernel 3.17+, glibc 2.25+, Android 9+).
-    // Falls back to /dev/urandom for older kernels — still cryptographically safe.
-    ssize_t ret = getrandom(buf, size, 0);
+    // Linux / Android: invoke the getrandom(2) syscall directly via syscall(),
+    // rather than the libc/bionic wrapper. The wrapper (and its <sys/random.h>
+    // declaration) only exists for glibc 2.25+ / Android API 28+, but this
+    // package's minSdkVersion is 24 — the kernel syscall itself has been
+    // available since Linux 3.17 (Android 5.0 / API 21), so calling it
+    // directly keeps older API levels buildable without losing CSPRNG quality.
+    // Falls back to /dev/urandom for kernels that lack the syscall entirely.
+    long ret = syscall(SYS_getrandom, buf, size, 0);
     if (ret < 0 || static_cast<size_t>(ret) != size) {
         // Fallback: /dev/urandom (always available on Linux/Android)
         int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);

@@ -73,4 +73,52 @@ describe('ProductCard', () => {
     fireEvent.press(cardBtn);
     expect(mockOnPress).toHaveBeenCalledTimes(1);
   });
+
+  it('falls back to a placeholder icon when the image fails to load', () => {
+    const { getByTestId, queryByTestId, getAllByText } = render(
+      <ProductCard
+        product={mockProduct}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
+      />,
+    );
+
+    fireEvent(getByTestId('product-card-image'), 'onError');
+
+    expect(queryByTestId('product-card-image')).toBeNull();
+    expect(getByTestId('product-card-image-fallback')).toBeTruthy();
+    expect(getAllByText('Test Product').length).toBeGreaterThan(0);
+  });
+
+  it('keeps rendering the image through its load lifecycle events', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ProductCard
+        product={mockProduct}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
+      />,
+    );
+
+    const image = getByTestId('product-card-image');
+    fireEvent(image, 'onLoadStart');
+    fireEvent(image, 'onLoadEnd');
+
+    expect(getByTestId('product-card-image')).toBeTruthy();
+    expect(queryByTestId('product-card-image-fallback')).toBeNull();
+  });
+
+  it('renders the placeholder icon when the product has no image', () => {
+    const { getByTestId } = render(
+      <ProductCard
+        product={{ ...mockProduct, image: undefined }}
+        onAddToOnline={jest.fn()}
+        onAddToInStore={jest.fn()}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(getByTestId('product-card-image-fallback')).toBeTruthy();
+  });
 });

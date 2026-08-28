@@ -21,7 +21,7 @@ body:json {
 }
 
 script:post-response {
-  if (res.status === 201) {
+  if (res.status === 200) {
     bru.setEnvVar("api_key", res.body.key);
   }
 }

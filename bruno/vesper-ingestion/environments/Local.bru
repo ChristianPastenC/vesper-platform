@@ -1,33 +1,10 @@
-{
-  "name": "Local",
-  "variables": [
-    {
-      "name": "base_url",
-      "value": "http://127.0.0.1:8081",
-      "enabled": true,
-      "secret": false,
-      "type": "text"
-    },
-    {
-      "name": "token",
-      "value": "",
-      "enabled": true,
-      "secret": true,
-      "type": "text"
-    },
-    {
-      "name": "api_key",
-      "value": "",
-      "enabled": true,
-      "secret": true,
-      "type": "text"
-    },
-    {
-      "name": "bundle_id",
-      "value": "com.demo.app",
-      "enabled": true,
-      "secret": false,
-      "type": "text"
-    }
-  ]
+vars {
+  base_url: http://127.0.0.1:8081
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODgwMzE2NjUsImlhdCI6MTc4Nzk0NTI2NSwic3ViIjoidGVuYW50XzBlYWVmZDk5LTRkOGQtNDVjOC04YmI2LTU2YzA0ODUwMWNmMyJ9.klQwlDMutVT2IELiWzu7S6Wl19ki9mK5ghLlITGXHBA
+  api_key: sk_c854a9b9-1d5f-4bf4-bcc3-85d0631c2d68
+  bundle_id: com.demo.app
 }
+vars:secret [
+  token,
+  api_key
+]

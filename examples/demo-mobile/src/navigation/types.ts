@@ -28,4 +28,5 @@ export type RootStackParamList = {
   Stores: undefined;
   Orders: undefined;
   OrderDetails: { orderId: string };
+  DevMenu: undefined;
 };

@@ -3,29 +3,45 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <cstring>
 
 namespace sovereign::secure::crypto {
 
 /**
- * Computes the SHA-256 hash of the input data.
- * @param data The input binary data.
- * @return A 32-byte vector containing the SHA-256 hash.
+ * SHA-256 implementation (pure C++17)
  */
 std::vector<uint8_t> sha256(const std::vector<uint8_t>& data);
 
 /**
- * Encodes binary data to Base64Url format without padding.
- * @param data The input binary data.
- * @return Base64Url encoded string.
+ * URL-safe Base64 encoding without padding
  */
 std::string base64UrlEncode(const std::vector<uint8_t>& data);
 
 /**
- * Compares two byte arrays in constant time to prevent timing attacks.
- * @param a First byte array
- * @param b Second byte array
- * @return True if both arrays are strictly equal, false otherwise.
+ * Constant-time comparison for cryptographic hashes/keys
+ * Returns true if equal, false otherwise
+ * Time taken depends only on length, not on contents
  */
 bool constantTimeEqual(const std::vector<uint8_t>& a, const std::vector<uint8_t>& b);
+
+/**
+ * Securely zeroes a region of memory.
+ *
+ * Unlike std::fill or memset, this function writes through a volatile pointer,
+ * which prevents the compiler from eliding the operation as a "dead write"
+ * even when the buffer goes out of scope immediately after.
+ *
+ * Equivalent to explicit_bzero(3) / SecureZeroMemory on platforms that support it,
+ * but implemented portably via the volatile-pointer idiom (C++11 and later).
+ *
+ * @param ptr  Pointer to the beginning of the region.
+ * @param size Number of bytes to overwrite with zero.
+ */
+inline void secure_zero(void* ptr, size_t size) noexcept {
+    volatile uint8_t* p = static_cast<volatile uint8_t*>(ptr);
+    for (size_t i = 0; i < size; ++i) {
+        p[i] = 0;
+    }
+}
 
 } // namespace sovereign::secure::crypto

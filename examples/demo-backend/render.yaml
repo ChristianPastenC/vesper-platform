@@ -4,7 +4,7 @@ services:
     env: go
     plan: free
     rootDir: examples/demo-backend
-    buildCommand: "go mod download && go build -o server ./cmd/server"
+    buildCommand: "go mod download && go test ./... && go build -o server ./cmd/server"
     startCommand: "./server"
     envVars:
       - key: PAYLOAD_SECRET_KEY

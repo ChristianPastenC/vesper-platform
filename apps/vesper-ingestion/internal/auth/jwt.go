@@ -1,4 +1,4 @@
-﻿package auth
+package auth
 
 import (
 	"errors"
@@ -33,15 +33,19 @@ func SignToken(tenantID string) (string, error) {
 	return token.SignedString(jwtSecret())
 }
 
-// ValidateTenant parses and validates a Bearer JWT from the Authorization header.
+// ValidateTenant parses and validates a JWT from the Authorization header.
 // Returns the tenantID from the "sub" claim, or an error if the token is
 // expired, tampered with, or signed with a different algorithm/key.
 func ValidateTenant(authHeader string) (string, error) {
-	const prefix = "Bearer "
-	if len(authHeader) <= len(prefix) {
-		return "", errors.New("missing or malformed Authorization header")
+	if authHeader == "" {
+		return "", errors.New("missing Authorization header")
 	}
-	raw := authHeader[len(prefix):]
+
+	raw := authHeader
+	const prefix = "Bearer "
+	if len(authHeader) > len(prefix) && authHeader[:len(prefix)] == prefix {
+		raw = authHeader[len(prefix):]
+	}
 
 	token, err := jwt.Parse(raw, func(t *jwt.Token) (interface{}, error) {
 		// Reject any algorithm other than HS256 — prevents algorithm confusion attacks

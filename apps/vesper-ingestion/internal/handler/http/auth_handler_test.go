@@ -96,6 +96,7 @@ func (m *MockAuthRepo) GetMetricsByTenant(ctx context.Context, tenantID string, 
 }
 
 func TestRegisterAndLogin(t *testing.T) {
+	os.Setenv("JWT_SECRET", "this-is-a-32-byte-dummy-secret-for-testing-only")
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	repo := NewMockAuthRepo()
 	handler := myhttp.NewAuthHandler(logger, repo)

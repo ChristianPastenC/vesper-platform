@@ -4,5 +4,5 @@ services:
     env: go
     plan: free
     rootDir: apps/vesper-ingestion
-    buildCommand: "go mod download && go build -o server ./cmd/server"
+    buildCommand: "go mod download && go test ./... && go build -o server ./cmd/server"
     startCommand: "./server"

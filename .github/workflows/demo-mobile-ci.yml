@@ -6,10 +6,12 @@ on:
     paths:
       - 'examples/demo-mobile/**'
       - '.github/workflows/demo-mobile-ci.yml'
+      - 'packages/ghost-ledger/**'
   pull_request:
     branches: [ "main", "develop" ]
     paths:
       - 'examples/demo-mobile/**'
+      - 'packages/ghost-ledger/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

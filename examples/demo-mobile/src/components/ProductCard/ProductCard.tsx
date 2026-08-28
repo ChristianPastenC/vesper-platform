@@ -20,6 +20,12 @@ export interface ProductCardProps {
   onPress: () => void;
 }
 
+// The image placeholder card keeps a fixed light background regardless of the
+// active app theme (see ProductCard.styles.ts), so fallback content must use a
+// fixed neutral tone here too — theme.colors.text flips to near-white in dark
+// mode and becomes nearly invisible against that background.
+const FALLBACK_ICON_COLOR = '#94A3B8';
+
 const formatEan13 = (bc: string) => {
   if (bc.length === 13) {
     return `${bc.slice(0, 1)} ${bc.slice(1, 7)} ${bc.slice(7)}`;
@@ -54,12 +60,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToOnline
   const theme = useTheme();
   const styles = stylesFactory(theme.colors);
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   return (
     <View style={styles.card}>
       <TouchableOpacity onPress={onPress} testID="product-card-press" activeOpacity={0.7}>
         <View style={styles.imagePlaceholder}>
-          {product.image ? (
+          {product.image && !imageError ? (
             <>
               {imageLoading && (
                 <View style={styles.skeletonOverlay}>
@@ -67,15 +74,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToOnline
                 </View>
               )}
               <Image
+                testID="product-card-image"
                 source={{ uri: product.image }}
                 style={styles.image}
                 onLoadStart={() => setImageLoading(true)}
                 onLoadEnd={() => setImageLoading(false)}
-                onError={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
               />
             </>
           ) : (
-            <Ionicons name="cube-outline" size={32} color={theme.colors.text + '33'} />
+            <View testID="product-card-image-fallback" style={styles.imageFallback}>
+              <Ionicons name="image-outline" size={28} color={FALLBACK_ICON_COLOR} />
+              {imageError && (
+                <Text style={styles.imageFallbackText} numberOfLines={1}>
+                  {product.name}
+                </Text>
+              )}
+            </View>
           )}
 
           <TouchableOpacity

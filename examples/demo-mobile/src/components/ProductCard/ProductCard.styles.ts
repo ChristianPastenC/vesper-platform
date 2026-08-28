@@ -34,6 +34,20 @@ export const stylesFactory = (colors: ThemeColors) =>
       height: '100%',
       resizeMode: 'cover',
     },
+    imageFallback: {
+      flex: 1,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: verticalScale(4),
+    },
+    imageFallbackText: {
+      fontSize: scaleFont(10),
+      // Fixed neutral tone — the placeholder card behind it keeps a constant
+      // light background regardless of the active app theme.
+      color: '#64748B',
+      paddingHorizontal: scale(8),
+    },
     quickAddBtn: {
       position: 'absolute',
       bottom: scale(8),

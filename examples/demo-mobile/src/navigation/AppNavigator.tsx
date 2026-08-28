@@ -13,6 +13,7 @@ import { PaymentSuccessScreen } from '../features/payment/views/PaymentSuccessSc
 import { StoresScreen } from '../features/stores/views/StoresScreen';
 import { OrdersScreen } from '../features/orders/views/OrdersScreen/OrdersScreen';
 import { OrderDetailsScreen } from '../features/orders/views/OrderDetailsScreen/OrderDetailsScreen';
+import { DevMenuScreen } from '../features/dev-menu/views/DevMenuScreen';
 import { useTheme } from '../core/theme/useTheme';
 
 import { useTranslation } from 'react-i18next';
@@ -109,6 +110,15 @@ export const AppNavigator: React.FC = () => {
           title: t('orders.detailsTitle'),
         }}
       />
+      {__DEV__ && (
+        <Stack.Screen
+          name="DevMenu"
+          component={DevMenuScreen}
+          options={{
+            title: 'Developer Menu',
+          }}
+        />
+      )}
     </Stack.Navigator>
   );
 };

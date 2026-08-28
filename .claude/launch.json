@@ -1,0 +1,32 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vesper-console",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["--cwd", "apps/vesper-console", "dev"],
+      "port": 4000
+    },
+    {
+      "name": "demo-backend",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["-C", "examples/demo-backend", "run", "./cmd/server"],
+      "port": 8080
+    },
+    {
+      "name": "vesper-ingestion",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "JWT_SECRET=local-dev-only-secret-please-32chars",
+        "go", "-C", "apps/vesper-ingestion", "run", "./cmd/server"
+      ],
+      "port": 8081
+    },
+    {
+      "name": "demo-mobile-metro",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["--cwd", "examples/demo-mobile", "start"],
+      "port": 8082
+    }
+  ]
+}

@@ -36,6 +36,15 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       shadowRadius: 12,
       elevation: 4,
     },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: scale(20),
+      paddingVertical: verticalScale(18),
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border + '60',
+    },
     rowLast: {
       flexDirection: 'row',
       justifyContent: 'space-between',

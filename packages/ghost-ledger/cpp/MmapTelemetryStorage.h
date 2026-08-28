@@ -32,6 +32,9 @@ private:
     void writeEventInternal(size_t index, const TelemetryEvent& event);
     std::vector<uint8_t> generateKeystream(size_t index);
 
+    // Platform-native CSPRNG — BCryptGenRandom / arc4random_buf / getrandom
+    void generateSecureRandom(uint8_t* buf, size_t size);
+
     std::string filepath_;
     std::vector<uint8_t> session_key_;
     

@@ -1,16 +1,26 @@
 #include "MmapTelemetryStorage.h"
 #include "CryptoUtils.h"
 #include <cstring>
-#include <random>
 #include <iostream>
+#include <stdexcept>
 
+// ── Platform-specific headers ────────────────────────────────────────────────
 #ifdef _WIN32
-#include <windows.h>
+#  include <windows.h>
+#  include <bcrypt.h>                    // BCryptGenRandom
+#  ifdef _MSC_VER
+#    pragma comment(lib, "bcrypt.lib")   // Auto-link on MSVC
+#  endif
 #else
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#  include <sys/mman.h>                 // mmap, munmap, mlock, msync
+#  include <sys/stat.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#  if defined(__APPLE__) || defined(__FreeBSD__)
+#    include <stdlib.h>                 // arc4random_buf (Apple/BSD)
+#  else
+#    include <sys/random.h>            // getrandom(2) (Linux/Android)
+#  endif
 #endif
 
 namespace sovereign::secure {
@@ -29,17 +39,43 @@ MmapTelemetryStorage::MmapTelemetryStorage()
 }
 
 MmapTelemetryStorage::~MmapTelemetryStorage() {
+    // Zeroize and unlock the session key before any memory is released.
+    // This prevents the key from lingering in freed heap pages.
+    if (!session_key_.empty()) {
+        crypto::secure_zero(session_key_.data(), session_key_.size());
+#ifdef _WIN32
+        VirtualUnlock(session_key_.data(), session_key_.size());
+#else
+        munlock(session_key_.data(), session_key_.size());
+#endif
+        session_key_.clear();
+    }
     unmapFile();
 }
 
 void MmapTelemetryStorage::init(const std::string& filepath, const std::vector<uint8_t>& sessionKey) {
     if (is_initialized_) return;
-    
+
+    // Reject short keys outright — silent zero-padding produces a weak key.
+    if (sessionKey.size() < 32) {
+        throw std::invalid_argument(
+            "[MmapTelemetryStorage] session_key must be exactly 32 bytes; "
+            "got " + std::to_string(sessionKey.size()));
+    }
+
     filepath_ = filepath;
     session_key_ = sessionKey;
-    if (session_key_.size() < 32) {
-        session_key_.resize(32, 0); // Pad with zeroes if too short
-    }
+
+    // Attempt to lock the key in RAM so the OS cannot swap it to disk.
+    // mlock/VirtualLock may fail on unprivileged processes (e.g. stock Android
+    // without CAP_IPC_LOCK). We treat failure as a soft warning — the key is
+    // still in memory, just not guaranteed to be non-swappable. The session key
+    // is short-lived and ephemeral, so this is an acceptable degradation.
+#ifdef _WIN32
+    VirtualLock(session_key_.data(), session_key_.size());
+#else
+    mlock(session_key_.data(), session_key_.size());
+#endif
 
     openAndMapFile(filepath_);
     is_initialized_ = true;
@@ -128,19 +164,57 @@ void MmapTelemetryStorage::unmapFile() {
 
 void MmapTelemetryStorage::formatNewFile() {
     std::memset(mapped_data_, 0, MAX_FILE_SIZE);
-    uint32_t* magic = reinterpret_cast<uint32_t*>(mapped_data_);
+    uint32_t* magic   = reinterpret_cast<uint32_t*>(mapped_data_);
     uint32_t* version = reinterpret_cast<uint32_t*>(mapped_data_ + 4);
-    
-    *magic = MAGIC_SIG;
-    *version = VERSION;
-    *head_index_ = 0;
-    *count_ = 0;
-    
-    // Generate IV (using std::random_device for simplicity)
-    std::random_device rd;
-    for (int i = 0; i < 32; ++i) {
-        iv_[i] = static_cast<uint8_t>(rd());
+
+    *magic        = MAGIC_SIG;
+    *version      = VERSION;
+    *head_index_  = 0;
+    *count_       = 0;
+
+    // Generate IV using a platform CSPRNG.
+    //
+    // std::random_device is explicitly NOT used here. On MinGW (Windows), it is
+    // documented to fall back to a deterministic PRNG when no hardware source is
+    // available, producing a predictable IV and a breakable XOR keystream.
+    // We use OS-level APIs that are guaranteed to be cryptographically strong:
+    //
+    //   Windows  → BCryptGenRandom (CNG, kernel CSPRNG)
+    //   Apple/BSD → arc4random_buf (ChaCha20 CSPRNG, never fails, no seed needed)
+    //   Linux/Android → getrandom(2) with /dev/urandom fallback
+    generateSecureRandom(iv_, 32);
+}
+
+void MmapTelemetryStorage::generateSecureRandom(uint8_t* buf, size_t size) {
+#ifdef _WIN32
+    NTSTATUS status = BCryptGenRandom(
+        NULL, buf, static_cast<ULONG>(size), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    if (!BCRYPT_SUCCESS(status)) {
+        throw std::runtime_error(
+            "[MmapTelemetryStorage] BCryptGenRandom failed — cannot generate secure IV");
     }
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+    // arc4random_buf is seeded by the kernel; never fails; available on all Apple platforms.
+    arc4random_buf(buf, size);
+#else
+    // Linux / Android: getrandom(2) (kernel 3.17+, glibc 2.25+, Android 9+).
+    // Falls back to /dev/urandom for older kernels — still cryptographically safe.
+    ssize_t ret = getrandom(buf, size, 0);
+    if (ret < 0 || static_cast<size_t>(ret) != size) {
+        // Fallback: /dev/urandom (always available on Linux/Android)
+        int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+        if (fd < 0) {
+            throw std::runtime_error(
+                "[MmapTelemetryStorage] Cannot open /dev/urandom for IV generation");
+        }
+        ssize_t n = read(fd, buf, size);
+        close(fd);
+        if (n < 0 || static_cast<size_t>(n) != size) {
+            throw std::runtime_error(
+                "[MmapTelemetryStorage] Failed to read entropy from /dev/urandom");
+        }
+    }
+#endif
 }
 
 std::vector<uint8_t> MmapTelemetryStorage::generateKeystream(size_t index) {
@@ -191,20 +265,40 @@ void MmapTelemetryStorage::writeEvent(const TelemetryEvent& event) {
 std::vector<TelemetryEvent> MmapTelemetryStorage::readAllAndClear() {
     std::vector<TelemetryEvent> result;
     if (!is_initialized_) return result;
-    
+
     size_t current_count = *count_;
     result.reserve(current_count);
-    
+
     if (current_count > 0) {
         size_t start = (current_count == MAX_EVENTS) ? *head_index_ : 0;
         for (size_t i = 0; i < current_count; ++i) {
             result.push_back(readEvent((start + i) % MAX_EVENTS));
         }
     }
-    
+
+    // Purge the XOR-encrypted event bytes from the mmap region before
+    // resetting the counters. Without this step the ciphertext remains on disk
+    // even after "clearing" — recoverable by anyone with filesystem access who
+    // also obtains the session key (e.g. via a memory dump or crash report).
+    //
+    // We zero the entire data area (not just the events read) to handle ring-
+    // buffer wraparound correctly and to leave no partial ciphertext behind.
+    // The header (magic, version, head_index, count, iv) is preserved — only
+    // the event data region is wiped.
+    if (current_count > 0) {
+        crypto::secure_zero(mapped_data_ + HEADER_SIZE, MAX_FILE_SIZE - HEADER_SIZE);
+        // Flush to physical storage so the kernel page cache doesn't hold the
+        // plaintext after the process exits.
+#ifdef _WIN32
+        FlushViewOfFile(mapped_data_ + HEADER_SIZE, MAX_FILE_SIZE - HEADER_SIZE);
+#else
+        msync(mapped_data_ + HEADER_SIZE, MAX_FILE_SIZE - HEADER_SIZE, MS_SYNC);
+#endif
+    }
+
     *head_index_ = 0;
-    *count_ = 0;
-    
+    *count_      = 0;
+
     return result;
 }
 

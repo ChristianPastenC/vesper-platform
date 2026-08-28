@@ -34,6 +34,10 @@ target_compile_options(SovereignSecureCore PRIVATE
     -O3
 )
 
+if (WIN32)
+    target_link_libraries(SovereignSecureCore PUBLIC bcrypt)
+endif()
+
 # ---------------------------------------------------------------------------
 # Target 2: SovereignSecureClient (Conditional JSI Wrapper Shared Library)
 # ---------------------------------------------------------------------------

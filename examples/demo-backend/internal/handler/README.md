@@ -12,6 +12,7 @@ Contains all REST route handlers and the central router.
 - **`router.go`**: The central `chi` Router configuration that wires all endpoints, handlers, and middlewares together. Exposes the Swagger UI.
 - **`auth_handler.go`**: Endpoints for user registration, login, and token refreshing.
 - **`catalog_handler.go`**: Endpoints for retrieving product catalog data.
+- **`dev_handler.go`**: Development endpoints for simulating or testing specific logic.
 - **`orders_handler.go`**: Endpoints for fetching user orders.
 - **`payment_handler.go`**: Endpoints for processing online payments and syncing offline transactions.
 - **`profile_handler.go`**: Endpoints for fetching and updating user profiles.

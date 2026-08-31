@@ -33,7 +33,7 @@ To run this backend in your local environment, ensure you have Go 1.22+ installe
 
 - **Generate Swagger Documentation:**
   ```bash
-  swag init -g internal/handler/http/router.go
+  swag init -g cmd/server/main.go
   ```
 - **Clean and format modules:**
   ```bash

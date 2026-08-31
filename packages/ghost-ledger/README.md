@@ -166,7 +166,12 @@ const client = SovereignClientCore.getInstance({
   },
   networkResolver: async () => navigator.onLine,
   networkAdapter: new FetchAdapter(),
-  defaultTTL: 60_000
+  defaultTTL: 60_000,
+  telemetry: {
+    apiKey: 'your-vesper-api-key',
+    bundleId: 'com.your.app',
+    endpoint: 'https://api.vesper.local/v1/support/telemetry'
+  }
 });
 
 // Traps in C++ memory if connection drops

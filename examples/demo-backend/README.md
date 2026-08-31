@@ -1,6 +1,15 @@
 # Vesper Platform - Backend API
 
+[![Demo Backend Deployment](https://img.shields.io/badge/Live_Deployment-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
+
 Welcome to the Backend API for the Vesper Platform. This service is built in Go (Golang) and designed under a strict **Zero-Trust Architecture**.
+
+## 🚀 Live Environment
+
+The production build of this backend is continuously deployed on Render. You can interact with the live Swagger documentation here:
+**[https://demo-backend-4puz.onrender.com/swagger/index.html](https://demo-backend-4puz.onrender.com/swagger/index.html)**
+
+---
 
 ## API Architecture
 

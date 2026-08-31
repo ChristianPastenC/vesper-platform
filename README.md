@@ -1,23 +1,43 @@
 # Vesper Core Platform
 
+[![Console Deployment](https://img.shields.io/badge/Console-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://vesper-console.netlify.app/)
+[![Ingestion API Deployment](https://img.shields.io/badge/Ingestion_API-Render-46E3B7?style=for-the-badge&logo=render)](https://vesper-ingestion.onrender.com/)
+[![Demo Backend Deployment](https://img.shields.io/badge/Demo_Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
+[![Ghost Ledger](https://img.shields.io/badge/@vesper/ghost--ledger-blue?style=for-the-badge&logo=npm)](./packages/ghost-ledger)
+
 This repository contains the Vesper Developer Platform, a B2B SaaS system that provides a portal and an ingestion API for the Vesper Client SDK telemetry data.
+
+## 🚀 Live Environments
+
+You can explore the deployed platform and API implementations via the following public URLs:
+
+| Service | Live URL | Hosting |
+| :--- | :--- | :--- |
+| **Vesper Console (Frontend)** | [vesper-console.netlify.app](https://vesper-console.netlify.app/) | Netlify |
+| **Vesper Ingestion (API)** | [vesper-ingestion.onrender.com](https://vesper-ingestion.onrender.com/) | Render |
+| **Demo Backend (E-commerce)**| [demo-backend-4puz.onrender.com](https://demo-backend-4puz.onrender.com/) | Render |
+
+---
 
 ## Architecture
 
-The project is structured as a monorepo containing two main applications:
+The project is structured as a monorepo containing two main applications and a core library:
 
-1. **`vesper-ingestion`** (Backend - Go)
+1. **[`vesper-ingestion`](./apps/vesper-ingestion)** (Backend - Go)
    - A high-performance Go HTTP server using `go-chi`.
    - Exposes REST endpoints for the B2B SaaS authentication and API Key generation.
    - Exposes a binary ingestion endpoint (`/api/v1/support/telemetry`) that receives compressed telemetry data from client SDKs.
    - Implements Zero-Trust Log Sanitization middleware to scrub any accidental PII via Regex before processing.
    - Forwards telemetry to an OpenTelemetry collector (like VictoriaMetrics) and stores a local copy in SQLite for the real-time developer dashboard.
 
-2. **`vesper-console`** (Frontend - Astro)
+2. **[`vesper-console`](./apps/vesper-console)** (Frontend - Astro)
    - A lightweight, ultra-fast frontend built entirely in Astro and Vanilla JS.
    - Provides authentication (Login/Signup) for tenant organizations.
    - Allows developers to generate API Keys (`X-Sovereign-API-Key`) to embed in their `SovereignClientCore` implementations.
    - Features a real-time dashboard using `Chart.js` that visualizes the telemetry metrics (Integrity & Latency) ingested by the backend.
+
+3. **[`@vesper/ghost-ledger`](./packages/ghost-ledger)** (SDK - C++/TypeScript)
+   - The native cryptographic engine that integrates securely into client applications.
 
 ## Getting Started
 
@@ -86,3 +106,7 @@ Tests the mobile application and runs live anti-tampering validation:
 - **`security-dast` (Anti-Tampering Cross-Test)**: Boots a headless Android emulator with KVM acceleration. It then injects **Frida** into the compiled APK to simulate a real-world memory tampering attack. This guarantees the `IntegrityBreachError` mechanism functions flawlessly against dynamic runtime hooks. It posts the security report directly to Pull Requests.
 
 </details>
+
+## License
+
+This project is proprietary software. See the [LICENSE](./LICENSE) file for details.

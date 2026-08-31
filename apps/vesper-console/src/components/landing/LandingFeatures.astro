@@ -1,70 +1,73 @@
 ---
+
 ---
+
 <section id="quickstart" class="max-w-5xl mx-auto px-6 py-20">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
-        <div>
-          <h2 class="text-3xl font-bold text-white mb-4">Integración Nativa Segura</h2>
-          <p class="text-slate-400 leading-relaxed mb-6">
-            A diferencia de otras librerías NPM que mantienen material criptográfico expuesto en la
-            memoria del recolector de basura de JS, <b>Sovereign SDK</b> opera un motor C++ nativo que
-            destruye el material mediante <code
-              class="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm"
-              >SecureZeroMemory</code
-            > inmediatamente después de firmar la transacción.
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-center gap-3">
-              <svg
-                class="w-5 h-5 text-emerald-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"></path></svg
-              >
-              <span>Firmas Ed25519 y RSA-2048</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg
-                class="w-5 h-5 text-emerald-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"></path></svg
-              >
-              <span>Telemetría de Integridad de Ledger</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg
-                class="w-5 h-5 text-emerald-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"></path></svg
-              >
-              <span>Comunicación síncrona vía React Native Nitro / JSI</span>
-            </li>
-          </ul>
-        </div>
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative">
-          <div
-            class="absolute -top-3 -right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full"
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
+    <div>
+      <h2 class="text-3xl font-bold text-white mb-4" data-i18n="landing.features.title">
+        Integración Nativa Segura
+      </h2>
+      <p class="text-slate-400 leading-relaxed mb-6" data-i18n="landing.features.desc">
+        A diferencia de otras librerías NPM que mantienen material criptográfico expuesto en la
+        memoria del recolector de basura de JS, Sovereign SDK opera un motor C++ nativo que destruye
+        el material mediante <code
+          class="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm">SecureZeroMemory</code
+        > inmediatamente después de firmar la transacción.
+      </p>
+      <ul class="space-y-3">
+        <li class="flex items-center gap-3">
+          <svg
+            class="w-5 h-5 text-emerald-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"></path></svg
           >
-            cpp/VolatileQueue.hpp
-          </div>
-          <pre
-            class="text-sm font-mono text-slate-300 overflow-x-auto"><code><span class="text-slate-500">// Secure hardware wipe (Zeroization)</span>
+          <span>Firmas Ed25519 y RSA-2048</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <svg
+            class="w-5 h-5 text-emerald-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"></path></svg
+          >
+          <span>Telemetría de Integridad de Ledger</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <svg
+            class="w-5 h-5 text-emerald-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"></path></svg
+          >
+          <span>Comunicación síncrona vía React Native Nitro / JSI</span>
+        </li>
+      </ul>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative">
+      <div
+        class="absolute -top-3 -right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full"
+      >
+        cpp/VolatileQueue.hpp
+      </div>
+      <pre
+        class="text-sm font-mono text-slate-300 overflow-x-auto"><code><span class="text-slate-500">// Secure hardware wipe (Zeroization)</span>
 void VolatileQueue::activeZeroization() &#123;
     std::lock_guard&lt;std::mutex&gt; lock(mutex_);
     
@@ -79,125 +82,304 @@ void VolatileQueue::activeZeroization() &#123;
         0x00
     );
 &#125;</code></pre>
-        </div>
-      </div>
+    </div>
+  </div>
 
-      <!-- Core Security Features -->
-      <div class="border-t border-slate-800 pt-20 mb-32">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-white mb-4">Arquitectura de Seguridad Core</h2>
-          <p class="text-slate-400 max-w-2xl mx-auto">
-            Basado en 5 pilares fundamentales para proteger la integridad de las transacciones bajo
-            un entorno de memoria volátil y hostil.
-          </p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Volatile RAM Ledger</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Las peticiones son serializadas a binario y encoladas en un ledger estático C++ en
-              memoria física. Cada bloque se enlaza criptográficamente con SHA-256.
-            </p>
-          </div>
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Deterministic Zeroization</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Borrado activo mediante <code>std::fill</code> y <code>SecureZeroMemory</code> inmediatamente
-              después del despacho o expiración del TTL para evitar fugas al Heap JS.
-            </p>
-          </div>
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Integrity Watchdog</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Motor en background que detecta manipulación dinámica (inyección o corrupción de
-              memoria). Congela la ejecución y preserva evidencia.
-            </p>
-          </div>
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Dynamic DPoP Proofs</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Generación y firma efímera de Pruebas de Posesión (DPoP - RFC 9449) usando WebCrypto
-              para no sobrecargar el core C++.
-            </p>
-          </div>
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Transport Agnostic</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Desacoplado de la red vía el patrón Command. Adaptadores nativos para Fetch, Axios o
-              GraphQL incluidos.
-            </p>
-          </div>
-          <div
-            class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
-          >
-            <h3 class="text-lg font-bold text-emerald-400 mb-2">Pure JS Mock Mode</h3>
-            <p class="text-slate-400 text-sm leading-relaxed">
-              Soporte nativo para <em>fallback engine</em> sin JSI. Ideal para pipelines de CI/CD, web
-              y testing de componentes sin hardware real.
-            </p>
-          </div>
-        </div>
+  <!-- Core Security Features -->
+  <div class="border-t border-slate-800 pt-20 mb-32">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-white mb-4" data-i18n="landing.architecture.title">
+        Arquitectura de Seguridad Core
+      </h2>
+      <p class="text-slate-400 max-w-2xl mx-auto" data-i18n="landing.architecture.subtitle">
+        Basado en 5 pilares fundamentales para proteger la integridad de las transacciones bajo un
+        entorno de memoria volátil y hostil.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Volatile RAM Ledger</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p1_desc">
+          Las peticiones son serializadas a binario y encoladas en un ledger estático C++ en memoria
+          física. Cada bloque se enlaza criptográficamente con SHA-256.
+        </p>
       </div>
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Deterministic Zeroization</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p2_desc">
+          Borrado activo mediante <code>std::fill</code> y <code>SecureZeroMemory</code> inmediatamente
+          después del despacho o expiración del TTL para evitar fugas al Heap JS.
+        </p>
+      </div>
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Integrity Watchdog</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p3_desc">
+          Motor en background que detecta manipulación dinámica (inyección o corrupción de memoria).
+          Congela la ejecución y preserva evidencia.
+        </p>
+      </div>
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Dynamic DPoP Proofs</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p4_desc">
+          Generación y firma efímera de Pruebas de Posesión (DPoP - RFC 9449) usando WebCrypto para
+          no sobrecargar el core C++.
+        </p>
+      </div>
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Transport Agnostic</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p5_desc">
+          Desacoplado de la red vía el patrón Command. Adaptadores nativos para Fetch, Axios o
+          GraphQL incluidos.
+        </p>
+      </div>
+      <div
+        class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+      >
+        <h3 class="text-lg font-bold text-emerald-400 mb-2">Pure JS Mock Mode</h3>
+        <p class="text-slate-400 text-sm leading-relaxed" data-i18n="landing.architecture.p6_desc">
+          Soporte nativo para <em>fallback engine</em> sin JSI. Ideal para pipelines de CI/CD, web y testing
+          de componentes sin hardware real.
+        </p>
+      </div>
+    </div>
+  </div>
 
-      <!-- Flow Diagram (Text) -->
-      <div class="border-t border-slate-800 pt-20 mb-32">
-        <h2 class="text-3xl font-bold text-white mb-8 text-center">Flujo Operativo In-Memory</h2>
+  <section id="quickstart" class="max-w-5xl mx-auto px-6 py-20">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-32">
+      <div>
+        <h2 class="text-3xl font-bold text-white mb-4" data-i18n="landing.features.title">
+          Integración Nativa Segura
+        </h2>
+        <p class="text-slate-400 leading-relaxed mb-6" data-i18n="landing.features.desc">
+          A diferencia de otras librerías NPM que mantienen material criptográfico expuesto en la
+          memoria del recolector de basura de JS, Sovereign SDK opera un motor C++ nativo que
+          destruye el material mediante <code
+            class="bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm"
+            >SecureZeroMemory</code
+          > inmediatamente después de firmar la transacción.
+        </p>
+        <ul class="space-y-3">
+          <li class="flex items-center gap-3">
+            <svg
+              class="w-5 h-5 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"></path></svg
+            >
+            <span data-i18n="landing.features.bullet1">Firmas Ed25519 y RSA-2048</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg
+              class="w-5 h-5 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"></path></svg
+            >
+            <span data-i18n="landing.features.bullet2">Telemetría de Integridad de Ledger</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg
+              class="w-5 h-5 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"></path></svg
+            >
+            <span data-i18n="landing.features.bullet3"
+              >Comunicación síncrona vía React Native Nitro / JSI</span
+            >
+          </li>
+        </ul>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative">
         <div
-          class="bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-2xl text-slate-300 leading-relaxed max-w-4xl mx-auto space-y-4"
+          class="absolute -top-3 -right-3 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full"
         >
-          <p>
-            El ciclo de vida en tiempo de ejecución de una petición segura sigue un flujo estricto
-            para garantizar la resiliencia criptográfica:
+          cpp/VolatileQueue.hpp
+        </div>
+        <pre
+          class="text-sm font-mono text-slate-300 overflow-x-auto"><code><span class="text-slate-500">// Secure hardware wipe (Zeroization)</span>
+void VolatileQueue::activeZeroization() &#123;
+    std::lock_guard&lt;std::mutex&gt; lock(mutex_);
+    
+    <span class="text-emerald-400">#ifdef _WIN32</span>
+    SecureZeroMemory(arena_, size_);
+    <span class="text-emerald-400">#else</span>
+    explicit_bzero(arena_, size_);
+    <span class="text-emerald-400">#endif</span>
+    
+    telemetryEngine.recordEvent(
+        TelemetryEventType::ZEROIZATION_TRIGGERED, 
+        0x00
+    );
+&#125;</code></pre>
+      </div>
+    </div>
+
+    <!-- Core Security Features -->
+    <div class="border-t border-slate-800 pt-20 mb-32">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-white mb-4" data-i18n="landing.architecture.title">
+          Arquitectura de Seguridad Core
+        </h2>
+        <p class="text-slate-400 max-w-2xl mx-auto" data-i18n="landing.architecture.subtitle">
+          Basado en 5 pilares fundamentales para proteger la integridad de las transacciones bajo un
+          entorno de memoria volátil y hostil.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Volatile RAM Ledger</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p1_desc"
+          >
+            Las peticiones son serializadas a binario y encoladas en un ledger estático C++ en
+            memoria física. Cada bloque se enlaza criptográficamente con SHA-256.
           </p>
-          <ol class="list-decimal list-inside space-y-4 pl-2 mt-4">
-            <li>
-              La aplicación (<code
-                class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm">App</code
-              >) invoca <code class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
-                >executeRequest()</code
-              > en el <code class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
-                >SovereignClientCore</code
-              >.
-            </li>
-            <li>
-              Se verifica la integridad de la memoria. Si el Ledger ha sido comprometido (ej.
-              inyección de código o memory dump), se lanza inmediatamente un <code
-                class="text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
-                >IntegrityBreachError</code
-              >.
-            </li>
-            <li>
-              Si el entorno es seguro, se comprueba la conexión a red:
-              <ul class="list-disc list-outside pl-8 mt-3 space-y-2 text-slate-400 text-sm">
-                <li>
-                  <strong class="text-white">Online:</strong> Se adjunta la prueba DPoP efímera y se despacha
-                  la petición al <code class="text-emerald-400 bg-slate-800 px-1 rounded"
-                    >NetworkAdapter</code
-                  >. Al recibir éxito, se ejecuta el borrado seguro en hardware (<code
-                    class="text-emerald-400 bg-slate-800 px-1 rounded">SecureZeroMemory</code
-                  >) sobre los buffers para no dejar rastros en memoria, y se retorna la respuesta.
-                </li>
-                <li>
-                  <strong class="text-white">Offline o HTTP 503:</strong> La petición se encola en el
-                  ledger volátil (<code class="text-emerald-400 bg-slate-800 px-1 rounded"
-                    >MemoryQueue</code
-                  >). El núcleo C++ enlaza criptográficamente el payload mediante un encadenamiento
-                  SHA-256 (hash $H_n$) e inicia un zeroize de variables temporales, retornando una
-                  Promesa pendiente a la aplicación que se resolverá automáticamente en la
-                  reconexión.
-                </li>
-              </ul>
-            </li>
-          </ol>
+        </div>
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Deterministic Zeroization</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p2_desc"
+          >
+            Borrado activo mediante <code>std::fill</code> y <code>SecureZeroMemory</code> inmediatamente
+            después del despacho o expiración del TTL para evitar fugas al Heap JS.
+          </p>
+        </div>
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Integrity Watchdog</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p3_desc"
+          >
+            Motor en background que detecta manipulación dinámica (inyección o corrupción de
+            memoria). Congela la ejecución y preserva evidencia.
+          </p>
+        </div>
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Dynamic DPoP Proofs</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p4_desc"
+          >
+            Generación y firma efímera de Pruebas de Posesión (DPoP - RFC 9449) usando WebCrypto
+            para no sobrecargar el core C++.
+          </p>
+        </div>
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Transport Agnostic</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p5_desc"
+          >
+            Desacoplado de la red vía el patrón Command. Adaptadores nativos para Fetch, Axios o
+            GraphQL incluidos.
+          </p>
+        </div>
+        <div
+          class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl hover:border-emerald-500/50 transition-colors"
+        >
+          <h3 class="text-lg font-bold text-emerald-400 mb-2">Pure JS Mock Mode</h3>
+          <p
+            class="text-slate-400 text-sm leading-relaxed"
+            data-i18n="landing.architecture.p6_desc"
+          >
+            Soporte nativo para <em>fallback engine</em> sin JSI. Ideal para pipelines de CI/CD, web y
+            testing de componentes sin hardware real.
+          </p>
         </div>
       </div>
+    </div>
+
+    <!-- Flow Diagram (Text) -->
+    <div class="border-t border-slate-800 pt-20 mb-32">
+      <h2 class="text-3xl font-bold text-white mb-8 text-center" data-i18n="landing.flow.title">
+        Flujo Operativo In-Memory
+      </h2>
+      <div
+        class="bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-2xl text-slate-300 leading-relaxed max-w-4xl mx-auto space-y-4"
+      >
+        <p data-i18n="landing.flow.intro">
+          El ciclo de vida en tiempo de ejecución de una petición segura sigue un flujo estricto
+          para garantizar la resiliencia criptográfica:
+        </p>
+        <ol class="list-decimal list-inside space-y-4 pl-2 mt-4">
+          <li data-i18n="landing.flow.step1">
+            La aplicación (<code class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
+              >App</code
+            >) invoca <code class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
+              >executeRequest()</code
+            > en el <code class="text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
+              >SovereignClientCore</code
+            >.
+          </li>
+          <li data-i18n="landing.flow.step2">
+            Se verifica la integridad de la memoria. Si el Ledger ha sido comprometido (ej.
+            inyección de código o memory dump), se lanza inmediatamente un <code
+              class="text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm"
+              >IntegrityBreachError</code
+            >.
+          </li>
+          <li>
+            <span data-i18n="landing.flow.step3"
+              >Si el entorno es seguro, se comprueba la conexión a red:</span
+            >
+            <ul class="list-disc list-outside pl-8 mt-3 space-y-2 text-slate-400 text-sm">
+              <li data-i18n="landing.flow.step3_online">
+                <strong class="text-white">Online:</strong> Se adjunta la prueba DPoP efímera y se despacha
+                la petición al <code class="text-emerald-400 bg-slate-800 px-1 rounded"
+                  >NetworkAdapter</code
+                >. Al recibir éxito, se ejecuta el borrado seguro en hardware (<code
+                  class="text-emerald-400 bg-slate-800 px-1 rounded">SecureZeroMemory</code
+                >) sobre los buffers para no dejar rastros en memoria, y se retorna la respuesta.
+              </li>
+              <li data-i18n="landing.flow.step3_offline">
+                <strong class="text-white">Offline o HTTP 503:</strong> La petición se encola en el ledger
+                volátil (<code class="text-emerald-400 bg-slate-800 px-1 rounded">MemoryQueue</code
+                >). El núcleo C++ enlaza criptográficamente el payload mediante un encadenamiento
+                SHA-256 (hash $H_n$) e inicia un zeroize de variables temporales, retornando una
+                Promesa pendiente a la aplicación que se resolverá automáticamente en la reconexión.
+              </li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</section>

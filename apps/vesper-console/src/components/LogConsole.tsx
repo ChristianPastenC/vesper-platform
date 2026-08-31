@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { RiSearchLine, RiPauseCircleLine, RiPlayCircleLine, RiCloseLine, RiTerminalBoxLine, RiAlertLine } from '@remixicon/react';
 import { LogInspector } from './console/LogInspector';
+import { useTranslation } from 'react-i18next';
+import '../i18n/config';
 import { Metric, getLogDetails, formatTime } from '../utils/telemetry';
 
 export const LogConsole: React.FC = () => {
+  const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(null);
   const [logs, setLogs] = useState<Metric[]>([]);
   const [search, setSearch] = useState('');
@@ -100,7 +103,7 @@ export const LogConsole: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by event type, ID or message..."
+              placeholder={t("console.search")}
               className="bg-transparent border-none outline-none text-sm text-slate-200 placeholder-slate-500 w-full"
             />
           </div>
@@ -108,14 +111,14 @@ export const LogConsole: React.FC = () => {
           <button
             onClick={() => setIsLive(!isLive)}
             className={`px-4 py-1.5 rounded-lg text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 shadow-lg ${isLive
-                ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:shadow-red-500/20'
-                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 hover:shadow-emerald-500/20'
+              ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:shadow-red-500/20'
+              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 hover:shadow-emerald-500/20'
               }`}
           >
             {isLive ? (
-              <><RiPauseCircleLine size={16} /> PAUSE STREAM</>
+              <><RiPauseCircleLine size={16} />{t("console.pause")}</>
             ) : (
-              <><RiPlayCircleLine size={16} /> RESUME STREAM</>
+              <><RiPlayCircleLine size={16} />{t("console.resume")}</>
             )}
           </button>
         </div>
@@ -128,11 +131,11 @@ export const LogConsole: React.FC = () => {
                 <RiTerminalBoxLine size={48} className="mb-4 opacity-20 relative z-10" />
                 <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
               </div>
-              <p className="animate-pulse font-sans tracking-wide">Connecting to Vesper telemetry stream...</p>
+              <p className="animate-pulse font-sans tracking-wide">{t("console.connecting")}</p>
             </div>
           ) : filteredLogs.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-600 font-sans">
-              <p>No logs match the filter.</p>
+              <p>{t("console.no_logs")}</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -154,7 +157,7 @@ export const LogConsole: React.FC = () => {
                   >
                     <span className="text-slate-500 shrink-0 w-24 opacity-80">{timeStr}</span>
                     <span className={`shrink-0 w-16 font-extrabold tracking-wider ${isError ? 'text-red-500' :
-                        isWarn ? 'text-amber-500' : 'text-blue-400'
+                      isWarn ? 'text-amber-500' : 'text-blue-400'
                       }`}>{details.level}</span>
                     <span className="text-slate-500 shrink-0 w-24 opacity-80">[{details.source}]</span>
                     <span className="truncate">{details.msg}</span>

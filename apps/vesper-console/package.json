@@ -14,8 +14,11 @@
     "@remixicon/react": "^4.1.0",
     "astro": "^4.4.15",
     "clsx": "^2.1.0",
+    "i18next": "^26.4.0",
+    "i18next-browser-languagedetector": "^8.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.12",
     "recharts": "^2.12.2",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.1"

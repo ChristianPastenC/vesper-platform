@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import '../../i18n/config';
 import { RiKey2Line, RiFileCopyLine, RiDeleteBinLine } from '@remixicon/react';
 import { ConfirmModal } from '../ConfirmModal';
 
@@ -10,6 +12,7 @@ interface Key {
 }
 
 export const ApiKeyManager: React.FC = () => {
+  const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(null);
   const [keys, setKeys] = useState<Key[]>([]);
   const [loadingKeys, setLoadingKeys] = useState(true);
@@ -76,7 +79,7 @@ export const ApiKeyManager: React.FC = () => {
         setNewKeyName('');
         await fetchKeys();
       } else {
-        alert('Error al generar llave (Límite alcanzado)');
+        alert(t('dashboard.api_keys.error_limit'));
       }
     } finally {
       setIsGenerating(false);
@@ -116,9 +119,13 @@ export const ApiKeyManager: React.FC = () => {
 
       <div className="relative z-10">
         <h2 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-          <RiKey2Line size={20} className="text-emerald-400" /> API Keys
+          <RiKey2Line size={20} className="text-emerald-400" /> {t('dashboard.api_keys.title')}
         </h2>
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">Genere llaves para inyectar en la configuración de <code className="bg-white/5 text-emerald-300 px-1.5 py-0.5 rounded text-xs">SovereignClientCore</code> en el dispositivo del cliente.</p>
+        <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+          {t('dashboard.api_keys.subtitle').split('SovereignClientCore')[0]}
+          <code className="bg-white/5 text-emerald-300 px-1.5 py-0.5 rounded text-xs">SovereignClientCore</code>
+          {t('dashboard.api_keys.subtitle').split('SovereignClientCore')[1]}
+        </p>
 
         <div className="space-y-3 mb-6">
           {loadingKeys ? (
@@ -149,7 +156,7 @@ export const ApiKeyManager: React.FC = () => {
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-emerald-400/80 font-mono bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1.5">
                       <RiKey2Line size={12} />
-                      {k.bundle_id || 'Pendiente de vinculación'}
+                      {k.bundle_id || t('dashboard.api_keys.pending')}
                     </span>
                     <span className="text-xs text-slate-500">{new Date(k.created_at).toLocaleDateString()}</span>
                   </div>
@@ -160,7 +167,7 @@ export const ApiKeyManager: React.FC = () => {
                   onClick={() => copyToClipboard(k.key)}
                 >
                   <code className="text-xs text-slate-300 font-mono tracking-wide truncate mr-4">{k.key}</code>
-                  <span className="text-slate-400 text-xs flex items-center gap-1.5 font-medium group-hover/copy:text-emerald-400 transition-colors shrink-0"><RiFileCopyLine size={14} /> Copiar</span>
+                  <span className="text-slate-400 text-xs flex items-center gap-1.5 font-medium group-hover/copy:text-emerald-400 transition-colors shrink-0"><RiFileCopyLine size={14} />{t('dashboard.api_keys.copy')}</span>
                 </div>
               </div>
             ))
@@ -173,7 +180,7 @@ export const ApiKeyManager: React.FC = () => {
               type="text"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
-              placeholder="Nombre de la llave (Ej. Producción)"
+              placeholder={t("dashboard.api_keys.placeholder")}
               required
               className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
@@ -181,7 +188,7 @@ export const ApiKeyManager: React.FC = () => {
               type="submit"
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              {isGenerating ? 'Generando...' : keys.length > 0 ? 'Límite alcanzado (1/1)' : 'Generar API Key'}
+              {isGenerating ? t('dashboard.api_keys.generating') : keys.length > 0 ? t('dashboard.api_keys.limit') : t('dashboard.api_keys.generate')}
             </button>
           </fieldset>
         </form>
@@ -191,9 +198,9 @@ export const ApiKeyManager: React.FC = () => {
         isOpen={revokeModalOpen}
         onClose={() => setRevokeModalOpen(false)}
         onConfirm={handleRevoke}
-        title="Revocar API Key"
-        message="¿Estás seguro que deseas revocar esta API Key? Todas las peticiones con este Bundle ID fallarán hasta configurar una nueva."
-        confirmText="Revocar Key"
+        title={t("dashboard.api_keys.modal_title")}
+        message={t("dashboard.api_keys.modal_msg")}
+        confirmText={t("dashboard.api_keys.modal_confirm")}
       />
     </div>
   );

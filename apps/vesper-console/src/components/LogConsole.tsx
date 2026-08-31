@@ -204,7 +204,7 @@ export const LogConsole: React.FC = () => {
         const timeStr = date.toISOString().split('T')[1].replace('Z', '');
         
         return (
-          <aside className="w-96 bg-slate-900/60 backdrop-blur-2xl flex flex-col shrink-0 animate-in slide-in-from-right-10 duration-300 border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-20 relative">
+          <aside className="absolute inset-0 z-50 md:relative md:w-96 bg-slate-950/95 md:bg-slate-900/60 backdrop-blur-2xl flex flex-col shrink-0 animate-in slide-in-from-bottom-10 md:slide-in-from-right-10 duration-300 border-l-0 md:border-l border-white/10 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]">
             <div className="absolute top-0 right-0 w-full h-[300px] bg-blue-500/5 blur-[80px] pointer-events-none rounded-bl-full"></div>
             
             <div className="h-14 border-b border-white/10 flex items-center justify-between px-6 shrink-0 bg-transparent relative z-10">

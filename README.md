@@ -1,23 +1,43 @@
-# Sovereign Core Platform
+# Vesper Core Platform
 
-This repository contains the Sovereign Developer Platform, a B2B SaaS system that provides a portal and an ingestion API for the Sovereign Client SDK telemetry data.
+[![Console Deployment](https://img.shields.io/badge/Console-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://vesper-console.netlify.app/)
+[![Ingestion API Deployment](https://img.shields.io/badge/Ingestion_API-Render-46E3B7?style=for-the-badge&logo=render)](https://vesper-ingestion.onrender.com/)
+[![Demo Backend Deployment](https://img.shields.io/badge/Demo_Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
+[![Ghost Ledger](https://img.shields.io/badge/@vesper/ghost--ledger-blue?style=for-the-badge&logo=npm)](./packages/ghost-ledger)
+
+This repository contains the Vesper Developer Platform, a B2B SaaS system that provides a portal and an ingestion API for the Vesper Client SDK telemetry data.
+
+## 🚀 Live Environments
+
+You can explore the deployed platform and API implementations via the following public URLs:
+
+| Service | Live URL | Hosting |
+| :--- | :--- | :--- |
+| **Vesper Console (Frontend)** | [vesper-console.netlify.app](https://vesper-console.netlify.app/) | Netlify |
+| **Vesper Ingestion (API)** | [vesper-ingestion.onrender.com](https://vesper-ingestion.onrender.com/) | Render |
+| **Demo Backend (E-commerce)**| [demo-backend-4puz.onrender.com](https://demo-backend-4puz.onrender.com/) | Render |
+
+---
 
 ## Architecture
 
-The project is structured as a monorepo containing two main applications:
+The project is structured as a monorepo containing two main applications and a core library:
 
-1. **`telemetry-api`** (Backend - Go)
+1. **[`vesper-ingestion`](./apps/vesper-ingestion)** (Backend - Go)
    - A high-performance Go HTTP server using `go-chi`.
    - Exposes REST endpoints for the B2B SaaS authentication and API Key generation.
    - Exposes a binary ingestion endpoint (`/api/v1/support/telemetry`) that receives compressed telemetry data from client SDKs.
    - Implements Zero-Trust Log Sanitization middleware to scrub any accidental PII via Regex before processing.
    - Forwards telemetry to an OpenTelemetry collector (like VictoriaMetrics) and stores a local copy in SQLite for the real-time developer dashboard.
 
-2. **`web-support-portal`** (Frontend - Astro)
+2. **[`vesper-console`](./apps/vesper-console)** (Frontend - Astro)
    - A lightweight, ultra-fast frontend built entirely in Astro and Vanilla JS.
    - Provides authentication (Login/Signup) for tenant organizations.
    - Allows developers to generate API Keys (`X-Sovereign-API-Key`) to embed in their `SovereignClientCore` implementations.
    - Features a real-time dashboard using `Chart.js` that visualizes the telemetry metrics (Integrity & Latency) ingested by the backend.
+
+3. **[`@vesper/ghost-ledger`](./packages/ghost-ledger)** (SDK - C++/TypeScript)
+   - The native cryptographic engine that integrates securely into client applications.
 
 ## Getting Started
 
@@ -48,13 +68,45 @@ go run ./cmd/cli clean-db
 ## API Testing with Bruno
 
 This repository includes a native [Bruno](https://www.usebruno.com/) collection for API testing:
-- **`bruno/app-backend/`**: Contains the E-Commerce backend endpoints (if applicable).
-- **`bruno/telemetry-api/`**: Contains the B2B Auth and Ingestion endpoints. Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081`.
+> [!TIP]
+> Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081`.
 
-### Endpoints overview
-- `POST /api/v1/b2b/signup`: Register new tenant
-- `POST /api/v1/b2b/login`: Authenticate
-- `POST /api/v1/b2b/keys`: Generate SDK key
-- `GET /api/v1/b2b/keys`: List keys
-- `GET /api/v1/b2b/metrics`: Real-time data for the chart
-- `POST /api/v1/support/telemetry`: SDK Binary ingestion
+- **`bruno/demo-backend/`**: Contains the E-Commerce backend endpoints (if applicable).
+- **`bruno/vesper-ingestion/`**: Contains the B2B Auth and Ingestion endpoints.
+
+### Endpoints Overview
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/b2b/signup` | Register new tenant |
+| `POST` | `/api/v1/b2b/login` | Authenticate |
+| `POST` | `/api/v1/b2b/keys` | Generate SDK key |
+| `GET` | `/api/v1/b2b/keys` | List keys |
+| `DELETE` | `/api/v1/b2b/keys` | Delete an SDK key |
+| `GET` | `/api/v1/b2b/metrics` | Real-time data for the chart |
+| `GET` | `/api/v1/support/ping` | Health check |
+| `POST` | `/api/v1/support/telemetry` | SDK Binary ingestion |
+
+## Continuous Integration & Security Pipelines
+
+This repository enforces strict CI/CD and security testing via GitHub Actions:
+
+<details>
+<summary><strong>View Pipeline Workflows</strong></summary>
+
+### 1. Vesper Ghost Ledger CI (`ghost-ledger-ci.yml`)
+Ensures the structural integrity of the native cryptographic library:
+- **`cpp-tests`**: Uses CMake to build and run the pure C++ core tests natively on Ubuntu.
+- **`js-lint-test`**: Validates the TypeScript specs and runs pure JS fallback engine unit tests.
+
+### 2. Demo Mobile App CI (`demo-mobile-ci.yml`)
+Tests the mobile application and runs live anti-tampering validation:
+- **`lint-and-test`**: Lints and tests the React Native codebase.
+- **`build-android` & `build-ios`**: Assembles the Android APK (Gradle) and iOS Simulator build (Xcodebuild).
+- **`security-dast` (Anti-Tampering Cross-Test)**: Boots a headless Android emulator with KVM acceleration. It then injects **Frida** into the compiled APK to simulate a real-world memory tampering attack. This guarantees the `IntegrityBreachError` mechanism functions flawlessly against dynamic runtime hooks. It posts the security report directly to Pull Requests.
+
+</details>
+
+## License
+
+This project is proprietary software. See the [LICENSE](./LICENSE) file for details.

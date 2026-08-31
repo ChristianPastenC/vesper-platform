@@ -47,7 +47,7 @@ func main() {
 			return origin == allowed
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Vesper-API-Key", "Origin", "X-Sovereign-Session-Key", "X-Sovereign-IV"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key", "Origin", "X-Sovereign-Session-Key", "X-Sovereign-IV"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,

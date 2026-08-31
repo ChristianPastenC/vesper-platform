@@ -6,7 +6,7 @@ Modern enterprise service delivery models are decoupled across edge execution cl
 
 When a cloud-hosted IdP encounters an infrastructure collapse, or when the transport network experiences localized degradation, client-side application behavior natively defaults to a destructive termination loop. Standard system architecture enforces a "Fail-Fast" paradigm: invalidating local access state, purging volatile app variables, and forcefully ejecting the user to the initial gateway. 
 
-This Business Impact Analysis evaluates the financial penalties, operational bottlenecks, and regulatory compliance risks introduced by traditional session termination models. It establishes the foundational strategic context for the SovereignCore architecture, proving that client-side transaction survivability can be achieved through transient memory isolation without introducing data exposure vectors.
+This Business Impact Analysis evaluates the financial penalties, operational bottlenecks, and regulatory compliance risks introduced by traditional session termination models. It establishes the foundational strategic context for the VesperCore architecture, proving that client-side transaction survivability can be achieved through transient memory isolation without introducing data exposure vectors.
 
 ---
 
@@ -82,9 +82,9 @@ This structural bypass directly violates core data protection directives, exposi
 
 ## 5. Architectural Mitigation Mapping
 
-SovereignCore re-engineers this risk matrix by decoupling transport layer availability from local state execution. The table below details how the platform's security pillars structurally transform identified business impacts into controlled operational behaviors:
+VesperCore re-engineers this risk matrix by decoupling transport layer availability from local state execution. The table below details how the platform's security pillars structurally transform identified business impacts into controlled operational behaviors:
 
-| Operational Risk Vector | Traditional Failure Consequence | SovereignCore Engineered Strategy |
+| Operational Risk Vector | Traditional Failure Consequence | VesperCore Engineered Strategy |
 | :--- | :--- | :--- |
 | **Data-at-Rest Exposure** | Payloads are cached directly onto the device's physical flash storage to support offline retries, creating an exfiltration surface. | **Zero-Disk Footprint:** Payloads are retained exclusively within volatile RAM boundaries. Disk persistence is entirely prohibited. |
 | **Session Eviction Loops** | Sudden dropouts clear active context, causing operational downtime and driving up the Transaction Abandonment Rate. | **Transient Memory Containment:** Outages are bridged safely within a deterministic Time-To-Live (TTL) window, maintaining interface responsiveness without exposing data. |

@@ -7,8 +7,10 @@ Implements the repository interfaces defined in the Domain layer to interact wit
 
 ## Files
 
-- **`db.go`**: Initializes, configures, and manages the connection to BoltDB (an embedded key-value store).
-- **`bolt_user_repository.go`**: Persists user credentials, profile data, and handles user querying.
-- **`bolt_order_repository.go`**: Persists processed orders and immutable offline ledger chains to the database.
-- **`bolt_refresh_token_repository.go`**: Manages the storage and invalidation of refresh tokens for secure sessions.
-- **`*_test.go`**: Unit tests verifying the persistence and retrieval of records from BoltDB.
+| File | Description |
+| :--- | :--- |
+| **`db.go`** | Initializes, configures, and manages the connection to BoltDB (an embedded key-value store). |
+| **`bolt_user_repository.go`** | Persists user credentials, profile data, and handles user querying. |
+| **`bolt_order_repository.go`** | Persists processed orders and immutable offline ledger chains to the database. |
+| **`bolt_refresh_token_repository.go`** | Manages the storage and invalidation of refresh tokens for secure sessions. |
+| **`*_test.go`** | Unit tests verifying the persistence and retrieval of records from BoltDB. |

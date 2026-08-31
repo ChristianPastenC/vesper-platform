@@ -29,6 +29,9 @@ The security architecture of the library is built upon 5 fundamental implementat
 
 The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and TypeScript adapters:
 
+<details>
+<summary><strong>View Detailed Directory Structure</strong></summary>
+
 ```
 ├── cpp/
 │   ├── SovereignSecureClient.h   # JSI Hybrid Object wrapper class definition.
@@ -71,6 +74,8 @@ The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and
 ├── CMakeLists.txt                # Unified target-splitting compiler configuration.
 └── package.json                  # Package configuration with peerDependencies.
 ```
+
+</details>
 
 ---
 
@@ -156,6 +161,10 @@ sequenceDiagram
 ## Conceptual Usage Examples
 
 ### 1. Basic Setup (Offline Queueing & Replay)
+
+<details>
+<summary><strong>View Fetch Adapter & Telemetry setup</strong></summary>
+
 ```typescript
 import { SovereignClientCore, FetchAdapter } from '@vesper/ghost-ledger';
 
@@ -184,8 +193,14 @@ const pendingResponse = client.executeRequest('tx_101', {
 // Replay queue synchronously upon reconnection
 await client.processSynchronizedQueue(async () => true);
 ```
+</details>
 
-### 2. Axios Integration with Error Trapping
+### 2. Transport Integrations
+
+<details>
+<summary><strong>View Axios, Fetch, and GraphQL Integration Code</strong></summary>
+
+**Axios Integration with Error Trapping:**
 ```typescript
 import { SovereignClientCore, AxiosAdapter } from '@vesper/ghost-ledger';
 import axios from 'axios';
@@ -200,7 +215,7 @@ const client = SovereignClientCore.getInstance({
 client.executeRequest('tx_102', { method: 'POST', url: '/api/ledger/degraded', body: myPayload });
 ```
 
-### 3. Fetch Integration with Trapping
+**Fetch Integration with Trapping:**
 ```typescript
 import { SovereignClientCore, FetchAdapter } from '@vesper/ghost-ledger';
 
@@ -213,7 +228,7 @@ const client = SovereignClientCore.getInstance({
 client.executeRequest('tx_103', { method: 'GET', url: 'https://api.sovereign.local/v1/data' });
 ```
 
-### 4. GraphQL Integration with Trapping
+**GraphQL Integration with Trapping:**
 ```typescript
 import { SovereignClientCore, GraphQLAdapter } from '@vesper/ghost-ledger';
 
@@ -229,14 +244,16 @@ client.executeRequest('tx_104', {
   body: new TextEncoder().encode(JSON.stringify({ query: 'mutation { createTx(amount: 1500) }' }))
 });
 ```
+</details>
 
 ---
 
 ## Pure JavaScript Mock Mode
 
-For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@vesper/ghost-ledger` provides a built-in pure JavaScript fallback engine.
-
-This mode skips all attempts to load the native JSI/Nitro modules or Node `.node` addons, preventing Metro/Webpack static analysis or compile-time resolution errors.
+> [!TIP]
+> For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@vesper/ghost-ledger` provides a built-in pure JavaScript fallback engine.
+>
+> This mode skips all attempts to load the native JSI/Nitro modules or Node `.node` addons, preventing Metro/Webpack static analysis or compile-time resolution errors.
 
 ### Enabling Mock Mode
 

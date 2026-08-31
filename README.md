@@ -48,15 +48,41 @@ go run ./cmd/cli clean-db
 ## API Testing with Bruno
 
 This repository includes a native [Bruno](https://www.usebruno.com/) collection for API testing:
-- **`bruno/demo-backend/`**: Contains the E-Commerce backend endpoints (if applicable).
-- **`bruno/vesper-ingestion/`**: Contains the B2B Auth and Ingestion endpoints. Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081`.
+> [!TIP]
+> Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081`.
 
-### Endpoints overview
-- `POST /api/v1/b2b/signup`: Register new tenant
-- `POST /api/v1/b2b/login`: Authenticate
-- `POST /api/v1/b2b/keys`: Generate SDK key
-- `GET /api/v1/b2b/keys`: List keys
-- `DELETE /api/v1/b2b/keys`: Delete an SDK key
-- `GET /api/v1/b2b/metrics`: Real-time data for the chart
-- `GET /api/v1/support/ping`: Health check
-- `POST /api/v1/support/telemetry`: SDK Binary ingestion
+- **`bruno/demo-backend/`**: Contains the E-Commerce backend endpoints (if applicable).
+- **`bruno/vesper-ingestion/`**: Contains the B2B Auth and Ingestion endpoints.
+
+### Endpoints Overview
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/b2b/signup` | Register new tenant |
+| `POST` | `/api/v1/b2b/login` | Authenticate |
+| `POST` | `/api/v1/b2b/keys` | Generate SDK key |
+| `GET` | `/api/v1/b2b/keys` | List keys |
+| `DELETE` | `/api/v1/b2b/keys` | Delete an SDK key |
+| `GET` | `/api/v1/b2b/metrics` | Real-time data for the chart |
+| `GET` | `/api/v1/support/ping` | Health check |
+| `POST` | `/api/v1/support/telemetry` | SDK Binary ingestion |
+
+## Continuous Integration & Security Pipelines
+
+This repository enforces strict CI/CD and security testing via GitHub Actions:
+
+<details>
+<summary><strong>View Pipeline Workflows</strong></summary>
+
+### 1. Vesper Ghost Ledger CI (`ghost-ledger-ci.yml`)
+Ensures the structural integrity of the native cryptographic library:
+- **`cpp-tests`**: Uses CMake to build and run the pure C++ core tests natively on Ubuntu.
+- **`js-lint-test`**: Validates the TypeScript specs and runs pure JS fallback engine unit tests.
+
+### 2. Demo Mobile App CI (`demo-mobile-ci.yml`)
+Tests the mobile application and runs live anti-tampering validation:
+- **`lint-and-test`**: Lints and tests the React Native codebase.
+- **`build-android` & `build-ios`**: Assembles the Android APK (Gradle) and iOS Simulator build (Xcodebuild).
+- **`security-dast` (Anti-Tampering Cross-Test)**: Boots a headless Android emulator with KVM acceleration. It then injects **Frida** into the compiled APK to simulate a real-world memory tampering attack. This guarantees the `IntegrityBreachError` mechanism functions flawlessly against dynamic runtime hooks. It posts the security report directly to Pull Requests.
+
+</details>

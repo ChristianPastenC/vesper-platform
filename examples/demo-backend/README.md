@@ -12,7 +12,8 @@ The API follows Clean Architecture principles, divided into discrete layers to m
 - **Adapters (`internal/adapter` and `internal/store`):** Concrete technological implementations (BoltDB databases, external integrations, cryptography services).
 - **Entrypoint (`cmd`):** Application startup point and dependency injection wiring.
 
-> **For more details on each layer, refer to the `README.md` file inside each respective subfolder.**
+> [!NOTE]
+> For more details on each layer, refer to the `README.md` file inside each respective subfolder.
 
 ## Local Development
 
@@ -56,4 +57,5 @@ Special environment variables are provided to allow seamless local testing (e.g.
 - `DEV_DPOP_BYPASS=true`: Bypasses the ECDSA signature verification (DPoP).
 - `DEV_HASH_BYPASS=true`: Bypasses payload integrity verification (HMAC-SHA256).
 
-> **Warning:** These variables must never be injected or present in a production environment.
+> [!WARNING]
+> These variables must never be injected or present in a production environment.

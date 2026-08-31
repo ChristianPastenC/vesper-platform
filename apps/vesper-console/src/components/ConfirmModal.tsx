@@ -59,7 +59,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     {title}
                   </Dialog.Title>
                 </div>
-                
+
                 <div className="mt-2">
                   <p className="text-sm text-slate-400">
                     {message}

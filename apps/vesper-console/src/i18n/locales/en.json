@@ -1,0 +1,148 @@
+{
+  "header": {
+    "dashboard": "Dashboard",
+    "console": "Support Console",
+    "loading": "Loading...",
+    "logout": "LOGOUT",
+    "lang_es": "ES",
+    "lang_en": "EN"
+  },
+  "dashboard": {
+    "title": "Dashboard Overview",
+    "subtitle": "Monitor the health and cryptographic integrity of your installed SDK fleet in real time.",
+    "api_keys": {
+      "title": "API Keys",
+      "subtitle": "Generate keys to inject into the SovereignClientCore configuration on the client device.",
+      "no_keys": "No keys generated.",
+      "revoke": "Revoke",
+      "pending": "Pending binding",
+      "copy": "Copy",
+      "placeholder": "Key name (e.g. Production)",
+      "limit": "Limit reached (1/1)",
+      "generate": "Generate API Key",
+      "generating": "Generating...",
+      "modal_title": "Revoke API Key",
+      "modal_msg": "Are you sure you want to revoke this API Key? All requests with this Bundle ID will fail until a new one is configured.",
+      "modal_confirm": "Revoke Key",
+      "error_limit": "Error generating key (Limit reached)"
+    },
+    "security": {
+      "title": "Security Posture",
+      "zero_disk": "Zero-Disk Footprint",
+      "zero_disk_desc": "No persistence. All cryptographic materials and payloads are strictly confined to volatile RAM, ensuring total forensic deniability.",
+      "zeroize": "Deterministic Zeroize",
+      "zeroize_desc": "Physical memory allocations are actively zeroized explicitly after dispatch or TTL expiry.",
+      "dpop": "DPoP Strict Mode",
+      "dpop_desc": "All payloads enforce RFC 9449 standard. Rogue network transitions immediately freeze outbound transport layer."
+    },
+    "telemetry": {
+      "integrity": "Ledger Integrity",
+      "latency": "DPoP Latency",
+      "critical": "CRITICAL ALERT",
+      "stable": "STABLE",
+      "waiting": "WAITING",
+      "slow": "SLOW",
+      "optimal": "OPTIMAL",
+      "recent_activity": "Recent Support Activity",
+      "view_console": "View Full Console",
+      "waiting_events": "Waiting for telemetry events..."
+    }
+  },
+  "console": {
+    "search": "Filter by event type, ID or message...",
+    "pause": "PAUSE STREAM",
+    "resume": "RESUME STREAM",
+    "connecting": "Connecting to Vesper telemetry stream...",
+    "no_logs": "No logs match the filter.",
+    "inspector": "Trace Inspector",
+    "metadata": "Event Metadata",
+    "event_id": "Event ID:",
+    "timestamp": "Timestamp:",
+    "event_code": "Event Code:",
+    "component": "Component:",
+    "raw_value": "Raw Value:",
+    "exception": "Exception Trace"
+  },
+  "auth": {
+    "login": {
+      "title": "Vesper Console",
+      "subtitle": "Enter your corporate credentials to manage your SDK integrations and monitor real-time telemetry.",
+      "invalid": "Invalid credentials.",
+      "email": "Work Email",
+      "password": "Password",
+      "connecting": "Connecting to server...",
+      "authenticating": "Authenticating...",
+      "submit": "Sign In",
+      "no_account": "Don't have an account?",
+      "register_link": "Register your organization"
+    },
+    "register": {
+      "title": "Organization Registration",
+      "subtitle": "Create an enterprise tenant to issue API keys and manage the Sovereign fleet.",
+      "error": "Error registering the organization.",
+      "name": "Organization Name",
+      "name_ph": "e.g. Acme Corp",
+      "email": "Admin Email",
+      "email_ph": "admin@company.com",
+      "password": "Password",
+      "registering": "Registering...",
+      "submit": "Create Tenant",
+      "has_account": "Already have an account?",
+      "login_link": "Sign In"
+    }
+  },
+  "landing": {
+    "hero": {
+      "title_start": "Zero-Trust Security for",
+      "title_end": "React Native",
+      "subtitle": "Enterprise-grade cryptographic library natively compiled. Asymmetric DPoP signatures and strict memory zeroization operating below the V8/Hermes engine via JSI Bridge.",
+      "doc_btn": "View Documentation",
+      "bundle_btn": "Generate Bundle ID"
+    },
+    "nav": {
+      "title": "Sovereign SDK",
+      "login": "Login",
+      "register": "Get API Key"
+    },
+    "features": {
+      "title": "Secure Native Integration",
+      "desc": "Unlike other NPM libraries that keep cryptographic material exposed in the JS garbage collector memory, Sovereign SDK operates a native C++ engine that destroys the material using <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>SecureZeroMemory</code> immediately after signing the transaction.",
+      "f1_title": "Hermes & V8 Bypass",
+      "f1_desc": "We use JSI to execute crypto-operations at the C++ level, avoiding the JS bridge.",
+      "f2_title": "Total Ephemerality",
+      "f2_desc": "No key ever touches Disk. Generated in RAM, used, and wiped in milliseconds.",
+      "f3_title": "DPoP RFC 9449",
+      "f3_desc": "Asymmetric signatures tied to the physical device. Stealing the Bearer token is useless without the private key.",
+      "bullet1": "Ed25519 and RSA-2048 Signatures",
+      "bullet2": "Ledger Integrity Telemetry",
+      "bullet3": "Synchronous communication via React Native Nitro / JSI"
+    },
+    "footer": "© 2026 Vesper Core Platform. B2B Dashboard.",
+    "architecture": {
+      "title": "Core Security Architecture",
+      "subtitle": "Based on 5 fundamental pillars to protect transaction integrity under a volatile and hostile memory environment.",
+      "p1_desc": "Requests are serialized to binary and queued in a static C++ ledger in physical memory. Each block is cryptographically linked with SHA-256.",
+      "p2_desc": "Active erasure using <code>std::fill</code> and <code>SecureZeroMemory</code> immediately after dispatch or TTL expiration to prevent leaks to the JS Heap.",
+      "p3_desc": "Background engine that detects dynamic manipulation (injection or memory corruption). Freezes execution and preserves evidence.",
+      "p4_desc": "Ephemeral generation and signing of Proofs of Possession (DPoP - RFC 9449) using WebCrypto to avoid overloading the C++ core.",
+      "p5_desc": "Decoupled from the network via the Command pattern. Native adapters for Fetch, Axios or GraphQL included.",
+      "p6_desc": "Native support for <em>fallback engine</em> without JSI. Ideal for CI/CD pipelines, web and component testing without real hardware."
+    },
+    "flow": {
+      "title": "In-Memory Operational Flow",
+      "intro": "The runtime lifecycle of a secure request follows a strict flow to ensure cryptographic resilience:",
+      "step1": "The application (<code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">App</code>) invokes <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">executeRequest()</code> on the <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">SovereignClientCore</code>.",
+      "step2": "Memory integrity is verified. If the Ledger has been compromised (e.g. code injection or memory dump), an <code class=\"text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">IntegrityBreachError</code> is immediately thrown.",
+      "step3": "If the environment is safe, network connection is checked:",
+      "step3_online": "<strong class=\"text-white\">Online:</strong> The ephemeral DPoP proof is attached and the request is dispatched to the <code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">NetworkAdapter</code>. Upon success, hardware secure erasure (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">SecureZeroMemory</code>) is executed on the buffers to leave no trace in memory, and the response is returned.",
+      "step3_offline": "<strong class=\"text-white\">Offline or HTTP 503:</strong> The request is queued in the volatile ledger (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">MemoryQueue</code>). The C++ core cryptographically links the payload using SHA-256 chaining (hash $H_n$) and initiates a zeroize of temporary variables, returning a pending Promise to the application that will automatically resolve on reconnection."
+    },
+    "examples": {
+      "title": "Conceptual Usage Examples",
+      "ex1": "1. Basic Setup (Queue & Replay)",
+      "ex2": "2. Axios Integration",
+      "ex3": "3. Fetch Integration",
+      "ex4": "4. GraphQL Integration"
+    }
+  }
+}

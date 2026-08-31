@@ -23,5 +23,35 @@ import '../styles/globals.css';
     >
     </div>
     <slot />
+    <script>
+      import '../i18n/config';
+
+      const updateTexts = () => {
+        const i18n = (window as any).i18n;
+        if (!i18n) return;
+
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (key) {
+            el.innerHTML = i18n.t(key);
+          }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          if (key) {
+            el.setAttribute('placeholder', i18n.t(key));
+          }
+        });
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const i18n = (window as any).i18n;
+        if (i18n) {
+          i18n.on('languageChanged', updateTexts);
+          // Initial run
+          updateTexts();
+        }
+      });
+    </script>
   </body>
 </html>

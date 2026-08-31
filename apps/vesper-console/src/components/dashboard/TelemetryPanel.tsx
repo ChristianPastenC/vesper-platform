@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import '../../i18n/config';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { MetricPoint, LogDetails, getLogDetails, formatTime } from '../../utils/telemetry';
 
 export const TelemetryPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(null);
   const [integrityData, setIntegrityData] = useState<MetricPoint[]>([]);
   const [latencyData, setLatencyData] = useState<MetricPoint[]>([]);
@@ -109,11 +112,11 @@ export const TelemetryPanel: React.FC = () => {
         <div className="bg-slate-900/40 backdrop-blur-xl ring-1 ring-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:ring-white/20 transition-all duration-300 flex flex-col">
           <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <div className="relative z-10 flex-1 flex flex-col">
-            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase mb-4">Integridad del Ledger</h2>
+            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase mb-4">{t('dashboard.telemetry.integrity')}</h2>
             <div className="flex items-end gap-3 mb-6">
               <span className="text-4xl font-black text-white leading-none">{latestIntegrity}</span>
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${latestIntegrity > 0 ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
-                {latestIntegrity > 0 ? 'ALERTA CRÍTICA' : 'ESTABLE'}
+                {latestIntegrity > 0 ? t('dashboard.telemetry.critical') : t('dashboard.telemetry.stable')}
               </span>
             </div>
             <div className="h-56 w-full mt-auto -mx-2">
@@ -147,11 +150,11 @@ export const TelemetryPanel: React.FC = () => {
         <div className="bg-slate-900/40 backdrop-blur-xl ring-1 ring-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:ring-white/20 transition-all duration-300 flex flex-col">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <div className="relative z-10 flex flex-col h-full">
-            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase mb-4">Latencia DPoP</h2>
+            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase mb-4">{t('dashboard.telemetry.latency')}</h2>
             <div className="flex items-end gap-3 mb-6">
               <span className="text-4xl font-black text-white leading-none">{latestLatency.toFixed(1)}<span className="text-2xl text-slate-500 ml-1">ms</span></span>
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${latestLatency > 100 ? 'bg-red-500/10 text-red-400 border-red-500/20' : latestLatency > 50 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
-                {latestLatency === 0 ? 'ESPERANDO' : latestLatency > 100 ? 'CRÍTICO' : latestLatency > 50 ? 'LENTO' : 'ÓPTIMO'}
+                {latestLatency === 0 ? t('dashboard.telemetry.waiting') : latestLatency > 100 ? 'CRÍTICO' : latestLatency > 50 ? t('dashboard.telemetry.slow') : t('dashboard.telemetry.optimal')}
               </span>
             </div>
             <div className="h-56 w-full mt-auto -mx-2">
@@ -187,20 +190,20 @@ export const TelemetryPanel: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-800/10 to-transparent pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase">Actividad Reciente de Soporte</h2>
-            <a href="/console" className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1">Ver Consola Completa &rarr;</a>
+            <h2 className="text-sm font-bold tracking-wider text-slate-400 uppercase">{t('dashboard.telemetry.recent_activity')}</h2>
+            <a href="/console" className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1">{t('dashboard.telemetry.view_console')} &rarr;</a>
           </div>
 
           <div className="space-y-3">
             {recentLogs.length === 0 ? (
-              <div className="text-sm text-slate-500 text-center py-4 italic border border-white/5 rounded-xl border-dashed">Esperando eventos telemétricos...</div>
+              <div className="text-sm text-slate-500 text-center py-4 italic border border-white/5 rounded-xl border-dashed">{t('dashboard.telemetry.waiting_events')}</div>
             ) : (
               [...recentLogs].reverse().slice(0, 4).map((log, idx) => (
                 <div key={idx} className="bg-black/30 border border-white/5 p-3.5 rounded-xl flex items-center justify-between group hover:bg-black/50 hover:border-white/10 transition-colors cursor-default">
                   <div className="flex items-center gap-4">
                     <span className={`text-[10px] font-black px-2 py-1 rounded-md border ${log.level === 'FATAL' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
-                        log.level === 'ERROR' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' :
-                          'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                      log.level === 'ERROR' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' :
+                        'bg-blue-500/10 text-blue-400 border-blue-500/30'
                       }`}>
                       {log.level}
                     </span>

@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-This document serves as the formal Threat Modeling and Risk Analysis for the Vesper Core Platform and its edge client ecosystem (`@vesper/ghost-ledger`). It utilizes the **STRIDE** methodology (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) to systematically identify, categorize, and mitigate operational and cryptographic risks. 
+This document serves as the formal Threat Modeling and Risk Analysis for the Vesper Core Platform and its edge client ecosystem (`@vesper-core/ghost-ledger`). It utilizes the **STRIDE** methodology (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege) to systematically identify, categorize, and mitigate operational and cryptographic risks. 
 
 In alignment with Zero-Trust principles, the Vesper architecture is designed to proactively neutralize all identified vectors. Currently, **there are no "Accepted Risks"** within the core transaction flow; all threats are actively mitigated by the cryptographic and architectural controls documented below.
 

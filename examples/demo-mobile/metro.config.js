@@ -9,10 +9,10 @@ const config = getDefaultConfig(projectRoot);
 // Include watchFolders pointing to the root of the monorepo
 config.watchFolders = [workspaceRoot];
 
-// Resolve alias @vesper/ghost-ledger correctly to the directory
+// Resolve alias @vesper-core/ghost-ledger correctly to the directory
 config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
-  '@vesper/ghost-ledger': path.resolve(workspaceRoot, 'packages/ghost-ledger'),
+  '@vesper-core/ghost-ledger': path.resolve(workspaceRoot, 'packages/ghost-ledger'),
 };
 
 // Let Metro know where to resolve packages

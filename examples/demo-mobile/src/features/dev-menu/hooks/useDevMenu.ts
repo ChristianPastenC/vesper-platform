@@ -4,7 +4,7 @@ import {
   serializeAdapterRequest,
   encodeJsonBody,
   type SovereignAdapterRequest,
-} from '@vesper/ghost-ledger';
+} from '@vesper-core/ghost-ledger';
 import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
 import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
 import { validateHandshake } from '../../../core/network/handshakeValidator';

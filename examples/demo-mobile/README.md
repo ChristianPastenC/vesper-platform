@@ -1,6 +1,6 @@
 # Demo Mobile App (`demo-mobile`)
 
-Welcome to the React Native (Expo/Bare) mobile application demonstrating the integration of `@vesper/ghost-ledger`.
+Welcome to the React Native (Expo/Bare) mobile application demonstrating the integration of `@vesper-core/ghost-ledger`.
 
 ## Purpose
 This mobile application serves as a real-world integration example for the Vesper Zero-Trust cryptographic library. It simulates an e-commerce platform where users can browse a catalog, authenticate, and process payments.
@@ -33,7 +33,7 @@ The app is built using React Native and leverages the native JSI bindings provid
    ```bash
    cd examples/demo-mobile
    ```
-2. Install dependencies (ensure `@vesper/ghost-ledger` is built first in `packages/ghost-ledger`):
+2. Install dependencies (ensure `@vesper-core/ghost-ledger` is built first in `packages/ghost-ledger`):
    ```bash
    yarn install
    ```

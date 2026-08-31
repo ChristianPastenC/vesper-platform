@@ -36,7 +36,7 @@ The project is structured as a monorepo containing two main applications and a c
    - Allows developers to generate API Keys (`X-Sovereign-API-Key`) to embed in their `SovereignClientCore` implementations.
    - Features a real-time dashboard using `Chart.js` that visualizes the telemetry metrics (Integrity & Latency) ingested by the backend.
 
-3. **[`@vesper/ghost-ledger`](./packages/ghost-ledger)** (SDK - C++/TypeScript)
+3. **[`@vesper-core/ghost-ledger`](./packages/ghost-ledger)** (SDK - C++/TypeScript)
    - The native cryptographic engine that integrates securely into client applications.
 
 ## Getting Started

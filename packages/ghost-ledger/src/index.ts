@@ -1,14 +1,14 @@
 /**
- * @vesper/ghost-ledger — public package surface
+ * @vesper-core/ghost-ledger — public package surface
  *
  * All public symbols are available from this entry point.
  * For tree-shaking in bundle-size sensitive applications, use the dedicated
  * subpath imports:
  *
- *   import { DPoPSigner, withDPoP }                      from '@vesper/ghost-ledger/dpop';
+ *   import { DPoPSigner, withDPoP }                      from '@vesper-core/ghost-ledger/dpop';
  *   import { FetchAdapter, AxiosAdapter, GraphQLAdapter,
  *             fetchWithTrapping, axiosWithTrapping,
- *             graphqlWithTrapping }                       from '@vesper/ghost-ledger/adapters';
+ *             graphqlWithTrapping }                       from '@vesper-core/ghost-ledger/adapters';
  *
  * Internal modules (crypto.ts, ledger.ts, core.ts, dpop/*, adapters/*) are
  * private implementation details and may change without notice.

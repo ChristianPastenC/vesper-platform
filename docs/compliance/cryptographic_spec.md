@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-This document provides the formal technical specification for the cryptographic mechanisms deployed across the Vesper Core Platform and the `@vesper/ghost-ledger` client SDK. The cryptographic suite is engineered to enforce a **Zero-Trust architecture**, guaranteeing data integrity, non-repudiation, and perfect session binding even during hostile transport transitions or offline execution phases.
+This document provides the formal technical specification for the cryptographic mechanisms deployed across the Vesper Core Platform and the `@vesper-core/ghost-ledger` client SDK. The cryptographic suite is engineered to enforce a **Zero-Trust architecture**, guaranteeing data integrity, non-repudiation, and perfect session binding even during hostile transport transitions or offline execution phases.
 
 ---
 
@@ -30,7 +30,7 @@ To eliminate the risk of bearer token theft and replay attacks, the platform emp
 ### 3.2. Payload Integrity Validation (HMAC)
 Data sent over hostile networks is strictly protected against tampering.
 * **Engineered Component**: `internal/handler/middleware/hash_validator.go`
-* **Mechanism**: The `@vesper/ghost-ledger` computes an HMAC-SHA256 hash of the JSON payload body immediately before transport. This hash is appended to the request as the `X-Sovereign-Hash` header. The Go backend recalculates the hash upon receipt.
+* **Mechanism**: The `@vesper-core/ghost-ledger` computes an HMAC-SHA256 hash of the JSON payload body immediately before transport. This hash is appended to the request as the `X-Sovereign-Hash` header. The Go backend recalculates the hash upon receipt.
 * **Security Outcome**: Prevents Man-in-the-Middle (MitM) attackers from modifying transaction amounts or routing details in transit. Any byte mismatch immediately triggers a `400 Bad Request` and terminates the connection.
 
 ### 3.3. Offline Transaction Ledger (Cryptographic Chaining)
@@ -50,7 +50,7 @@ The platform ensures that transactions queued locally during network outages can
 
 ## 4. Key Management & Entropy (CSPRNG)
 
-The `@vesper/ghost-ledger` SDK is designed to be environment-agnostic while demanding high-entropy cryptographic primitives. It relies on a mandatory `cryptoProvider` interface supplied during initialization:
+The `@vesper-core/ghost-ledger` SDK is designed to be environment-agnostic while demanding high-entropy cryptographic primitives. It relies on a mandatory `cryptoProvider` interface supplied during initialization:
 
 ```typescript
 cryptoProvider: {

@@ -1,6 +1,6 @@
 {
-  "name": "@vesper/ghost-ledger",
-  "version": "0.1.0",
+  "name": "@vesper-core/ghost-ledger",
+  "version": "0.0.1-beta.1",
   "description": "Cryptographic resilience middleware: volatile RAM ledger, Error Trapping Matrix, DPoP asymmetric proof-of-possession signing, and platform-agnostic transport adapters.",
   "license": "MIT",
   "type": "module",
@@ -21,10 +21,36 @@
       "types": "./dist/adapters/index.d.ts"
     }
   },
+  "author": "ChristianPastenC <christian_pasten@outlook.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChristianPastenC/vesper-platform.git",
+    "directory": "packages/ghost-ledger"
+  },
+  "bugs": {
+    "url": "https://github.com/ChristianPastenC/vesper-platform/issues"
+  },
+  "keywords": [
+    "react-native",
+    "nitro",
+    "nitro-modules",
+    "vesper",
+    "ghost-ledger",
+    "crypto",
+    "dpop"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "android",
+    "cpp",
+    "nitrogen",
+    "CMakeLists.txt",
+    "nitro.json",
+    "SovereignSecureClient.podspec"
   ],
   "scripts": {
+    "prepack": "yarn clean:native && yarn codegen && yarn build",
+    "clean:native": "rimraf android/build android/.cxx cpp/tests/build",
     "build": "tsc",
     "clean": "rimraf dist",
     "rebuild": "rimraf dist && tsc",

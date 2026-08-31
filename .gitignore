@@ -21,3 +21,6 @@ coverage/
 # Go Binaries
 *.exe
 bin/
+
+# Generated Packages by npm
+*.tgz

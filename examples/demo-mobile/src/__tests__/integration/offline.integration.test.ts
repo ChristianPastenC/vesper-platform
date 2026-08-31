@@ -2,7 +2,7 @@ import {
   SovereignMemoryQueue,
   SovereignClientCore,
   serializeAdapterRequest,
-} from '@vesper/ghost-ledger';
+} from '@vesper-core/ghost-ledger';
 
 describe('Integration: Offline Queue', () => {
   let queue: SovereignMemoryQueue;
@@ -23,7 +23,7 @@ describe('Integration: Offline Queue', () => {
         encryptAesGcm: jest.fn(),
         decryptAesGcm: jest.fn(),
         wrapKeyRsaOaep: jest.fn(),
-      } as unknown as import('@vesper/ghost-ledger').IDPoPCryptoProvider,
+      } as unknown as import('@vesper-core/ghost-ledger').IDPoPCryptoProvider,
       networkResolver: async () => true,
       networkAdapter: { request: jest.fn().mockResolvedValue({ status: 200, data: {} }) },
       errorTrapping: { freezeOn503_504: false, freezeOn401: false },
@@ -43,7 +43,7 @@ describe('Integration: Offline Queue', () => {
 
     const cryptoMock = (
       client as unknown as {
-        cryptoProvider: import('@vesper/ghost-ledger').IDPoPCryptoProvider;
+        cryptoProvider: import('@vesper-core/ghost-ledger').IDPoPCryptoProvider;
       }
     ).cryptoProvider;
 

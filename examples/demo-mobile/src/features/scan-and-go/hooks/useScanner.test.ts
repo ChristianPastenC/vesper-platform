@@ -30,7 +30,7 @@ jest.mock('../../../core/auth/tokenStore', () => ({
   getAccessToken: jest.fn(() => Promise.resolve('mock-access-token')),
 }));
 
-jest.mock('@vesper/ghost-ledger', () => ({
+jest.mock('@vesper-core/ghost-ledger', () => ({
   encodeHeaders: jest.fn((headers) => headers),
 }));
 

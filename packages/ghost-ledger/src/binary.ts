@@ -1,5 +1,5 @@
 /**
- * @vesper/ghost-ledger — binary encoding utilities
+ * @vesper-core/ghost-ledger — binary encoding utilities
  *
  * Encodes request metadata into flat byte-arrays.
  * Plain JS strings are immutable and cannot be zeroed in RAM. By encoding

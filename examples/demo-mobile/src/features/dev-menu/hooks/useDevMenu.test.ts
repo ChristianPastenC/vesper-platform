@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useDevMenu } from './useDevMenu';
-import { SovereignMemoryQueue } from '@vesper/ghost-ledger';
+import { SovereignMemoryQueue } from '@vesper-core/ghost-ledger';
 import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
 import { getTelemetryApiKey } from '../../../core/config';
 import { useAppStore } from '../../../store/useAppStore';
@@ -40,7 +40,7 @@ const mockQueue = {
   dequeue: jest.fn().mockResolvedValue(undefined),
 };
 
-jest.mock('@vesper/ghost-ledger', () => ({
+jest.mock('@vesper-core/ghost-ledger', () => ({
   SovereignMemoryQueue: { getInstance: jest.fn() },
   serializeAdapterRequest: jest.fn(() => new Uint8Array([1, 2, 3])),
   encodeJsonBody: jest.fn(() => new Uint8Array([4, 5, 6])),

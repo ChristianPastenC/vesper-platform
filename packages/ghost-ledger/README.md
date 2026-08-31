@@ -1,6 +1,6 @@
-# @vesper/ghost-ledger
+# @vesper-core/ghost-ledger
 
-`@vesper/ghost-ledger` is a transport-agnostic cryptographic resilience library designed to sequester pending request payloads securely in volatile RAM during connection failures. It guarantees the cryptographic integrity of enqueued transactions.
+`@vesper-core/ghost-ledger` is a transport-agnostic cryptographic resilience library designed to sequester pending request payloads securely in volatile RAM during connection failures. It guarantees the cryptographic integrity of enqueued transactions.
 
 ---
 
@@ -166,7 +166,7 @@ sequenceDiagram
 <summary><strong>View Fetch Adapter & Telemetry setup</strong></summary>
 
 ```typescript
-import { SovereignClientCore, FetchAdapter } from '@vesper/ghost-ledger';
+import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 
 const client = SovereignClientCore.getInstance({
   cryptoProvider: {
@@ -202,7 +202,7 @@ await client.processSynchronizedQueue(async () => true);
 
 **Axios Integration with Error Trapping:**
 ```typescript
-import { SovereignClientCore, AxiosAdapter } from '@vesper/ghost-ledger';
+import { SovereignClientCore, AxiosAdapter } from '@vesper-core/ghost-ledger';
 import axios from 'axios';
 
 const client = SovereignClientCore.getInstance({
@@ -217,7 +217,7 @@ client.executeRequest('tx_102', { method: 'POST', url: '/api/ledger/degraded', b
 
 **Fetch Integration with Trapping:**
 ```typescript
-import { SovereignClientCore, FetchAdapter } from '@vesper/ghost-ledger';
+import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 
 const client = SovereignClientCore.getInstance({
   cryptoProvider: myCryptoProvider,
@@ -230,7 +230,7 @@ client.executeRequest('tx_103', { method: 'GET', url: 'https://api.sovereign.loc
 
 **GraphQL Integration with Trapping:**
 ```typescript
-import { SovereignClientCore, GraphQLAdapter } from '@vesper/ghost-ledger';
+import { SovereignClientCore, GraphQLAdapter } from '@vesper-core/ghost-ledger';
 
 const client = SovereignClientCore.getInstance({
   cryptoProvider: myCryptoProvider,
@@ -251,7 +251,7 @@ client.executeRequest('tx_104', {
 ## Pure JavaScript Mock Mode
 
 > [!TIP]
-> For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@vesper/ghost-ledger` provides a built-in pure JavaScript fallback engine.
+> For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@vesper-core/ghost-ledger` provides a built-in pure JavaScript fallback engine.
 >
 > This mode skips all attempts to load the native JSI/Nitro modules or Node `.node` addons, preventing Metro/Webpack static analysis or compile-time resolution errors.
 
@@ -263,7 +263,7 @@ You can enable mock mode in one of two ways:
 Pass `mock: true` in the `SovereignClientCoreConfig` when instantiating the core client:
 
 ```typescript
-import { SovereignClientCore } from '@vesper/ghost-ledger';
+import { SovereignClientCore } from '@vesper-core/ghost-ledger';
 
 const client = SovereignClientCore.getInstance({
   cryptoProvider: myCryptoProvider,

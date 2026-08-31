@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-This policy formally defines the strict memory management, data-at-rest protection, and runtime tampering mitigation controls enforced across the Vesper Core Platform and the `@vesper/ghost-ledger` edge client. 
+This policy formally defines the strict memory management, data-at-rest protection, and runtime tampering mitigation controls enforced across the Vesper Core Platform and the `@vesper-core/ghost-ledger` edge client. 
 
 In high-security enterprise environments, the endpoint device is treated as a hostile environment. This policy establishes the engineering guidelines that ensure sensitive transaction payloads, bearer tokens, and cryptographic keys are never inadvertently exposed to forensic extraction, dynamic memory scrapers, or unauthorized application debugging.
 
@@ -22,7 +22,7 @@ The cornerstone of the Vesper Edge Architecture is the strict prohibition of non
 
 Relying on Garbage Collection (GC) in managed runtimes (like JavaScript, Swift, or Kotlin) is categorically insufficient for secure memory treatment. GC engines (such as the V8/Hermes engine) defer deallocation to unpredictable intervals. During this temporal window, sensitive payloads remain dormant in plaintext on the application heap. This leaves the system vulnerable to memory-scraping tools, physical cold-boot attacks, and core dump forensic extraction.
 
-To counter this, `@vesper/ghost-ledger` leverages the React Native JSI (JavaScript Interface) to instantly pass sensitive payloads across the bridge into native deterministic C++ memory, enforcing **Active Byte-Level Zeroization**:
+To counter this, `@vesper-core/ghost-ledger` leverages the React Native JSI (JavaScript Interface) to instantly pass sensitive payloads across the bridge into native deterministic C++ memory, enforcing **Active Byte-Level Zeroization**:
 
 * **The JSI Memory Boundary**: Once a payload enters the C++ queue, no references are kept in the JavaScript heap. The C++ engine takes absolute ownership of the memory pointer.
 * **Deterministic Destruction**: When a transaction payload successfully synchronizes with the backend, or when its deterministic Time-To-Live (TTL) expires, the native C++ engine does not simply "free" the memory. It executes an active memory wipe.

@@ -4,7 +4,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
-import { encodeHeaders } from '@vesper/ghost-ledger';
+import { encodeHeaders } from '@vesper-core/ghost-ledger';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
@@ -24,7 +24,7 @@ jest.mock('../../payment/ledger/buildTransactionLedger', () => ({
   buildTransactionLedger: jest.fn(),
 }));
 
-jest.mock('@vesper/ghost-ledger', () => ({
+jest.mock('@vesper-core/ghost-ledger', () => ({
   encodeJsonBody: jest.fn((body) => new Uint8Array(Buffer.from(JSON.stringify(body)))),
   encodeHeaders: jest.fn((headers) => headers),
 }));

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as Crypto from 'react-native-quick-crypto';
 import { useSovereignClient } from '../../../providers/sovereign/SovereignClientContext';
-import { SovereignAdapterRequest, encodeJsonBody } from '@vesper/ghost-ledger';
+import { SovereignAdapterRequest, encodeJsonBody } from '@vesper-core/ghost-ledger';
 import { buildTransactionLedger, TransactionBlock } from '../ledger/buildTransactionLedger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 

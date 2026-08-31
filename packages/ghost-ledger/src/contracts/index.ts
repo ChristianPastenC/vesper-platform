@@ -1,5 +1,5 @@
 /**
- * @vesper/ghost-ledger — abstract interface contracts
+ * @vesper-core/ghost-ledger — abstract interface contracts
  *
  * This module is the single source of truth for every abstract interface in
  * the SovereignCore framework. It has ZERO imports — all types are either

@@ -24,7 +24,7 @@ jest.mock('../../payment/ledger/buildTransactionLedger', () => ({
   buildTransactionLedger: jest.fn(),
 }));
 
-jest.mock('@vesper/ghost-ledger', () => ({
+jest.mock('@vesper-core/ghost-ledger', () => ({
   encodeJsonBody: jest.fn((body) => new Uint8Array(Buffer.from(JSON.stringify(body)))),
   encodeHeaders: jest.fn((headers) => headers),
 }));

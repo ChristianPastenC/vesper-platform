@@ -5,7 +5,7 @@ import {
   useSovereignClient,
   useSovereignDPoPKey,
 } from './SovereignClientContext';
-import type { SovereignClientCore } from '@vesper/ghost-ledger';
+import type { SovereignClientCore } from '@vesper-core/ghost-ledger';
 
 describe('SovereignClientContext', () => {
   // Suppress expected console.errors from React when an error is thrown in renderHook

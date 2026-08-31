@@ -4,7 +4,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { randomUUID } from 'react-native-quick-crypto';
-import { encodeHeaders } from '@vesper/ghost-ledger';
+import { encodeHeaders } from '@vesper-core/ghost-ledger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { BackendProduct } from '../../../features/catalog/hooks/useSovereignCatalog';
 import { getApiUrl } from '../../../core/config';

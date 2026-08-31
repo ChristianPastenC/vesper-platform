@@ -56,7 +56,7 @@ replaceInFile(path.join(__dirname, 'src/providers/sovereign/useSovereignInitiali
 
 // 5. SovereignClientContext.test.tsx
 replaceInFile(path.join(__dirname, 'src/providers/sovereign/SovereignClientContext.test.tsx'), [
-  // no external internal imports to fix that start with ../ because it only imports from @vesper/ghost-ledger and ./SovereignClientContext
+  // no external internal imports to fix that start with ../ because it only imports from @vesper-core/ghost-ledger and ./SovereignClientContext
 ]);
 
 // EXTERNALS:

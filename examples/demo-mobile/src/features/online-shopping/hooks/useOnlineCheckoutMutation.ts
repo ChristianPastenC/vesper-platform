@@ -3,7 +3,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequest';
 import { getAccessToken } from '../../../core/auth/tokenStore';
 import { buildTransactionLedger } from '../../payment/ledger/buildTransactionLedger';
-import { encodeJsonBody, encodeHeaders } from '@vesper/ghost-ledger';
+import { encodeJsonBody, encodeHeaders } from '@vesper-core/ghost-ledger';
 import { randomUUID } from 'react-native-quick-crypto';
 import { getApiUrl, getTestCardNumber } from '../../../core/config';
 

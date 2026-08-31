@@ -1,5 +1,5 @@
 /**
- * @vesper/ghost-ledger — cryptographic provider interfaces
+ * @vesper-core/ghost-ledger — cryptographic provider interfaces
  *
  * Platform-agnostic interfaces for cryptographic primitives consumed by
  * SovereignMemoryQueue and SovereignClientCore.

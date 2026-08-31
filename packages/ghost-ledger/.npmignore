@@ -1,0 +1,18 @@
+# Ignore android build artifacts
+android/build
+android/.cxx
+android/.gradle
+
+# Ignore tests and local builds of C++
+cpp/tests/
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+
+# Ignore coverage and logs
+coverage/
+*.log
+
+# Ignore IDE and editor files
+node_modules/

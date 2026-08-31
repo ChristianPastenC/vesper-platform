@@ -2217,7 +2217,7 @@
     "@urql/core" "^5.1.2"
     wonka "^6.3.2"
 
-"@vesper/ghost-ledger@link:../../packages/ghost-ledger":
+"@vesper-core/ghost-ledger@link:../../packages/ghost-ledger":
   version "0.0.0"
   uid ""
 

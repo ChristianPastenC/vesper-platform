@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SovereignClientCore, FetchAdapter } from '@vesper/ghost-ledger';
+import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import { nativeCryptoProvider } from '../../core/crypto/NativeCryptoProvider';
 import {
   networkResolver,

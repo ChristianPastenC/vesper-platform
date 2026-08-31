@@ -1,5 +1,5 @@
 /**
- * @vesper/ghost-ledger/adapters
+ * @vesper-core/ghost-ledger/adapters
  *
  * This subpath export exposes the concrete network adapters and their functional
  * equivalents, allowing consumers to choose the transport mechanism that best

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useSovereignClient } from '../../providers/sovereign/SovereignClientContext';
 import { getRefreshToken, saveTokens } from './tokenStore';
 import { useAppStore } from '../../store/useAppStore';
-import type { SovereignAdapterRequest } from '@vesper/ghost-ledger';
+import type { SovereignAdapterRequest } from '@vesper-core/ghost-ledger';
 import { getApiUrl } from '../config';
 
 export interface ExecuteRequestConfig {

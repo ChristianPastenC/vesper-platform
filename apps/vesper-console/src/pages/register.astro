@@ -5,7 +5,7 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Sovereign Telemetry | Register">
   <main class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
     <!-- Ambient glowing backgrounds -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
     <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
 
     <div class="max-w-md w-full bg-slate-900/40 backdrop-blur-2xl ring-1 ring-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative group">
@@ -13,7 +13,7 @@ import Layout from '../layouts/Layout.astro';
       
       <div class="p-10 relative z-10">
         <div class="flex items-center justify-center mb-8">
-          <div class="bg-emerald-500/10 text-emerald-400 p-4 rounded-2xl ring-1 ring-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+          <div class="bg-blue-500/10 text-blue-400 p-4 rounded-2xl ring-1 ring-blue-500/30 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10">
               <path fill-rule="evenodd" d="M3 2.25a.75.75 0 000 1.5v16.5h-.75a.75.75 0 000 1.5H21a.75.75 0 000-1.5h-.75V3.75a.75.75 0 000-1.5H3ZM5.25 3.75h12v16.5h-12V3.75ZM8.25 7.5a.75.75 0 000 1.5h6a.75.75 0 000-1.5h-6Zm0 3.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5h-6Zm0 3.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5h-6Z" clip-rule="evenodd" />
             </svg>
@@ -31,7 +31,7 @@ import Layout from '../layouts/Layout.astro';
           <div class="space-y-1.5">
             <label for="name" class="block text-xs font-bold tracking-wide text-slate-300 uppercase">Nombre de Organización</label>
             <input type="text" id="name" name="name" required 
-              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-inner"
+              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner"
               placeholder="Ej. Acme Corp"
             />
           </div>
@@ -39,7 +39,7 @@ import Layout from '../layouts/Layout.astro';
           <div class="space-y-1.5">
             <label for="email" class="block text-xs font-bold tracking-wide text-slate-300 uppercase">Correo Administrativo</label>
             <input type="email" id="email" name="email" required 
-              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-inner"
+              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner"
               placeholder="admin@empresa.com"
             />
           </div>
@@ -47,12 +47,12 @@ import Layout from '../layouts/Layout.astro';
           <div class="space-y-1.5">
             <label for="password" class="block text-xs font-bold tracking-wide text-slate-300 uppercase">Contraseña</label>
             <input type="password" id="password" name="password" required 
-              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-inner"
+              class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner"
               placeholder="••••••••"
             />
           </div>
           
-          <button type="submit" id="submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-xl transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:-translate-y-0.5 active:translate-y-0 mt-8">
+          <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:-translate-y-0.5 active:translate-y-0 mt-8">
             <span id="btn-text" class="tracking-wide">Crear Tenant</span>
             <svg id="spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -61,7 +61,7 @@ import Layout from '../layouts/Layout.astro';
           </button>
         </form>
         <p class="text-center text-slate-400 mt-8 text-sm">
-          ¿Ya tiene una cuenta? <a href="/login" class="text-emerald-400 hover:text-emerald-300 font-semibold underline decoration-emerald-400/30 underline-offset-4 transition-colors">Iniciar Sesión</a>
+          ¿Ya tiene una cuenta? <a href="/login" class="text-blue-400 hover:text-blue-300 font-semibold underline decoration-blue-400/30 underline-offset-4 transition-colors">Iniciar Sesión</a>
         </p>
       </div>
     </div>

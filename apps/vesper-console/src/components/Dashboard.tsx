@@ -230,11 +230,11 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-auto p-8 relative">
+    <div className="w-full flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 relative">
       {/* Astro.build style ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] max-w-[100vw] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
       
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto">
         <header className="mb-10 text-center md:text-left">
           <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Dashboard Overview</h2>
           <p className="text-slate-400 mt-2 text-sm max-w-2xl">Monitoree la salud e integridad criptográfica de su flota de SDKs instalados en tiempo real.</p>

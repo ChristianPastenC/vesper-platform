@@ -5,7 +5,7 @@ import { LogConsole } from '../components/LogConsole';
 ---
 
 <Layout title="Sovereign Telemetry | Support Console">
-  <main class="h-screen bg-[#0d1117] flex flex-col font-sans" id="app-container">
+  <main class="w-full h-screen bg-[#0d1117] flex flex-col font-sans overflow-hidden" id="app-container">
     <Header activeTab="console" />
     <LogConsole client:load />
   </main>

@@ -84,17 +84,33 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         
-      - name: Build Android App
+      - name: Build Unprotected Android App (Baseline)
         working-directory: examples/demo-mobile/android
+        env:
+          EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
         run: |
           chmod +x ./gradlew
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-unprotected.apk
+          
+      - name: Build Protected Android App
+        working-directory: examples/demo-mobile/android
+        run: |
+          ./gradlew clean
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Upload Protected APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: examples/demo-mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Unprotected APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-unprotected-apk
+          path: examples/demo-mobile/android/app/build/outputs/apk/debug/app-unprotected.apk
 
   build-ios:
     name: Build iOS (Simulator)
@@ -171,6 +187,12 @@ jobs:
           name: app-debug-apk
           path: ./apks/protected
 
+      - name: Download Unprotected APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-unprotected-apk
+          path: ./apks/unprotected
+
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -186,9 +208,6 @@ jobs:
           script: |
             echo "🔥 Emulator booted! Setting up Frida Server..."
             
-            # Install the Protected APK
-            adb install -r ./apks/protected/app-debug.apk
-            
             # Download, push and start Frida Server as root
             wget -qO frida-server.xz https://github.com/frida/frida/releases/download/16.5.1/frida-server-16.5.1-android-x86_64.xz
             unxz frida-server.xz
@@ -199,8 +218,12 @@ jobs:
             adb shell "nohup /data/local/tmp/frida-server >/dev/null 2>&1 &"
             sleep 3
             
-            echo "⚔️ Triggering DAST Python Script (Frida will spawn the app)..."
-            cd examples/demo-mobile && python scripts/frida_dast_test.py
+            echo "⚔️ Triggering DAST Python Script (Frida will install and spawn the apps)..."
+            cd examples/demo-mobile && python scripts/frida_dast_test.py \
+              --package mx.edu.sovereign.core \
+              --protected-apk ../../apks/protected/app-debug.apk \
+              --baseline-package mx.edu.sovereign.core \
+              --baseline-apk ../../apks/unprotected/app-unprotected.apk
             
             # Render the report natively on the GitHub Actions Summary page
             if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi

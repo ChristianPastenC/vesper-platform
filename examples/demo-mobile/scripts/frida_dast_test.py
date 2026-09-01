@@ -8,6 +8,7 @@ from datetime import datetime
 # Define the metrics we want to test
 class SecurityMetrics:
     def __init__(self):
+        self.was_run = False
         self.frida_attached = False
         self.jsi_hook_success = False
         self.memory_leak_detected = False
@@ -22,8 +23,14 @@ def generate_markdown_report(unprotected_metrics, protected_metrics):
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     commit_sha = os.environ.get('GITHUB_SHA', 'a8f3b9c')[:7]
     
-    unprotected_dump = unprotected_metrics.memory_dump if unprotected_metrics.memory_leak_detected else "[NO LEAK DETECTED]"
+    unprotected_dump = unprotected_metrics.memory_dump if unprotected_metrics.memory_leak_detected else ("[NO LEAK DETECTED]" if unprotected_metrics.was_run else "[N/A - BASELINE NOT RUN]")
     protected_dump = protected_metrics.memory_dump if protected_metrics.memory_leak_detected else "[ZEROIZED / MEMORY CLEARED]"
+
+    # Helper function to render unprotected results vs N/A
+    def render_unprotected(condition, true_text, false_text):
+        if not unprotected_metrics.was_run:
+            return "⚪ N/A (Not Tested)"
+        return true_text if condition else false_text
 
     report = f"""## 🛡️ Vesper Ghost Ledger: Dynamic Analysis Security Report
 **Generated:** {timestamp}
@@ -39,23 +46,23 @@ This automated report compares the security posture of the application against a
 
 | Attack Vector | Unprotected Build | Protected Build (Ghost Ledger) | Metric / Evidence | Verdict |
 | :--- | :--- | :--- | :--- | :--- |
-| **Process Attachment (ptrace)** | {"🔴 Allowed" if unprotected_metrics.frida_attached else "🟢 Blocked"} | {"🟡 Allowed (Contained)" if protected_metrics.frida_attached else "🟢 Blocked"} | Process intercepted at runtime | ℹ️ Neutralized |
-| **JSI Function Hooking** | {"🔴 Intercepted" if unprotected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | {"🔴 Intercepted" if protected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | Pointers validated via integrity | {"✅ PASS" if not protected_metrics.jsi_hook_success else "❌ FAIL"} |
-| **In-Memory Key Extraction** | {"🔴 Keys Leaked" if unprotected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\\text{{ ms}}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
-| **Ledger Alteration ($H_n$)** | {"🔴 Hash Manipulated" if unprotected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | {"🔴 Hash Manipulated" if protected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | C++ mutation detection | {"✅ PASS" if not protected_metrics.crypto_bypass_success else "❌ FAIL"} |
+| **Process Attachment (ptrace)** | {render_unprotected(unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {"🟡 Allowed (Contained)" if protected_metrics.frida_attached else "🟢 Blocked"} | Process intercepted at runtime | ℹ️ Neutralized |
+| **JSI Function Hooking** | {render_unprotected(unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {"🔴 Intercepted" if protected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | Pointers validated via integrity | {"✅ PASS" if not protected_metrics.jsi_hook_success else "❌ FAIL"} |
+| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\\text{{ ms}}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
+| **Ledger Alteration ($H_n$)** | {render_unprotected(unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {"🔴 Hash Manipulated" if protected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | C++ mutation detection | {"✅ PASS" if not protected_metrics.crypto_bypass_success else "❌ FAIL"} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
 - **Data Leakage (Leakage Bytes):**
-  - *Unprotected:* `{unprotected_metrics.leakage_bytes:,} bytes` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
+  - *Unprotected:* `{f"{unprotected_metrics.leakage_bytes:,} bytes" if unprotected_metrics.was_run else "N/A"}` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
   - *Protected:* `{protected_metrics.leakage_bytes:,} bytes` ({'Entropy noise / Honeypot return' if protected_metrics.leakage_bytes == 0 else 'Leaked'})
 - **RAM Exposure Window (Memory TTL):**
-  - *Unprotected:* `{'Indefinite' if unprotected_metrics.memory_ttl_ms < 0 else f"{unprotected_metrics.memory_ttl_ms} ms"}` (Awaiting GC / Persisted in heap)
+  - *Unprotected:* `{'Indefinite' if unprotected_metrics.memory_ttl_ms < 0 else (f"{unprotected_metrics.memory_ttl_ms} ms" if unprotected_metrics.was_run else "N/A")}` (Awaiting GC / Persisted in heap)
   - *Protected:* `{f"< {protected_metrics.memory_ttl_ms} ms" if protected_metrics.memory_ttl_ms > 0 else "Indefinite"}` (Active Zeroization triggered)
 - **Performance Overhead (Latency):**
   - The C++ Nitro Modules layer adds `+{protected_metrics.latency_ms} ms` per transaction, proving that military-grade security does not degrade UX.
 
 ### 🔍 Technical Summary & Forensic Evidence
-- **Unprotected Build:** The attacker {"successfully" if unprotected_metrics.jsi_hook_success else "failed to"} intercepted JSI bindings, extracting {"plaintext cryptographic keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing"}. Transaction hashes were {"successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated"} before reaching the network layer.
+- **Unprotected Build:** The attacker {("successfully" if unprotected_metrics.jsi_hook_success else "failed to") if unprotected_metrics.was_run else "was not tested so they neither succeeded nor failed to"} intercepted JSI bindings, extracting {("plaintext cryptographic keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing") if unprotected_metrics.was_run else "nothing"}. Transaction hashes were {("successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated") if unprotected_metrics.was_run else "not manipulated"} before reaching the network layer.
 - **Protected Build:** The Ghost Ledger C++ runtime successfully obfuscated memory buffers. JSI function pointers were protected via integrity checks, causing malicious hooks to return garbage data rather than crashing the app, thus trapping the attacker in a honeypot state.
 
 <details>
@@ -97,6 +104,7 @@ def on_message(message, data, metrics):
 
 def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
     metrics = SecurityMetrics()
+    metrics.was_run = True
     print(f"\n🚀 Starting Dynamic Analysis for {'PROTECTED' if is_protected else 'UNPROTECTED'} build: {package_name}")
     
     try:
@@ -286,10 +294,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Frida DAST against Vesper Ghost Ledger")
     parser.add_argument("--package", type=str, default="mx.edu.sovereign.core", help="Target package name (Protected)")
     parser.add_argument("--baseline-package", type=str, default=None, help="Target package name (Unprotected baseline)")
+    parser.add_argument("--protected-apk", type=str, default=None, help="Path to the protected APK to install before testing")
+    parser.add_argument("--baseline-apk", type=str, default=None, help="Path to the unprotected baseline APK to install before testing")
     args = parser.parse_args()
     
+    import os
+
     # 1. Run REAL attack against Unprotected App (if provided)
     if args.baseline_package:
+        if args.baseline_apk:
+            print(f"[!] Installing baseline APK: {args.baseline_apk}")
+            os.system(f"adb install -r {args.baseline_apk}")
+            time.sleep(2)
+        
         print(f"[!] Running baseline metrics for Unprotected Build: {args.baseline_package}")
         unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False)
     else:
@@ -301,7 +318,12 @@ if __name__ == "__main__":
         unprotected_metrics.memory_leak_detected = False
         unprotected_metrics.crypto_bypass_success = False
         
-    # 2. Run REAL attack against Protected App currently running in the emulator
+    # 2. Run REAL attack against Protected App
+    if args.protected_apk:
+        print(f"[!] Installing protected APK: {args.protected_apk}")
+        os.system(f"adb install -r {args.protected_apk}")
+        time.sleep(2)
+
     protected_metrics = run_test_suite(args.package, is_protected=True)
     
     # 3. Generate the professional Markdown report

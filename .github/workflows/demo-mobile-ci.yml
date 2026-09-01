@@ -92,7 +92,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew clean
           ./gradlew assembleDebug --no-daemon
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-unprotected.apk
+          mv app/build/outputs/apk/debug/app-debug.apk ../app-unprotected.apk
           
       - name: Build Protected Android App
         working-directory: examples/demo-mobile/android
@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-unprotected-apk
-          path: examples/demo-mobile/android/app/build/outputs/apk/debug/app-unprotected.apk
+          path: examples/demo-mobile/app-unprotected.apk
 
   build-ios:
     name: Build iOS (Simulator)
@@ -158,11 +158,35 @@ jobs:
         working-directory: examples/demo-mobile/ios
         run: pod install
         
-      - name: Build iOS App
+      - name: Build Unprotected iOS App
         working-directory: examples/demo-mobile/ios
-        run: xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
+        env:
+          EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
+        run: |
+          xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Unprotected
+          cd Build/Unprotected/Build/Products/Debug-iphonesimulator
+          zip -r ../../../../../app-unprotected.app.zip *.app
 
-  security-dast:
+      - name: Build Protected iOS App
+        working-directory: examples/demo-mobile/ios
+        run: |
+          xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Protected
+          cd Build/Protected/Build/Products/Debug-iphonesimulator
+          zip -r ../../../../../app-protected.app.zip *.app
+
+      - name: Upload Unprotected iOS App
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unprotected-app
+          path: examples/demo-mobile/ios/app-unprotected.app.zip
+
+      - name: Upload Protected iOS App
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-protected-app
+          path: examples/demo-mobile/ios/app-protected.app.zip
+
+  security-dast-android:
     name: Anti-Tampering (Frida) Cross-Test
     needs: build-android
     runs-on: ubuntu-latest
@@ -228,24 +252,115 @@ jobs:
             # Render the report natively on the GitHub Actions Summary page
             if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
           
-      - name: Post Security Report to PR
+      - name: Upload Security Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-security-report
+          path: examples/demo-mobile/security-report.md
+
+  security-dast-ios:
+    name: Anti-Tampering (Frida) Cross-Test (iOS)
+    needs: build-ios
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Frida & Tools
+        run: pip install frida==16.5.1 frida-tools
+
+      - name: Download Protected iOS App
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-protected-app
+          path: ./apks/protected-ios
+
+      - name: Download Unprotected iOS App
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-unprotected-app
+          path: ./apks/unprotected-ios
+
+      - name: Unzip Apps
+        run: |
+          cd apks/protected-ios && unzip app-protected.app.zip
+          cd ../unprotected-ios && unzip app-unprotected.app.zip
+
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 15 Pro" || true
+          xcrun simctl list devices | grep Booted || true
+
+      - name: Run Frida DAST on iOS Simulator
+        run: |
+          PROTECTED_APP=`ls apks/protected-ios | grep .app | head -n 1`
+          UNPROTECTED_APP=`ls apks/unprotected-ios | grep .app | head -n 1`
+          
+          echo "⚔️ Triggering DAST Python Script for iOS..."
+          cd examples/demo-mobile && python scripts/frida_dast_test.py \
+            --package mx.edu.sovereign.core \
+            --protected-apk ../../apks/protected-ios/$PROTECTED_APP \
+            --baseline-package mx.edu.sovereign.core \
+            --baseline-apk ../../apks/unprotected-ios/$UNPROTECTED_APP \
+            --platform ios
+            
+          if [ -f security-report.md ]; then cat security-report.md >> $GITHUB_STEP_SUMMARY; fi
+
+      - name: Upload iOS Security Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-security-report
+          path: examples/demo-mobile/security-report.md
+
+  security-report-convergence:
+    name: Final Verification & Results
+    needs: [security-dast-android, security-dast-ios]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Download Android Report
+        uses: actions/download-artifact@v4
+        with:
+          name: android-security-report
+          path: ./reports/android
+          
+      - name: Download iOS Report
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-security-report
+          path: ./reports/ios
+
+      - name: Merge Reports
+        run: |
+          echo "# 🛡️ Vesper Ghost Ledger: Multi-Platform Security Audit" > final_report.md
+          echo "## 📱 Android Analysis" >> final_report.md
+          cat ./reports/android/security-report.md >> final_report.md
+          echo "" >> final_report.md
+          echo "---" >> final_report.md
+          echo "## 🍏 iOS Analysis" >> final_report.md
+          cat ./reports/ios/security-report.md >> final_report.md
+          
+          cat final_report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post Combined Security Report to PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            // The python script generates this markdown file in the current working directory
-            const report = fs.readFileSync('examples/demo-mobile/security-report.md', 'utf8');
+            const report = fs.readFileSync('final_report.md', 'utf8');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: report
             });
-
-      - name: Upload Security Report Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frida-security-report
-          path: examples/demo-mobile/security-report.md

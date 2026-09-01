@@ -17,6 +17,8 @@ class SecurityMetrics:
         self.latency_ms = 0.0
         self.memory_ttl_ms = 0.0
         self.memory_dump = ""
+        self.was_run = False
+        self.memory_dump = ""
 
 def generate_markdown_report(unprotected_metrics, protected_metrics):
     import os
@@ -53,7 +55,7 @@ This automated report compares the security posture of the application against a
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
 - **Data Leakage (Leakage Bytes):**
-  - *Unprotected:* `{f"{unprotected_metrics.leakage_bytes:,} bytes" if unprotected_metrics.was_run else "N/A"}` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
+  - *Unprotected:* `{f"{f"{unprotected_metrics.leakage_bytes:,} bytes" if unprotected_metrics.was_run else "N/A"}" if unprotected_metrics.was_run else "N/A"}` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
   - *Protected:* `{protected_metrics.leakage_bytes:,} bytes` ({'Entropy noise / Honeypot return' if protected_metrics.leakage_bytes == 0 else 'Leaked'})
 - **RAM Exposure Window (Memory TTL):**
   - *Unprotected:* `{'Indefinite' if unprotected_metrics.memory_ttl_ms < 0 else (f"{unprotected_metrics.memory_ttl_ms} ms" if unprotected_metrics.was_run else "N/A")}` (Awaiting GC / Persisted in heap)
@@ -94,6 +96,7 @@ def on_message(message, data, metrics):
             metrics.memory_leak_detected = payload.get('leaked', False)
             metrics.leakage_bytes = payload.get('leakage_bytes', 0)
             metrics.memory_dump = payload.get('dump', '')
+            metrics.memory_dump = payload.get('dump', '')
         elif payload.get('event') == 'crypto_bypass':
             metrics.crypto_bypass_success = payload.get('success', False)
         elif payload.get('event') == 'latency_measure':
@@ -102,14 +105,16 @@ def on_message(message, data, metrics):
     elif message['type'] == 'error':
         print(f"[*] Frida Error: {message['stack']}")
 
-def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
+def run_test_suite(package_name: str, is_protected: bool, platform: str = "android") -> SecurityMetrics:
     metrics = SecurityMetrics()
     metrics.was_run = True
     print(f"\n🚀 Starting Dynamic Analysis for {'PROTECTED' if is_protected else 'UNPROTECTED'} build: {package_name}")
     
     try:
-        # We use spawn instead of attach to guarantee early instrumentation and launch
-        device = frida.get_usb_device(timeout=5)
+        if platform == "ios":
+            device = frida.get_local_device()
+        else:
+            device = frida.get_usb_device(timeout=5)
         pid = device.spawn([package_name])
         session = device.attach(pid)
         metrics.frida_attached = True
@@ -155,6 +160,7 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
                         }
 
                         var leaked = false;
+                        var actual_dump = "";
                         var actual_dump = "";
                         var totalScanned = 0;
                         var MAX_TOTAL = 256 * 1024 * 1024; // 256 MB hard cap
@@ -256,15 +262,17 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
             print(f"[!] Unexpected RPC error: {rpc_generic}. Continuing with partial metrics.")
         
         # Simulate real user interaction to trigger cryptographic operations
-        print("[*] Simulating UI interaction via adb to trigger internal data flows...")
+        print("[*] Simulating UI interaction to trigger internal data flows...")
         import os
-        # Bring up the app in case it was in background
-        os.system(f"adb shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1")
-        time.sleep(2)
-        # Send a few taps to navigate tabs or trigger buttons
-        os.system("adb shell input tap 300 800")
-        time.sleep(1)
-        os.system("adb shell input tap 500 1200")
+        if platform == "ios":
+            os.system(f"xcrun simctl launch booted {package_name} >/dev/null 2>&1")
+            time.sleep(2)
+        else:
+            os.system(f"adb shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1")
+            time.sleep(2)
+            os.system("adb shell input tap 300 800")
+            time.sleep(1)
+            os.system("adb shell input tap 500 1200")
         
         # Wait for async Memory.scan() callbacks to complete
         time.sleep(3)

@@ -50,16 +50,16 @@ This automated report compares the security posture of the application against a
 | :--- | :--- | :--- | :--- | :--- |
 | **Process Attachment (ptrace)** | {render_unprotected(unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {"🟡 Allowed (Contained)" if protected_metrics.frida_attached else "🟢 Blocked"} | Process intercepted at runtime | ℹ️ Neutralized |
 | **JSI Function Hooking** | {render_unprotected(unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {"🔴 Intercepted" if protected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | Pointers validated via integrity | {"✅ PASS" if not protected_metrics.jsi_hook_success else "❌ FAIL"} |
-| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\\text{{ ms}}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
+| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\text{ ms}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
 | **Ledger Alteration ($H_n$)** | {render_unprotected(unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {"🔴 Hash Manipulated" if protected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | C++ mutation detection | {"✅ PASS" if not protected_metrics.crypto_bypass_success else "❌ FAIL"} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
 - **Data Leakage (Leakage Bytes):**
-  - *Unprotected:* `{f"{f"{unprotected_metrics.leakage_bytes:,} bytes" if unprotected_metrics.was_run else "N/A"}" if unprotected_metrics.was_run else "N/A"}` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
+  - *Unprotected:* `{f'{unprotected_metrics.leakage_bytes:,} bytes' if unprotected_metrics.was_run else 'N/A'}` ({'Plaintext JSON payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
   - *Protected:* `{protected_metrics.leakage_bytes:,} bytes` ({'Entropy noise / Honeypot return' if protected_metrics.leakage_bytes == 0 else 'Leaked'})
 - **RAM Exposure Window (Memory TTL):**
-  - *Unprotected:* `{'Indefinite' if unprotected_metrics.memory_ttl_ms < 0 else (f"{unprotected_metrics.memory_ttl_ms} ms" if unprotected_metrics.was_run else "N/A")}` (Awaiting GC / Persisted in heap)
-  - *Protected:* `{f"< {protected_metrics.memory_ttl_ms} ms" if protected_metrics.memory_ttl_ms > 0 else "Indefinite"}` (Active Zeroization triggered)
+  - *Unprotected:* `{'Indefinite' if unprotected_metrics.memory_ttl_ms < 0 else (f'{unprotected_metrics.memory_ttl_ms} ms' if unprotected_metrics.was_run else 'N/A')}` (Awaiting GC / Persisted in heap)
+  - *Protected:* `{f'< {protected_metrics.memory_ttl_ms} ms' if protected_metrics.memory_ttl_ms > 0 else 'Indefinite'}` (Active Zeroization triggered)
 - **Performance Overhead (Latency):**
   - The C++ Nitro Modules layer adds `+{protected_metrics.latency_ms} ms` per transaction, proving that military-grade security does not degrade UX.
 
@@ -263,16 +263,16 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         
         # Simulate real user interaction to trigger cryptographic operations
         print("[*] Simulating UI interaction to trigger internal data flows...")
-        import os
+        import subprocess
         if platform == "ios":
-            os.system(f"xcrun simctl launch booted {package_name} >/dev/null 2>&1")
+            subprocess.run(f"xcrun simctl launch booted {package_name}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(2)
         else:
-            os.system(f"adb shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1")
+            subprocess.run(f"adb shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(2)
-            os.system("adb shell input tap 300 800")
+            subprocess.run("adb shell input tap 300 800", shell=True)
             time.sleep(1)
-            os.system("adb shell input tap 500 1200")
+            subprocess.run("adb shell input tap 500 1200", shell=True)
         
         # Wait for async Memory.scan() callbacks to complete
         time.sleep(3)
@@ -302,21 +302,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Frida DAST against Vesper Ghost Ledger")
     parser.add_argument("--package", type=str, default="mx.edu.sovereign.core", help="Target package name (Protected)")
     parser.add_argument("--baseline-package", type=str, default=None, help="Target package name (Unprotected baseline)")
-    parser.add_argument("--protected-apk", type=str, default=None, help="Path to the protected APK to install before testing")
-    parser.add_argument("--baseline-apk", type=str, default=None, help="Path to the unprotected baseline APK to install before testing")
+    parser.add_argument("--protected-apk", type=str, default=None, help="Path to the protected APK/APP to install before testing")
+    parser.add_argument("--baseline-apk", type=str, default=None, help="Path to the unprotected baseline APK/APP to install before testing")
+    parser.add_argument("--platform", type=str, default="android", help="Platform to test on: android or ios")
     args = parser.parse_args()
     
-    import os
+    import subprocess
 
     # 1. Run REAL attack against Unprotected App (if provided)
     if args.baseline_package:
         if args.baseline_apk:
-            print(f"[!] Installing baseline APK: {args.baseline_apk}")
-            os.system(f"adb install -r {args.baseline_apk}")
+            print(f"[!] Installing baseline app: {args.baseline_apk}")
+            if args.platform == "ios":
+                subprocess.run(f"xcrun simctl install booted {args.baseline_apk}", shell=True)
+            else:
+                subprocess.run(f"adb install -r {args.baseline_apk}", shell=True)
             time.sleep(2)
         
         print(f"[!] Running baseline metrics for Unprotected Build: {args.baseline_package}")
-        unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False)
+        unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False, platform=args.platform)
     else:
         # If no real baseline is provided, initialize empty metrics instead of faking them
         print("[!] No baseline package provided. Skipping unprotected baseline (no hardcoded data).")
@@ -328,11 +332,14 @@ if __name__ == "__main__":
         
     # 2. Run REAL attack against Protected App
     if args.protected_apk:
-        print(f"[!] Installing protected APK: {args.protected_apk}")
-        os.system(f"adb install -r {args.protected_apk}")
+        print(f"[!] Installing protected app: {args.protected_apk}")
+        if args.platform == "ios":
+            subprocess.run(f"xcrun simctl install booted {args.protected_apk}", shell=True)
+        else:
+            subprocess.run(f"adb install -r {args.protected_apk}", shell=True)
         time.sleep(2)
 
-    protected_metrics = run_test_suite(args.package, is_protected=True)
+    protected_metrics = run_test_suite(args.package, is_protected=True, platform=args.platform)
     
     # 3. Generate the professional Markdown report
     generate_markdown_report(unprotected_metrics, protected_metrics)

@@ -15,12 +15,16 @@ class SecurityMetrics:
         self.leakage_bytes = 0
         self.latency_ms = 0.0
         self.memory_ttl_ms = 0.0
+        self.memory_dump = ""
 
 def generate_markdown_report(unprotected_metrics, protected_metrics):
     import os
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     commit_sha = os.environ.get('GITHUB_SHA', 'a8f3b9c')[:7]
     
+    unprotected_dump = unprotected_metrics.memory_dump if unprotected_metrics.memory_leak_detected else "[NO LEAK DETECTED]"
+    protected_dump = protected_metrics.memory_dump if protected_metrics.memory_leak_detected else "[ZEROIZED / MEMORY CLEARED]"
+
     report = f"""## 🛡️ Vesper Ghost Ledger: Dynamic Analysis Security Report
 **Generated:** {timestamp}
 
@@ -59,12 +63,12 @@ This automated report compares the security posture of the application against a
 
 **Unprotected Build (Memory Dump):**
 ```text
-0x7fff5fbff8a0: {"7b 22 61 6d 6f 75 6e 74 22 3a 20 31 35 30 30 7d {\"amount\": 1500}" if unprotected_metrics.memory_leak_detected else "[NO LEAK DETECTED]"}
+0x7fff5fbff8a0: {unprotected_dump}
 ```
 
 **Protected Build (Ghost Ledger Zeroization):**
 ```text
-0x7fff5fbff8a0: {"00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 [ZEROIZED]" if not protected_metrics.memory_leak_detected else "7b 22 61 6d 6f 75 6e 74 22 3a 20 31 35 30 30 7d"}
+0x7fff5fbff8a0: {protected_dump}
 ```
 </details>
 
@@ -82,6 +86,7 @@ def on_message(message, data, metrics):
         elif payload.get('event') == 'memory_scan':
             metrics.memory_leak_detected = payload.get('leaked', False)
             metrics.leakage_bytes = payload.get('leakage_bytes', 0)
+            metrics.memory_dump = payload.get('dump', '')
         elif payload.get('event') == 'crypto_bypass':
             metrics.crypto_bypass_success = payload.get('success', False)
         elif payload.get('event') == 'latency_measure':
@@ -142,6 +147,7 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
                         }
 
                         var leaked = false;
+                        var actual_dump = "";
                         var totalScanned = 0;
                         var MAX_TOTAL = 256 * 1024 * 1024; // 256 MB hard cap
                         var MAX_PER_RANGE = 16 * 1024 * 1024; // 16 MB per range
@@ -162,6 +168,19 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
                                     Memory.scan(range.base, scanSize, SENTINEL_PATTERN, {
                                         onMatch: function(address, size) {
                                             leaked = true;
+                                            try {
+                                                var buf = Memory.readByteArray(address, size);
+                                                var view = new Uint8Array(buf);
+                                                var hex = [];
+                                                var ascii = "";
+                                                for(var i=0; i<view.length; i++) {
+                                                    var h = view[i].toString(16);
+                                                    hex.push(h.length === 1 ? '0' + h : h);
+                                                    var c = view[i];
+                                                    ascii += (c >= 32 && c <= 126) ? String.fromCharCode(c) : '.';
+                                                }
+                                                actual_dump = hex.join(' ') + " " + ascii;
+                                            } catch(e) {}
                                             return 'stop';
                                         },
                                         onError: function(reason) { /* skip unreadable pages */ },
@@ -174,10 +193,10 @@ def run_test_suite(package_name: str, is_protected: bool) -> SecurityMetrics:
                                 return leaked || totalScanned >= MAX_TOTAL;
                             });
 
-                        send({ event: 'memory_scan', leaked: leaked, leakage_bytes: leaked ? SENTINEL_BYTES.length : 0 });
+                        send({ event: 'memory_scan', leaked: leaked, leakage_bytes: leaked ? SENTINEL_BYTES.length : 0, dump: actual_dump });
 
                     } catch(memErr) {
-                        send({ event: 'memory_scan', leaked: false, leakage_bytes: 0 });
+                        send({ event: 'memory_scan', leaked: false, leakage_bytes: 0, dump: "" });
                     }
 
                     // ── 3. Crypto Bypass / Hash Mutation Attempt ────────────

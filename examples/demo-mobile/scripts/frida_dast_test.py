@@ -50,7 +50,7 @@ This automated report compares the security posture of the application against a
 | :--- | :--- | :--- | :--- | :--- |
 | **Process Attachment (ptrace)** | {render_unprotected(unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {"🟡 Allowed (Contained)" if protected_metrics.frida_attached else "🟢 Blocked"} | Process intercepted at runtime | ℹ️ Neutralized |
 | **JSI Function Hooking** | {render_unprotected(unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {"🔴 Intercepted" if protected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | Pointers validated via integrity | {"✅ PASS" if not protected_metrics.jsi_hook_success else "❌ FAIL"} |
-| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\text{ ms}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
+| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | Active Zeroization in $t < 10\\text{{ ms}}$ | {"✅ PASS" if not protected_metrics.memory_leak_detected else "❌ FAIL"} |
 | **Ledger Alteration ($H_n$)** | {render_unprotected(unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {"🔴 Hash Manipulated" if protected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | C++ mutation detection | {"✅ PASS" if not protected_metrics.crypto_bypass_success else "❌ FAIL"} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)

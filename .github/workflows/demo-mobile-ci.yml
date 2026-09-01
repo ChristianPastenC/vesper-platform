@@ -242,11 +242,10 @@ jobs:
             sleep 3
             
             echo "⚔️ Triggering DAST Python Script (Frida will install and spawn the apps)..."
-            cd examples/demo-mobile
-            python scripts/frida_dast_test.py --package mx.edu.sovereign.core --protected-apk ../../apks/protected/app-debug.apk --baseline-package mx.edu.sovereign.core --baseline-apk ../../apks/unprotected/app-unprotected.apk
+            cd examples/demo-mobile && python scripts/frida_dast_test.py --package mx.edu.sovereign.core --protected-apk ../../apks/protected/app-debug.apk --baseline-package mx.edu.sovereign.core --baseline-apk ../../apks/unprotected/app-unprotected.apk
             
             # Render the report natively on the GitHub Actions Summary page
-            if [ -f security-report.md ]; then cat security-report.md >> $GITHUB_STEP_SUMMARY; fi
+            if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
           
       - name: Upload Security Report Artifact
         if: always()
@@ -306,7 +305,7 @@ jobs:
           echo "⚔️ Triggering DAST Python Script for iOS..."
           cd examples/demo-mobile && python scripts/frida_dast_test.py --package mx.edu.sovereign.core --protected-apk ../../apks/protected-ios/$PROTECTED_APP --baseline-package mx.edu.sovereign.core --baseline-apk ../../apks/unprotected-ios/$UNPROTECTED_APP --platform ios
             
-          if [ -f security-report.md ]; then cat security-report.md >> $GITHUB_STEP_SUMMARY; fi
+          if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
 
       - name: Upload iOS Security Report Artifact
         if: always()

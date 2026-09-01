@@ -25,7 +25,7 @@ export const secureClient = SovereignClientCore.getInstance({
   networkResolver: networkResolver,
   networkAdapter: new FetchAdapter(),
   enableAutoDPoP: true,
-  mock: false,
+  mock: process.env.EXPO_PUBLIC_SOVEREIGN_MOCK === 'true',
   telemetry: telemetryApiKey
     ? {
         apiKey: telemetryApiKey,

@@ -295,19 +295,29 @@ def _android_node_center(node):
     x1, y1, x2, y2 = (int(v) for v in m.groups())
     return (x1 + x2) // 2, (y1 + y2) // 2
 
-def _android_find_by_text(nodes, texts):
+def _android_find_by_text(nodes, texts, partial=False):
+    """Exact match by default. `partial=True` does a substring match instead --
+    needed for elements whose accessibility label isn't just the visible text
+    (e.g. a tab button's content-desc can come out as "Account, tab, 4 of 4"
+    rather than plain "Account"), where an exact match would never hit."""
     for node in nodes:
         label = node.get('text') or node.get('content-desc') or ''
-        if label in texts:
+        if not label:
+            continue
+        if partial:
+            if any(t in label for t in texts):
+                return node
+        elif label in texts:
             return node
     return None
 
-def _android_tap_by_text(texts, timeout=15, poll_interval=1.0):
-    """Poll the accessibility tree for an element with exact text/content-desc
-    in `texts`, and tap its center once found. Returns True on success."""
+def _android_tap_by_text(texts, timeout=15, poll_interval=1.0, partial=False):
+    """Poll the accessibility tree for an element matching `texts`
+    (see _android_find_by_text for `partial`), and tap its center once
+    found. Returns True on success."""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        node = _android_find_by_text(_android_dump_nodes(), texts)
+        node = _android_find_by_text(_android_dump_nodes(), texts, partial=partial)
         if node is not None:
             center = _android_node_center(node)
             if center:
@@ -315,7 +325,17 @@ def _android_tap_by_text(texts, timeout=15, poll_interval=1.0):
                 return True
         time.sleep(poll_interval)
     print(f"[-] Could not find any of {texts} on screen within {timeout}s.")
+    _android_dump_visible_text()
     return False
+
+def _android_dump_visible_text():
+    """Debug aid: print every on-screen text/content-desc label so a failed
+    run's logs show what the screen actually looked like at that point."""
+    labels = sorted({
+        (node.get('text') or node.get('content-desc') or '').strip()
+        for node in _android_dump_nodes()
+    } - {''})
+    print(f"[i] Visible text/content-desc on screen ({len(labels)}): {labels}")
 
 def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
     """Find the (first) EditText on screen, tap it to focus, then type."""
@@ -331,35 +351,53 @@ def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
                     return True
         time.sleep(poll_interval)
     print(f"[-] Could not find an EditText on screen within {timeout}s.")
+    _android_dump_visible_text()
     return False
 
 def drive_android_dev_menu_enqueue(test_nonce):
     """Navigate Profile tab -> Developer Menu, force offline mode, type the
     sentinel into the DAST test field, and enqueue it into the real native
     ledger. Returns True if every step succeeded."""
-    steps = [
-        lambda: _android_tap_by_text(['Account']),
-        lambda: _android_tap_by_text(['Developer Menu']),
-    ]
-    for step in steps:
-        if not step():
-            return False
+    # The very first tap waits out the app's full cold start (Zygote fork,
+    # Hermes init, first JS render) on top of whatever the emulator itself
+    # is loaded with -- 15s was fine for a warm/idle CI runner but not
+    # reliably enough for that, which silently aborted the whole sequence
+    # here before it ever got a chance to try anything.
+    print("[*] Waiting for cold start and tapping the Account tab...")
+    if not _android_tap_by_text(['Account'], timeout=60, partial=True):
+        return False
+
+    print("[*] Opening Developer Menu...")
+    if not _android_tap_by_text(['Developer Menu'], timeout=15, partial=True):
+        return False
 
     # Only tap "Simulate Network Offline" if we're not already offline --
     # otherwise that same button now reads "Resume Network (Flush Queue)"
-    # and would flush/undo the very state we're trying to set up.
+    # and would flush/undo the very state we're trying to set up. This one
+    # stays an exact match against the dedicated status value Text node,
+    # which never carries the "Offline" substring by accident the way the
+    # "Simulate Network Offline" button's own label would under partial
+    # matching.
     nodes = _android_dump_nodes()
     if _android_find_by_text(nodes, ['Offline']) is None:
-        if not _android_tap_by_text(['Simulate Network Offline']):
+        print("[*] Simulating network offline...")
+        if not _android_tap_by_text(['Simulate Network Offline'], partial=True):
             return False
 
+    print(f"[*] Typing sentinel into the DAST label field: {test_nonce}")
     if not _android_type_into_edit_text(test_nonce):
         return False
 
-    return _android_tap_by_text(['Enqueue Test Payload'])
+    # The "Enqueue" button stays disabled until the typed text propagates
+    # from the native EditText back to React state (onChangeText); give that
+    # a beat before hunting for the now-enabled button.
+    time.sleep(0.5)
+
+    print("[*] Tapping Enqueue Test Payload...")
+    return _android_tap_by_text(['Enqueue Test Payload'], partial=True)
 
 def drive_android_dev_menu_dequeue():
-    return _android_tap_by_text(['Dequeue & Zeroize'])
+    return _android_tap_by_text(['Dequeue & Zeroize'], partial=True)
 
 # --- iOS UI automation --------------------------------------------------
 # Same navigation as Android, driven through the `tapAccessibilityId` /

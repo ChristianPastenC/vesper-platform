@@ -314,7 +314,10 @@ def _android_find_by_text(nodes, texts, partial=False):
 def _android_tap_by_text(texts, timeout=15, poll_interval=1.0, partial=False):
     """Poll the accessibility tree for an element matching `texts`
     (see _android_find_by_text for `partial`), and tap its center once
-    found. Returns True on success."""
+    found. Returns (True, None) on success, or (False, diagnostic_message)
+    -- the diagnostic is meant to end up in the report's error field, since
+    that's the only way to see what a CI run's screen actually looked like
+    without direct access to its job logs."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         node = _android_find_by_text(_android_dump_nodes(), texts, partial=partial)
@@ -322,23 +325,25 @@ def _android_tap_by_text(texts, timeout=15, poll_interval=1.0, partial=False):
             center = _android_node_center(node)
             if center:
                 subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
-                return True
+                return True, None
         time.sleep(poll_interval)
-    print(f"[-] Could not find any of {texts} on screen within {timeout}s.")
-    _android_dump_visible_text()
-    return False
+    visible = _android_visible_text()
+    message = f"Could not find any of {texts} on screen within {timeout}s. Visible text/content-desc: {visible}"
+    print(f"[-] {message}")
+    return False, message
 
-def _android_dump_visible_text():
-    """Debug aid: print every on-screen text/content-desc label so a failed
-    run's logs show what the screen actually looked like at that point."""
-    labels = sorted({
+def _android_visible_text():
+    """Every on-screen text/content-desc label, for embedding in a failure
+    message -- this is what lets a failed CI run's PR-posted report say what
+    the screen actually looked like, without needing the raw job logs."""
+    return sorted({
         (node.get('text') or node.get('content-desc') or '').strip()
         for node in _android_dump_nodes()
     } - {''})
-    print(f"[i] Visible text/content-desc on screen ({len(labels)}): {labels}")
 
 def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
-    """Find the (first) EditText on screen, tap it to focus, then type."""
+    """Find the (first) EditText on screen, tap it to focus, then type.
+    Returns (True, None) or (False, diagnostic_message)."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         for node in _android_dump_nodes():
@@ -348,28 +353,32 @@ def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
                     subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
                     time.sleep(0.3)
                     subprocess.run(f"adb shell input text {text}", shell=True)
-                    return True
+                    return True, None
         time.sleep(poll_interval)
-    print(f"[-] Could not find an EditText on screen within {timeout}s.")
-    _android_dump_visible_text()
-    return False
+    visible = _android_visible_text()
+    message = f"Could not find an EditText on screen within {timeout}s. Visible text/content-desc: {visible}"
+    print(f"[-] {message}")
+    return False, message
 
 def drive_android_dev_menu_enqueue(test_nonce):
     """Navigate Profile tab -> Developer Menu, force offline mode, type the
     sentinel into the DAST test field, and enqueue it into the real native
-    ledger. Returns True if every step succeeded."""
+    ledger. Returns (True, None) if every step succeeded, or
+    (False, diagnostic_message) on the first step that didn't."""
     # The very first tap waits out the app's full cold start (Zygote fork,
     # Hermes init, first JS render) on top of whatever the emulator itself
     # is loaded with -- 15s was fine for a warm/idle CI runner but not
     # reliably enough for that, which silently aborted the whole sequence
     # here before it ever got a chance to try anything.
     print("[*] Waiting for cold start and tapping the Account tab...")
-    if not _android_tap_by_text(['Account'], timeout=60, partial=True):
-        return False
+    ok, msg = _android_tap_by_text(['Account'], timeout=60, partial=True)
+    if not ok:
+        return False, f"[Account tab] {msg}"
 
     print("[*] Opening Developer Menu...")
-    if not _android_tap_by_text(['Developer Menu'], timeout=15, partial=True):
-        return False
+    ok, msg = _android_tap_by_text(['Developer Menu'], timeout=15, partial=True)
+    if not ok:
+        return False, f"[Developer Menu row] {msg}"
 
     # Only tap "Simulate Network Offline" if we're not already offline --
     # otherwise that same button now reads "Resume Network (Flush Queue)"
@@ -381,12 +390,14 @@ def drive_android_dev_menu_enqueue(test_nonce):
     nodes = _android_dump_nodes()
     if _android_find_by_text(nodes, ['Offline']) is None:
         print("[*] Simulating network offline...")
-        if not _android_tap_by_text(['Simulate Network Offline'], partial=True):
-            return False
+        ok, msg = _android_tap_by_text(['Simulate Network Offline'], partial=True)
+        if not ok:
+            return False, f"[Simulate Network Offline] {msg}"
 
     print(f"[*] Typing sentinel into the DAST label field: {test_nonce}")
-    if not _android_type_into_edit_text(test_nonce):
-        return False
+    ok, msg = _android_type_into_edit_text(test_nonce)
+    if not ok:
+        return False, f"[DAST label EditText] {msg}"
 
     # The "Enqueue" button stays disabled until the typed text propagates
     # from the native EditText back to React state (onChangeText); give that
@@ -394,10 +405,14 @@ def drive_android_dev_menu_enqueue(test_nonce):
     time.sleep(0.5)
 
     print("[*] Tapping Enqueue Test Payload...")
-    return _android_tap_by_text(['Enqueue Test Payload'], partial=True)
+    ok, msg = _android_tap_by_text(['Enqueue Test Payload'], partial=True)
+    if not ok:
+        return False, f"[Enqueue Test Payload button] {msg}"
+    return True, None
 
 def drive_android_dev_menu_dequeue():
-    return _android_tap_by_text(['Dequeue & Zeroize'], partial=True)
+    ok, msg = _android_tap_by_text(['Dequeue & Zeroize'], partial=True)
+    return ok, (f"[Dequeue & Zeroize button] {msg}" if not ok else None)
 
 # --- iOS UI automation --------------------------------------------------
 # Same navigation as Android, driven through the `tapAccessibilityId` /
@@ -418,18 +433,20 @@ def drive_ios_dev_menu_enqueue(script, test_nonce):
         time.sleep(0.5)
         script.exports_sync.tap_accessibility_id("dev-menu-enqueue-btn")
         time.sleep(1.5)
-        return True
+        return True, None
     except Exception as e:
-        print(f"[!] iOS dev-menu enqueue drive failed: {e}")
-        return False
+        message = f"iOS dev-menu enqueue drive failed: {e}"
+        print(f"[!] {message}")
+        return False, message
 
 def drive_ios_dev_menu_dequeue(script):
     try:
         script.exports_sync.tap_accessibility_id("dev-menu-dequeue-btn")
-        return True
+        return True, None
     except Exception as e:
-        print(f"[!] iOS dev-menu dequeue drive failed: {e}")
-        return False
+        message = f"iOS dev-menu dequeue drive failed: {e}"
+        print(f"[!] {message}")
+        return False, message
 
 def run_test_suite(package_name: str, is_protected: bool, platform: str = "android", device_udid: str = None) -> SecurityMetrics:
     metrics = SecurityMetrics()
@@ -452,18 +469,50 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             # `simctl launch --wait-for-debugger`, then attach; Frida resumes
             # it as part of a successful attach, so no explicit resume call
             # is needed (or possible) for this path.
+            #
+            # This exact combination (frida 16.5.1 + this launch/attach
+            # sequence) is proven to work -- it's what a passing CI run used
+            # a few hours before a later run hit "unexpected error while
+            # probing dyld of target process" with the identical code and
+            # version. That's the signature of CI-environment flakiness
+            # (simulator boot timing, injection races), not a deterministic
+            # incompatibility, so the fix is to retry the attach rather than
+            # to keep chasing a different frida version/mechanism.
             udid_str = device_udid if device_udid else "booted"
             device = frida.get_local_device()
-            print(f"[*] Launching {package_name} on simulator {udid_str} suspended (--wait-for-debugger)...")
-            launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
-            if launch_res.returncode != 0:
-                raise Exception(f"simctl launch failed: {launch_res.stderr.strip() or launch_res.stdout.strip()}")
-            pid_str = launch_res.stdout.split(":")[-1].strip()
-            if not pid_str.isdigit():
-                raise Exception(f"Could not parse PID from simctl launch output: {launch_res.stdout.strip()}")
-            pid = int(pid_str)
-            print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
-            session = device.attach(pid)
+            max_attempts = 3
+            last_error = None
+            session = None
+            for attempt in range(1, max_attempts + 1):
+                print(f"[*] Launching {package_name} on simulator {udid_str} suspended (--wait-for-debugger), attempt {attempt}/{max_attempts}...")
+                launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+                if launch_res.returncode != 0:
+                    last_error = Exception(f"simctl launch failed: {launch_res.stderr.strip() or launch_res.stdout.strip()}")
+                    print(f"[!] {last_error}")
+                    time.sleep(3)
+                    continue
+                pid_str = launch_res.stdout.split(":")[-1].strip()
+                if not pid_str.isdigit():
+                    last_error = Exception(f"Could not parse PID from simctl launch output: {launch_res.stdout.strip()}")
+                    print(f"[!] {last_error}")
+                    time.sleep(3)
+                    continue
+                pid = int(pid_str)
+                print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
+                try:
+                    session = device.attach(pid)
+                    last_error = None
+                    break
+                except Exception as e:
+                    last_error = e
+                    print(f"[!] Attach attempt {attempt}/{max_attempts} failed: {e}")
+                    # The app is stuck suspended waiting for a debugger that
+                    # never came; kill it before retrying so simctl launch
+                    # doesn't collide with the stale instance.
+                    subprocess.run(f"xcrun simctl terminate {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+                    time.sleep(3)
+            if session is None:
+                raise last_error
         else:
             # CI emulators can take a while to become visible to frida-server
             device = frida.get_usb_device(timeout=60)
@@ -714,12 +763,17 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         # sample instead of hoping a blind tap landed on something.
         print(f"[*] Driving a real ledger transaction via the Developer Menu ({platform})...")
         if platform == "ios":
-            enqueued = drive_ios_dev_menu_enqueue(script, test_nonce)
+            enqueued, enqueue_error = drive_ios_dev_menu_enqueue(script, test_nonce)
         else:
-            enqueued = drive_android_dev_menu_enqueue(test_nonce)
+            enqueued, enqueue_error = drive_android_dev_menu_enqueue(test_nonce)
 
         if not enqueued:
-            print("[-] Could not drive the app to enqueue a real transaction via the Developer Menu.")
+            print(f"[-] Could not drive the app to enqueue a real transaction via the Developer Menu: {enqueue_error}")
+            # Surface this in the report's error field -- otherwise the only
+            # symptom is "payload never confirmed resident" with no way to
+            # tell, from the PR-posted report alone, which navigation step
+            # actually failed or what the screen looked like at that point.
+            metrics.error = f"Developer Menu navigation failed: {enqueue_error}"
 
         if measured_latencies:
             metrics.latency_ms = sum(measured_latencies) / len(measured_latencies)
@@ -735,9 +789,13 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
 
         print("[*] Dequeuing (zeroizing) the transaction, then re-scanning memory...")
         if platform == "ios":
-            drive_ios_dev_menu_dequeue(script)
+            dequeued, dequeue_error = drive_ios_dev_menu_dequeue(script)
         else:
-            drive_android_dev_menu_dequeue()
+            dequeued, dequeue_error = drive_android_dev_menu_dequeue()
+        if not dequeued:
+            print(f"[-] Could not drive the app to dequeue via the Developer Menu: {dequeue_error}")
+            if not metrics.error:  # don't clobber a more informative enqueue-stage error
+                metrics.error = f"Developer Menu dequeue failed: {dequeue_error}"
         time.sleep(1)
         run_memory_scan()
 

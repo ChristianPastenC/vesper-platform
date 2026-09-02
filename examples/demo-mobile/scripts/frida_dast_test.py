@@ -11,6 +11,13 @@ from datetime import datetime
 class SecurityMetrics:
     def __init__(self):
         self.was_run = False
+        # `completed` is only True if the attack actually ran end-to-end
+        # (attach + spawn + scans all succeeded). This is what the report
+        # must gate on -- NOT `was_run`, which used to be set True even
+        # when Frida never attached, causing failed/skipped tests to be
+        # rendered as if the app had "blocked" the attack.
+        self.completed = False
+        self.error = None
         self.frida_attached = False
         self.jsi_hook_success = False
         self.memory_leak_detected = False
@@ -51,60 +58,97 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
     device_info = get_device_info(platform)
     runner = os.environ.get('RUNNER_OS', 'Local') + " " + os.environ.get('RUNNER_ARCH', '')
     
-    if not unprotected_metrics.was_run:
-        unprotected_dump_str = "[N/A - BASELINE NOT RUN]"
+    # NOTE: gating is done on `.completed`, not `.was_run`. `.was_run` only
+    # means "we attempted this test"; `.completed` means Frida actually
+    # attached, ran the attack script, and the results below are real
+    # evidence. Rendering on `.was_run` is what previously let a test that
+    # crashed/timed-out during attach print identical "🟢 Blocked / 0 Bytes"
+    # results to a test that genuinely observed the app blocking an attack.
+
+    if not unprotected_metrics.completed:
+        unprotected_dump_str = f"[NO DATA - TEST DID NOT COMPLETE]\nReason: {unprotected_metrics.error or 'baseline not run'}"
     elif unprotected_metrics.memory_leak_detected:
         unprotected_dump_str = f"{unprotected_metrics.memory_dump}"
     else:
         unprotected_dump_str = "[ZEROIZED / PATTERN NOT FOUND IN HEAP]"
 
-    if not protected_metrics.was_run:
-        protected_dump_str = "[N/A - TEST NOT RUN]"
+    if not protected_metrics.completed:
+        protected_dump_str = f"[NO DATA - TEST DID NOT COMPLETE]\nReason: {protected_metrics.error or 'unknown'}"
     elif protected_metrics.memory_leak_detected:
          protected_dump_str = f"{protected_metrics.memory_dump}"
     else:
          protected_dump_str = "[ZEROIZED / PATTERN NOT FOUND IN HEAP]"
 
-    def render_unprotected(condition, true_text, false_text):
-        if not unprotected_metrics.was_run:
-            return "⚪ N/A (Not Tested)"
+    def render_cell(metrics_obj, condition, true_text, false_text):
+        if not metrics_obj.completed:
+            return "⚠️ ERROR (Not Validated)"
         return true_text if condition else false_text
-    
+
+    def verdict(condition_pass, requires_baseline=False):
+        # condition_pass: True means the protected build resisted the attack
+        if not protected_metrics.completed:
+            return "⚠️ TEST ERROR"
+        if requires_baseline and not unprotected_metrics.completed:
+            return "⚠️ NO BASELINE"
+        return "✅ PASS" if condition_pass else "❌ FAIL"
+
     latency_delta = 0.0
-    if protected_metrics.was_run and unprotected_metrics.was_run:
+    latency_valid = protected_metrics.completed and unprotected_metrics.completed
+    if latency_valid:
         latency_delta = protected_metrics.latency_ms - unprotected_metrics.latency_ms
 
-    latency_str = f"+{latency_delta:.2f} ms" if latency_delta > 0 else f"{latency_delta:.2f} ms"
+    latency_str = (f"+{latency_delta:.2f} ms" if latency_delta > 0 else f"{latency_delta:.2f} ms") if latency_valid else "N/A (incomplete run)"
+
+    mem_extraction_pass = protected_metrics.completed and not protected_metrics.memory_leak_detected
+    mem_anomaly = protected_metrics.completed and protected_metrics.memory_leak_detected
+
+    all_completed = unprotected_metrics.completed and protected_metrics.completed
+    protected_held = protected_metrics.completed and not protected_metrics.jsi_hook_success and not protected_metrics.memory_leak_detected and not protected_metrics.crypto_bypass_success
+
+    if not all_completed:
+        overall_line = "❌ **Overall Status:** INCONCLUSIVE — one or more Frida runs did not complete, so this report is **not** valid security evidence. See errors below and re-run the pipeline."
+    elif protected_held:
+        overall_line = "✅ **Overall Status:** The Ghost Ledger library successfully maintained Zero-Trust runtime integrity under active instrumentation in this run."
+    else:
+        overall_line = "❌ **Overall Status:** At least one attack succeeded against the protected build. Investigate before treating this as a passing security gate."
+
+    errors_section = ""
+    if unprotected_metrics.error or protected_metrics.error:
+        errors_section = "\n### ⚠️ Execution Errors\n"
+        if unprotected_metrics.error:
+            errors_section += f"- **Unprotected run:** {unprotected_metrics.error}\n"
+        if protected_metrics.error:
+            errors_section += f"- **Protected run:** {protected_metrics.error}\n"
 
     report = f"""## 🛡️ Vesper Ghost Ledger: Dynamic Analysis Security Report
 **Generated:** {timestamp}
 
-This automated report compares the security posture of the application against active runtime instrumentation attacks (Frida). The goal is to prove that while attackers may attach to the process, `@vesper/ghost-ledger` prevents meaningful data extraction and function manipulation.
+This automated report compares the security posture of the application against active runtime instrumentation attacks (Frida). The goal is to prove that while attackers may attach to the process, `@vesper/ghost-ledger` prevents meaningful data extraction and function manipulation. Rows where a test did not actually complete are marked as errors, not as passing controls.
 
 ### 🔬 Reproducibility Metadata (Forensic Audit)
 | Target Architecture | Test Runner | Frida Core Version | Injection Mode | Commit SHA |
 | :--- | :--- | :--- | :--- | :--- |
 | {device_info} | {runner} | v{frida_version} | Spawn (-f) | `{commit_sha}` |
-
+{errors_section}
 ### 📊 Cross-Test Comparison
 
 | Attack Vector | Unprotected Build | Protected Build (Ghost Ledger) | Metric / Evidence | Verdict |
 | :--- | :--- | :--- | :--- | :--- |
-| **Process Attachment (ptrace)** | {render_unprotected(unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {"🟡 Allowed (Contained)" if protected_metrics.frida_attached else "🟢 Blocked"} | Process intercepted at runtime | ℹ️ Neutralized |
-| **JSI Function Hooking** | {render_unprotected(unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {"🔴 Intercepted" if protected_metrics.jsi_hook_success else "🟢 Blocked / Honeypot"} | Pointers validated via integrity | {"✅ PASS" if not protected_metrics.jsi_hook_success else "❌ FAIL"} |
-| **In-Memory Key Extraction** | {render_unprotected(unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {"🔴 Keys Leaked" if protected_metrics.memory_leak_detected else "🟢 0 Bytes Extracted"} | {unprotected_metrics.leakage_bytes} B vs {protected_metrics.leakage_bytes} B leaked | {"✅ PASS" if not protected_metrics.memory_leak_detected and unprotected_metrics.memory_leak_detected else ("⚠️ ANOMALY" if protected_metrics.memory_leak_detected else "✅ PASS")} |
-| **Ledger Alteration ($H_n$)** | {render_unprotected(unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {"🔴 Hash Manipulated" if protected_metrics.crypto_bypass_success else "🟢 Immutable Signature"} | C++ mutation detection | {"✅ PASS" if not protected_metrics.crypto_bypass_success else "❌ FAIL"} |
+| **Process Attachment (ptrace)** | {render_cell(unprotected_metrics, unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {render_cell(protected_metrics, protected_metrics.frida_attached, "🟡 Allowed (Contained)", "🟢 Blocked")} | Process intercepted at runtime | ℹ️ Neutralized |
+| **JSI Function Hooking** | {render_cell(unprotected_metrics, unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {render_cell(protected_metrics, protected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | Pointers validated via integrity | {verdict(protected_metrics.completed and not protected_metrics.jsi_hook_success)} |
+| **In-Memory Key Extraction** | {render_cell(unprotected_metrics, unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {render_cell(protected_metrics, protected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {protected_metrics.leakage_bytes if protected_metrics.completed else 'N/A'} B leaked (protected) | {"⚠️ ANOMALY" if mem_anomaly else verdict(mem_extraction_pass)} |
+| **Ledger Alteration ($H_n$)** | {render_cell(unprotected_metrics, unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {render_cell(protected_metrics, protected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | C++ mutation detection | {verdict(protected_metrics.completed and not protected_metrics.crypto_bypass_success)} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
 - **Data Leakage (Leakage Bytes):**
-  - *Unprotected:* `{f'{unprotected_metrics.leakage_bytes} bytes' if unprotected_metrics.was_run else 'N/A'}` ({'Leaked payload' if unprotected_metrics.leakage_bytes > 0 else 'No leak'})
-  - *Protected:* `{protected_metrics.leakage_bytes} bytes` ({'Leaked' if protected_metrics.leakage_bytes > 0 else 'Active Zeroization'})
+  - *Unprotected:* `{f'{unprotected_metrics.leakage_bytes} bytes' if unprotected_metrics.completed else 'N/A - run did not complete'}` ({'Leaked payload' if unprotected_metrics.completed and unprotected_metrics.leakage_bytes > 0 else ('No leak' if unprotected_metrics.completed else 'no data')})
+  - *Protected:* `{f'{protected_metrics.leakage_bytes} bytes' if protected_metrics.completed else 'N/A - run did not complete'}` ({'Leaked' if protected_metrics.completed and protected_metrics.leakage_bytes > 0 else ('Active Zeroization' if protected_metrics.completed else 'no data')})
 - **Performance Overhead (Latency):**
   - The C++ Nitro Modules layer adds `{latency_str}` per transaction.
 
 ### 🔍 Technical Summary & Forensic Evidence
-- **Unprotected Build:** The attacker {("successfully" if unprotected_metrics.jsi_hook_success else "failed to") if unprotected_metrics.was_run else "was not tested so they neither succeeded nor failed to"} intercept JSI bindings, extracting {("plaintext keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing") if unprotected_metrics.was_run else "nothing"}. Transaction hashes were {("successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated") if unprotected_metrics.was_run else "not manipulated"} before reaching the network layer.
-- **Protected Build:** The Ghost Ledger C++ runtime successfully obfuscated memory buffers. JSI function pointers were protected via integrity checks, causing malicious hooks to fail or return honeypot data rather than crashing the app.
+- **Unprotected Build:** {("The attacker " + ("successfully" if unprotected_metrics.jsi_hook_success else "failed to") + " intercept JSI bindings, extracting " + ("plaintext keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing") + ". Transaction hashes were " + ("successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated") + " before reaching the network layer.") if unprotected_metrics.completed else f"⚠️ This run did not complete ({unprotected_metrics.error or 'unknown reason'}), so no baseline evidence was collected."}
+- **Protected Build:** {("The Ghost Ledger C++ runtime " + ("successfully obfuscated memory buffers and JSI function pointers were protected via integrity checks, causing malicious hooks to fail or return honeypot data rather than crashing the app." if protected_held else "did NOT fully block the attack in this run -- at least one attack vector above succeeded.")) if protected_metrics.completed else f"⚠️ This run did not complete ({protected_metrics.error or 'unknown reason'}), so no security evidence was collected for the protected build."}
 
 <details>
 <summary>🔍 View Comparative Memory Trace (Hex Dump)</summary>
@@ -120,7 +164,7 @@ This automated report compares the security posture of the application against a
 ```
 </details>
 
-✅ **Overall Status:** The Ghost Ledger library successfully maintains Zero-Trust runtime integrity under active instrumentation.
+{overall_line}
 """
     with open("security-report.md", "w") as f:
         f.write(report)
@@ -148,7 +192,7 @@ def on_message(message, data, metrics):
 
 def run_test_suite(package_name: str, is_protected: bool, platform: str = "android") -> SecurityMetrics:
     metrics = SecurityMetrics()
-    metrics.was_run = True
+    metrics.was_run = True  # "an attempt was made" -- NOT proof the attack executed
     print(f"\n🚀 Starting Dynamic Analysis for {'PROTECTED' if is_protected else 'UNPROTECTED'} build: {package_name}")
     
     test_nonce = f"GHOST_SEC_{uuid.uuid4().hex[:8]}"
@@ -160,7 +204,9 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         if platform == "ios":
             device = frida.get_local_device()
         else:
-            device = frida.get_usb_device(timeout=5)
+            # CI emulators can take a while to become visible to frida-server
+            # after boot; 5s was too aggressive and caused spurious timeouts.
+            device = frida.get_usb_device(timeout=60)
         pid = device.spawn([package_name])
         session = device.attach(pid)
         metrics.frida_attached = True
@@ -337,14 +383,31 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             pass 
 
         print("[+] Tests completed and session detached.")
-        
+        metrics.completed = True
+
     except frida.TimedOutError:
-        print(f"[-] USB device not found within timeout. Skipping Frida tests (CI safe).")
+        metrics.error = "USB/emulator device not found within timeout"
+        print(f"[-] {metrics.error}. Frida never attached -- this run produces NO valid security evidence.")
     except frida.ProcessNotFoundError:
-        print(f"[-] Application {package_name} not found in emulator. Skipping Frida tests.")
+        metrics.error = f"Application {package_name} not found in emulator/simulator"
+        print(f"[-] {metrics.error}. Frida never attached -- this run produces NO valid security evidence.")
     except Exception as e:
-        print(f"[-] Unexpected error during Frida attachment: {e}. Continuing with partial metrics.")
-        
+        metrics.error = f"Unexpected error during Frida attachment: {e}"
+        print(f"[-] {metrics.error}. This run produces NO valid security evidence.")
+
+    if not metrics.completed:
+        # CRITICAL: do not let a failed/aborted run silently report as
+        # "blocked"/"0 bytes leaked". Reset every result field so the
+        # report generator is forced to render it as untested/error
+        # rather than as a passing security control.
+        metrics.frida_attached = False
+        metrics.jsi_hook_success = False
+        metrics.memory_leak_detected = False
+        metrics.crypto_bypass_success = False
+        metrics.leakage_bytes = 0
+        metrics.latency_ms = 0.0
+        metrics.memory_dump = ""
+
     return metrics
 
 if __name__ == "__main__":

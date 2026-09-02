@@ -191,32 +191,44 @@ def on_message(message, data, metrics):
         print(f"[*] Frida Error: {message['stack']}")
 
 def install_android_apk(apk_path, package_name):
+    """Returns an error message on failure, or None on success.
+
+    Must never sys.exit(): an install failure is a valid, reportable
+    outcome (bad build, flaky emulator, etc.) and the pipeline should
+    still emit security-report.md explaining what happened instead of
+    dying with no artifact at all.
+    """
     print(f"[!] Installing Android app: {apk_path}")
     result = subprocess.run(f"adb install -r {apk_path}", shell=True, capture_output=True, text=True)
     if result.returncode != 0 or "Failure" in result.stdout or "Failure" in result.stderr:
-        print(f"[-] ADB Install failed for {apk_path}:\n{result.stdout}\n{result.stderr}")
-        sys.exit(1)
-        
+        error = f"ADB install failed for {apk_path}: {result.stdout.strip()} {result.stderr.strip()}".strip()
+        print(f"[-] {error}")
+        return error
+
     check_pkg = subprocess.run(f"adb shell pm list packages | grep {package_name}", shell=True, capture_output=True, text=True)
     if package_name not in check_pkg.stdout:
         print(f"[-] Application {package_name} not found after installation! Dumping all installed packages:")
         subprocess.run("adb shell pm list packages", shell=True)
-        sys.exit(1)
+        return f"Application {package_name} not found after installing {apk_path}"
     print(f"[+] Successfully verified installation of {package_name} on Android.")
+    return None
 
 def install_ios_app(app_path, package_name, device_udid):
+    """Returns an error message on failure, or None on success. See install_android_apk for why this never sys.exit()s."""
     udid_str = device_udid if device_udid else "booted"
     print(f"[!] Installing iOS app: {app_path} on {udid_str}")
     result = subprocess.run(f"xcrun simctl install {udid_str} {app_path}", shell=True, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"[-] iOS Install failed for {app_path}:\n{result.stdout}\n{result.stderr}")
-        sys.exit(1)
-        
+        error = f"iOS install failed for {app_path}: {result.stdout.strip()} {result.stderr.strip()}".strip()
+        print(f"[-] {error}")
+        return error
+
     check_pkg = subprocess.run(f"xcrun simctl get_app_container {udid_str} {package_name}", shell=True, capture_output=True, text=True)
     if check_pkg.returncode != 0:
         print(f"[-] Application {package_name} not found after installation on iOS! simctl error:\n{check_pkg.stderr}")
-        sys.exit(1)
+        return f"Application {package_name} not found after installing {app_path}: {check_pkg.stderr.strip()}"
     print(f"[+] Successfully verified installation of {package_name} on iOS Simulator.")
+    return None
 
 def run_test_suite(package_name: str, is_protected: bool, platform: str = "android", device_udid: str = None) -> SecurityMetrics:
     metrics = SecurityMetrics()
@@ -253,12 +265,20 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             var TEST_NONCE = "{test_nonce}";
 
             function findTargetAddress(keywords) {{
+                // Only ever match real, exported *functions* (exp.type === 'function').
+                // A previous version also fell back to Module#enumerateSymbols(), which
+                // on stripped Android .so files can surface data objects, ifunc resolvers
+                // and other non-callable addresses -- Interceptor.attach()'ing one of
+                // those crashes the target process natively instead of raising a
+                // catchable JS exception, which is what was destabilizing the Android
+                // run. Exports are always safe attach targets, so we stick to those.
                 var target = null;
                 Process.enumerateModules().some(function(m) {{
                     if (m.name.indexOf("system") !== -1 || m.name.indexOf("libc") !== -1) return false;
-                    
+
                     try {{
                         m.enumerateExports().some(function(exp) {{
+                            if (exp.type !== 'function') return false;
                             for (var i=0; i<keywords.length; i++) {{
                                 if (exp.name.indexOf(keywords[i]) !== -1) {{
                                     target = exp.address; return true;
@@ -266,19 +286,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                             }}
                         }});
                     }} catch(e) {{}}
-                    
-                    if (target) return true;
-                    
-                    try {{
-                        m.enumerateSymbols().some(function(sym) {{
-                            for (var i=0; i<keywords.length; i++) {{
-                                if (sym.name.indexOf(keywords[i]) !== -1) {{
-                                    target = sym.address; return true;
-                                }}
-                            }}
-                        }});
-                    }} catch(e) {{}}
-                    
+
                     return target !== null;
                 }});
                 return target;
@@ -491,28 +499,55 @@ if __name__ == "__main__":
     parser.add_argument("--platform", type=str, default="android", help="Platform to test on: android or ios")
     parser.add_argument("--device-udid", type=str, default=None, help="Specific device UDID to use for iOS simulator")
     args = parser.parse_args()
-    
-    if args.baseline_package:
-        if args.baseline_apk:
-            if args.platform == "ios":
-                install_ios_app(args.baseline_apk, args.baseline_package, args.device_udid)
-            else:
-                install_android_apk(args.baseline_apk, args.baseline_package)
-            time.sleep(2)
-        
-        print(f"[!] Running baseline metrics for Unprotected Build: {args.baseline_package}")
-        unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False, platform=args.platform, device_udid=args.device_udid)
-    else:
-        print("[!] No baseline package provided. Skipping unprotected baseline (no hardcoded data).")
-        unprotected_metrics = SecurityMetrics()
-        
-    if args.protected_apk:
-        if args.platform == "ios":
-            install_ios_app(args.protected_apk, args.package, args.device_udid)
-        else:
-            install_android_apk(args.protected_apk, args.package)
-        time.sleep(2)
 
-    protected_metrics = run_test_suite(args.package, is_protected=True, platform=args.platform, device_udid=args.device_udid)
-    
+    def install(apk_path, package_name):
+        if args.platform == "ios":
+            return install_ios_app(apk_path, package_name, args.device_udid)
+        return install_android_apk(apk_path, package_name)
+
+    exit_code = 0
+
+    try:
+        if args.baseline_package:
+            install_error = install(args.baseline_apk, args.baseline_package) if args.baseline_apk else None
+            if install_error:
+                # Install failed: this is a reportable outcome, not a reason
+                # to kill the whole pipeline with no artifact. Record it and
+                # skip the run -- `run_test_suite` would only fail to spawn
+                # an app that was never actually installed.
+                print(f"[-] Skipping baseline run: {install_error}")
+                unprotected_metrics = SecurityMetrics()
+                unprotected_metrics.error = install_error
+                exit_code = 1
+            else:
+                time.sleep(2)
+                print(f"[!] Running baseline metrics for Unprotected Build: {args.baseline_package}")
+                unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False, platform=args.platform, device_udid=args.device_udid)
+        else:
+            print("[!] No baseline package provided. Skipping unprotected baseline (no hardcoded data).")
+            unprotected_metrics = SecurityMetrics()
+
+        protected_install_error = install(args.protected_apk, args.package) if args.protected_apk else None
+        if protected_install_error:
+            print(f"[-] Skipping protected run: {protected_install_error}")
+            protected_metrics = SecurityMetrics()
+            protected_metrics.error = protected_install_error
+            exit_code = 1
+        else:
+            if args.protected_apk:
+                time.sleep(2)
+            protected_metrics = run_test_suite(args.package, is_protected=True, platform=args.platform, device_udid=args.device_udid)
+            if not protected_metrics.completed:
+                exit_code = 1
+    except Exception as e:
+        # Last-resort safety net: no matter what breaks, the pipeline must
+        # still emit security-report.md so the workflow has evidence to
+        # upload/comment instead of failing with zero artifacts.
+        print(f"[-] Unexpected top-level failure: {e}")
+        unprotected_metrics = unprotected_metrics if 'unprotected_metrics' in locals() else SecurityMetrics()
+        protected_metrics = SecurityMetrics()
+        protected_metrics.error = f"Unexpected top-level failure: {e}"
+        exit_code = 1
+
     generate_markdown_report(unprotected_metrics, protected_metrics, args.platform)
+    sys.exit(exit_code)

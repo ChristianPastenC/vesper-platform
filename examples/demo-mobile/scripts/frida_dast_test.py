@@ -67,6 +67,10 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
     frida_version = getattr(frida, '__version__', 'Unknown')
     device_info = get_device_info(platform)
     runner = os.environ.get('RUNNER_OS', 'Local') + " " + os.environ.get('RUNNER_ARCH', '')
+    # Android spawns the app suspended via device.spawn(); iOS launches it
+    # normally and attaches afterwards (see run_test_suite) -- keep this
+    # label honest per platform instead of a hardcoded "Spawn (-f)".
+    injection_mode = "Spawn (-f)" if platform == "android" else "Launch + Attach"
     
     # NOTE: gating is done on `.completed`, not `.was_run`. `.was_run` only
     # means "we attempted this test"; `.completed` means Frida actually
@@ -151,7 +155,7 @@ This automated report compares the security posture of the application against a
 ### 🔬 Reproducibility Metadata (Forensic Audit)
 | Target Architecture | Test Runner | Frida Core Version | Injection Mode | Commit SHA |
 | :--- | :--- | :--- | :--- | :--- |
-| {device_info} | {runner} | v{frida_version} | Spawn (-f) | `{commit_sha}` |
+| {device_info} | {runner} | v{frida_version} | {injection_mode} | `{commit_sha}` |
 {errors_section}
 ### 📊 Cross-Test Comparison
 
@@ -464,41 +468,46 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             # Simulators aren't addressable via frida.get_device(udid) -- that
             # raised "device not found" in CI, because a booted simulator
             # isn't enumerated as its own USB/remote device the way a
-            # physical iPhone is. The supported pattern for simulators is to
-            # go through the local device and launch the app suspended via
-            # `simctl launch --wait-for-debugger`, then attach; Frida resumes
-            # it as part of a successful attach, so no explicit resume call
-            # is needed (or possible) for this path.
+            # physical iPhone is. frida.get_local_device() is the correct way
+            # to reach a simulator's own process space.
             #
-            # This exact combination (frida 16.5.1 + this launch/attach
-            # sequence) is proven to work -- it's what a passing CI run used
-            # a few hours before a later run hit "unexpected error while
-            # probing dyld of target process" with the identical code and
-            # version. That's the signature of CI-environment flakiness
-            # (simulator boot timing, injection races), not a deterministic
-            # incompatibility, so the fix is to retry the attach rather than
-            # to keep chasing a different frida version/mechanism.
+            # This used to launch suspended via `simctl launch
+            # --wait-for-debugger` and attach to that stopped process --
+            # historically fine, but it now reproducibly fails with
+            # "unexpected error while probing dyld of target process" on
+            # *every* attempt (both the unprotected and protected runs hit
+            # the identical error), which is the signature of a deterministic
+            # problem with that exact stop point rather than random flakiness
+            # a retry would paper over: --wait-for-debugger halts the process
+            # at the earliest possible instant, before dyld has necessarily
+            # finished setting up the structures Frida needs to inspect it.
+            #
+            # Attaching to an already-running process is Frida's most
+            # standard, best-supported attach mode on every platform, so
+            # trade catching the process at its absolute first instruction
+            # (which the unprotected keyword set wanted, to hook
+            # JNI_OnLoad/UIApplicationMain-equivalents) for reliably
+            # attaching at all: launch normally, give it a moment to finish
+            # initializing, then attach. This test's more important read --
+            # driving a real transaction through the Developer Menu after the
+            # app is up -- doesn't depend on catching that startup instant.
             udid_str = device_udid if device_udid else "booted"
             device = frida.get_local_device()
+            launch_res = subprocess.run(f"xcrun simctl launch {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+            if launch_res.returncode != 0:
+                raise Exception(f"simctl launch failed: {launch_res.stderr.strip() or launch_res.stdout.strip()}")
+            pid_str = launch_res.stdout.split(":")[-1].strip()
+            if not pid_str.isdigit():
+                raise Exception(f"Could not parse PID from simctl launch output: {launch_res.stdout.strip()}")
+            pid = int(pid_str)
+            print(f"[+] Application launched with PID: {pid}. Waiting for it to finish starting up before attaching...")
+            time.sleep(3)
+
             max_attempts = 3
             last_error = None
             session = None
             for attempt in range(1, max_attempts + 1):
-                print(f"[*] Launching {package_name} on simulator {udid_str} suspended (--wait-for-debugger), attempt {attempt}/{max_attempts}...")
-                launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
-                if launch_res.returncode != 0:
-                    last_error = Exception(f"simctl launch failed: {launch_res.stderr.strip() or launch_res.stdout.strip()}")
-                    print(f"[!] {last_error}")
-                    time.sleep(3)
-                    continue
-                pid_str = launch_res.stdout.split(":")[-1].strip()
-                if not pid_str.isdigit():
-                    last_error = Exception(f"Could not parse PID from simctl launch output: {launch_res.stdout.strip()}")
-                    print(f"[!] {last_error}")
-                    time.sleep(3)
-                    continue
-                pid = int(pid_str)
-                print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
+                print(f"[*] Attaching Frida to PID {pid}, attempt {attempt}/{max_attempts}...")
                 try:
                     session = device.attach(pid)
                     last_error = None
@@ -506,18 +515,42 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                 except Exception as e:
                     last_error = e
                     print(f"[!] Attach attempt {attempt}/{max_attempts} failed: {e}")
-                    # The app is stuck suspended waiting for a debugger that
-                    # never came; kill it before retrying so simctl launch
-                    # doesn't collide with the stale instance.
-                    subprocess.run(f"xcrun simctl terminate {udid_str} {package_name}", shell=True, capture_output=True, text=True)
                     time.sleep(3)
             if session is None:
+                subprocess.run(f"xcrun simctl terminate {udid_str} {package_name}", shell=True, capture_output=True, text=True)
                 raise last_error
         else:
             # CI emulators can take a while to become visible to frida-server
             device = frida.get_usb_device(timeout=60)
-            pid = device.spawn([package_name])
-            session = device.attach(pid)
+            max_attempts = 3
+            last_error = None
+            session = None
+            for attempt in range(1, max_attempts + 1):
+                print(f"[*] Spawning {package_name} on the Android emulator, attempt {attempt}/{max_attempts}...")
+                pid = None
+                try:
+                    pid = device.spawn([package_name])
+                    session = device.attach(pid)
+                    last_error = None
+                    break
+                except Exception as e:
+                    last_error = e
+                    print(f"[!] Spawn/attach attempt {attempt}/{max_attempts} failed: {e}")
+                    if pid is not None:
+                        # spawn() succeeded but attach() didn't -- the process
+                        # is left suspended and Frida's device-side spawn gate
+                        # stays held for this package (a later attempt/run
+                        # reusing the same package name fails outright with
+                        # "spawn already in progress" otherwise, since both
+                        # the baseline and protected runs spawn the identical
+                        # package here).
+                        try:
+                            device.kill(pid)
+                        except Exception:
+                            pass
+                    time.sleep(3)
+            if session is None:
+                raise last_error
             needs_resume = True
 
         metrics.frida_attached = True

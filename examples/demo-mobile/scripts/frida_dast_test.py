@@ -230,24 +230,15 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
 
     try:
         if platform == "ios":
-            device = frida.get_local_device()
             udid_str = device_udid if device_udid else "booted"
-            print(f"[*] Launching iOS Simulator app with --wait-for-debugger to intercept early startup...")
-            launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
-            if launch_res.returncode != 0:
-                raise Exception(f"simctl launch failed: {launch_res.stderr}")
-            
-            # simctl launch output: "mx.edu.sovereign.core: 12345"
-            pid_str = launch_res.stdout.split(":")[-1].strip()
-            if not pid_str.isdigit():
-                raise Exception(f"Could not parse PID from simctl launch: {launch_res.stdout}")
-            
-            pid = int(pid_str)
-            print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
+            print(f"[*] Locating iOS Simulator device {udid_str}...")
+            # Use get_device() instead of local_device so it resolves the Simulator
+            device = frida.get_device(udid_str, timeout=10)
+            print(f"[*] Spawning app natively via Frida on Simulator...")
+            pid = device.spawn([package_name])
             session = device.attach(pid)
         else:
             # CI emulators can take a while to become visible to frida-server
-            # after boot; 5s was too aggressive and caused spurious timeouts.
             device = frida.get_usb_device(timeout=60)
             pid = device.spawn([package_name])
             session = device.attach(pid)
@@ -261,29 +252,59 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             var SENTINEL_BYTES = {sentinel_bytes};
             var TEST_NONCE = "{test_nonce}";
 
-            rpc.exports = {{
-                runTests: function(isProtected) {{
-                    var jsiHookAttached = false;
+            function findTargetAddress(keywords) {{
+                var target = null;
+                Process.enumerateModules().some(function(m) {{
+                    if (m.name.indexOf("system") !== -1 || m.name.indexOf("libc") !== -1) return false;
+                    
                     try {{
-                        var exports = Module.enumerateExports("libSovereignSecureClient.so");
-                        for (var i = 0; i < exports.length; i++) {{
-                            if (exports[i].name.indexOf("executeTransaction") !== -1 || exports[i].name.indexOf("enqueue") !== -1) {{
-                                Interceptor.attach(exports[i].address, {{
-                                    onEnter: function(args) {{
-                                        send({{ event: 'jsi_hooked', success: true }});
-                                    }}
-                                }});
-                                jsiHookAttached = true;
-                                break;
+                        m.enumerateExports().some(function(exp) {{
+                            for (var i=0; i<keywords.length; i++) {{
+                                if (exp.name.indexOf(keywords[i]) !== -1) {{
+                                    target = exp.address; return true;
+                                }}
                             }}
-                        }}
+                        }});
                     }} catch(e) {{}}
                     
-                    if (!jsiHookAttached) {{
-                        send({{ event: 'jsi_hooked', success: false }});
+                    if (target) return true;
+                    
+                    try {{
+                        m.enumerateSymbols().some(function(sym) {{
+                            for (var i=0; i<keywords.length; i++) {{
+                                if (sym.name.indexOf(keywords[i]) !== -1) {{
+                                    target = sym.address; return true;
+                                }}
+                            }}
+                        }});
+                    }} catch(e) {{}}
+                    
+                    return target !== null;
+                }});
+                return target;
+            }}
+
+            rpc.exports = {{
+                runTests: function(isProtected) {{
+                    var keywords = isProtected ? ["executeTransaction", "enqueue", "verifyIntegrity"] : ["hermes", "JNI_OnLoad", "UIApplicationMain"];
+                    var addr = findTargetAddress(keywords);
+                    if (addr) {{
+                        try {{
+                            Interceptor.attach(addr, {{
+                                onEnter: function(args) {{
+                                    this.startTime = Date.now();
+                                    send({{ event: 'jsi_hooked', success: true }});
+                                }},
+                                onLeave: function(retval) {{
+                                    var latency = Date.now() - this.startTime;
+                                    send({{ event: 'latency', ms: latency }});
+                                }}
+                            }});
+                        }} catch(e) {{
+                            send({{ event: 'jsi_hooked', success: false, reason: "attach_failed" }});
+                        }}
                     }} else {{
-                        // Send true immediately if attached, the onEnter will send it again when triggered
-                        send({{ event: 'jsi_hooked', success: true }});
+                        send({{ event: 'jsi_hooked', success: false, reason: "stripped" }});
                     }}
                 }},
                 
@@ -329,30 +350,24 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                     send({{ event: 'memory_scan', leaked: leaked, leakage_bytes: leakBytes, dump: actual_dump }});
                 }},
 
-                testBypass: function() {{
-                    var bypassSuccess = false;
-                    try {{
-                        var exports = Module.enumerateExports("libSovereignSecureClient.so");
-                        for (var i = 0; i < exports.length; i++) {{
-                            if (exports[i].name.indexOf("verifyIntegrity") !== -1 || exports[i].name.indexOf("sha256") !== -1) {{
-                                Interceptor.attach(exports[i].address, {{
-                                    onLeave: function(retval) {{
-                                        try {{
-                                            retval.replace(ptr(1));
-                                            send({{ event: 'crypto_bypass', success: true }});
-                                        }} catch(e) {{}}
-                                    }}
-                                }});
-                                bypassSuccess = true;
-                                break;
-                            }}
+                testBypass: function(isProtected) {{
+                    var keywords = isProtected ? ["verifyIntegrity", "sha256", "crypto"] : ["hermes", "JNI_OnLoad", "UIApplicationMain"];
+                    var addr = findTargetAddress(keywords);
+                    if (addr) {{
+                        try {{
+                            Interceptor.attach(addr, {{
+                                onLeave: function(retval) {{
+                                    try {{
+                                        retval.replace(ptr(1));
+                                        send({{ event: 'crypto_bypass', success: true }});
+                                    }} catch(e) {{}}
+                                }}
+                            }});
+                        }} catch(e) {{
+                            send({{ event: 'crypto_bypass', success: false, reason: "attach_failed" }});
                         }}
-                    }} catch(e) {{}}
-                    
-                    if (!bypassSuccess) {{
-                        send({{ event: 'crypto_bypass', success: false }});
                     }} else {{
-                        send({{ event: 'crypto_bypass', success: true }});
+                        send({{ event: 'crypto_bypass', success: false, reason: "stripped" }});
                     }}
                 }},
 
@@ -376,21 +391,30 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         }})();
         """
         
+        # We will collect latencies emitted by the hook
+        measured_latencies = []
+
+        def local_on_message(message, data):
+            if message['type'] == 'send':
+                payload = message['payload']
+                if payload.get('event') == 'latency':
+                    measured_latencies.append(payload.get('ms', 0))
+            on_message(message, data, metrics)
+
         script = session.create_script(attacker_script)
-        script.on('message', lambda msg, data: on_message(msg, data, metrics))
+        script.on('message', local_on_message)
         script.load()
         
         device.resume(pid)
         
         try:
             script.exports_sync.run_tests(is_protected)
-            script.exports_sync.test_bypass()
+            script.exports_sync.test_bypass(is_protected)
         except Exception as e:
             print(f"[!] RPC call failed: {e}. Continuing with metrics.")
         
         print("[*] Executing transaction batch to measure latency and trigger data flows...")
         batch_size = 3
-        start_time = time.time()
         for _ in range(batch_size):
             if platform == "ios":
                 try:
@@ -401,14 +425,19 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
             else:
                 subprocess.run(f"adb shell input text {test_nonce}", shell=True)
                 time.sleep(0.5)
+                # Broader coverage taps and keyboard events to ensure checkout triggers
                 subprocess.run("adb shell input tap 300 800", shell=True)
-                time.sleep(0.5)
                 subprocess.run("adb shell input tap 500 1200", shell=True)
+                subprocess.run("adb shell input tap 700 1600", shell=True)
+                subprocess.run("adb shell input keyevent 61", shell=True) # TAB
+                subprocess.run("adb shell input keyevent 66", shell=True) # ENTER
                 time.sleep(0.5)
-        end_time = time.time()
         
-        metrics.latency_ms = ((end_time - start_time) * 1000.0) / batch_size
-        print(f"[+] Average transaction execution latency: {metrics.latency_ms:.2f} ms")
+        if measured_latencies:
+            metrics.latency_ms = sum(measured_latencies) / len(measured_latencies)
+            print(f"[+] Empirical C++ hook latency: {metrics.latency_ms:.2f} ms")
+        else:
+            print("[-] No latency data received. Transaction may not have been triggered.")
         
         time.sleep(2)
 

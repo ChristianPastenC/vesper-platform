@@ -32,12 +32,15 @@ describe('DevMenuScreen', () => {
     isSimulatedOffline: false,
     isBusy: false,
     lastFlushResult: null,
+    lastEnqueuedId: null,
     refreshStatus: jest.fn(),
     simulateOffline: jest.fn(),
     simulateOnline: jest.fn(),
     stopOperation: jest.fn(),
     flushTelemetryNow: jest.fn(),
     simulateE2EEvent: jest.fn(),
+    enqueueTestPayload: jest.fn(),
+    dequeueTestPayload: jest.fn(),
   };
 
   beforeEach(() => {
@@ -125,5 +128,29 @@ describe('DevMenuScreen', () => {
     const { getByTestId } = render(<DevMenuScreen />);
     expect(getByTestId('dev-menu-toggle-network-btn').props.accessibilityState.disabled).toBe(true);
     expect(getByTestId('dev-menu-simulate-event-btn').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('enqueues the typed label when the enqueue button is pressed', () => {
+    const { getByTestId } = render(<DevMenuScreen />);
+    fireEvent.changeText(getByTestId('dev-menu-custom-label-input'), 'GHOST_SEC_abc123');
+    fireEvent.press(getByTestId('dev-menu-enqueue-btn'));
+    expect(baseHookValue.enqueueTestPayload).toHaveBeenCalledWith('GHOST_SEC_abc123');
+  });
+
+  it('disables the enqueue button until a label is typed', () => {
+    const { getByTestId } = render(<DevMenuScreen />);
+    expect(getByTestId('dev-menu-enqueue-btn').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('disables the dequeue button until something has been enqueued', () => {
+    const { getByTestId } = render(<DevMenuScreen />);
+    expect(getByTestId('dev-menu-dequeue-btn').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('triggers dequeueTestPayload when the dequeue button is pressed', () => {
+    (useDevMenu as jest.Mock).mockReturnValue({ ...baseHookValue, lastEnqueuedId: 'dast-123' });
+    const { getByTestId } = render(<DevMenuScreen />);
+    fireEvent.press(getByTestId('dev-menu-dequeue-btn'));
+    expect(baseHookValue.dequeueTestPayload).toHaveBeenCalledTimes(1);
   });
 });

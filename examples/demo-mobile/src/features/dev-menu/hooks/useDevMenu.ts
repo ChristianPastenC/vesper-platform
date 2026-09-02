@@ -40,6 +40,7 @@ export const useDevMenu = () => {
   const [isSimulatedOffline, setIsSimulatedOffline] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [lastFlushResult, setLastFlushResult] = useState<FlushResult | null>(null);
+  const [lastEnqueuedId, setLastEnqueuedId] = useState<string | null>(null);
 
   const refreshStatus = useCallback(() => {
     const queue = SovereignMemoryQueue.getInstance();
@@ -128,6 +129,50 @@ export const useDevMenu = () => {
     return result;
   }, []);
 
+  // These two are split (rather than the combined enqueue+dequeue that
+  // simulateE2EEvent does) specifically so the Frida DAST pipeline can scan
+  // process memory *between* the two steps: once right after enqueue, to
+  // confirm the payload really is resident in the native ledger, and once
+  // after dequeue, to confirm zeroize() actually scrubbed it. Without a way
+  // to pause between them, a memory scan can only ever observe the
+  // already-zeroized end state, which made the "In-Memory Key Extraction"
+  // row meaningless (it always found nothing, on every build).
+  const enqueueTestPayload = useCallback(
+    async (label: string): Promise<string> => {
+      setIsBusy(true);
+      try {
+        const queue = SovereignMemoryQueue.getInstance();
+        queue.toggleNetworkSim(false);
+        setIsSimulatedOffline(true);
+
+        const requestId = `dast-${Date.now()}`;
+        const request = buildSimulatedRequest(label);
+        const binaryRequest = serializeAdapterRequest(request);
+
+        await queue.enqueue(nativeCryptoProvider, requestId, binaryRequest, 60_000, () => {});
+        setLastEnqueuedId(requestId);
+        refreshStatus();
+        return requestId;
+      } finally {
+        setIsBusy(false);
+      }
+    },
+    [refreshStatus],
+  );
+
+  const dequeueTestPayload = useCallback(async (): Promise<void> => {
+    if (!lastEnqueuedId) return;
+    setIsBusy(true);
+    try {
+      const queue = SovereignMemoryQueue.getInstance();
+      await queue.dequeue(nativeCryptoProvider, lastEnqueuedId);
+      setLastEnqueuedId(null);
+      refreshStatus();
+    } finally {
+      setIsBusy(false);
+    }
+  }, [lastEnqueuedId, refreshStatus]);
+
   const simulateE2EEvent = useCallback(async (): Promise<FlushResult> => {
     setIsBusy(true);
     try {
@@ -157,11 +202,14 @@ export const useDevMenu = () => {
     isSimulatedOffline,
     isBusy,
     lastFlushResult,
+    lastEnqueuedId,
     refreshStatus,
     simulateOffline,
     simulateOnline,
     stopOperation,
     flushTelemetryNow,
     simulateE2EEvent,
+    enqueueTestPayload,
+    dequeueTestPayload,
   };
 };

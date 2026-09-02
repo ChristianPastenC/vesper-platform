@@ -6,6 +6,8 @@ import argparse
 import os
 import subprocess
 import uuid
+import re
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 class SecurityMetrics:
@@ -25,6 +27,14 @@ class SecurityMetrics:
         self.leakage_bytes = 0
         self.latency_ms = 0.0
         self.memory_dump = ""
+        # Sanity check for the memory-scan methodology itself: was the
+        # sentinel payload actually observed resident in memory right after
+        # being enqueued into the ledger, before zeroize() ran? If this is
+        # False, `memory_leak_detected` below being False too doesn't mean
+        # anything -- it means the attack never got real data to find in the
+        # first place (e.g. the UI automation failed to drive a transaction),
+        # not that zeroization worked.
+        self.payload_confirmed_resident = False
 
 def get_device_info(platform):
     if platform == "android":
@@ -99,11 +109,24 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
 
     latency_str = (f"+{latency_delta:.2f} ms" if latency_delta > 0 else f"{latency_delta:.2f} ms") if latency_valid else "N/A (incomplete run)"
 
-    mem_extraction_pass = protected_metrics.completed and not protected_metrics.memory_leak_detected
-    mem_anomaly = protected_metrics.completed and protected_metrics.memory_leak_detected
+    # A "0 bytes leaked" result only means anything if the sentinel was
+    # actually confirmed resident in memory before zeroize() ran (see
+    # `payload_confirmed_resident` -- set from the memory scan taken right
+    # after the Developer Menu enqueue, before the dequeue/zeroize scan that
+    # produces the final `memory_leak_detected`). Without that positive
+    # control, "not found" just as easily means the UI automation failed to
+    # drive a real transaction as it does that zeroization worked.
+    mem_scan_meaningful = protected_metrics.completed and protected_metrics.payload_confirmed_resident
+    mem_extraction_pass = mem_scan_meaningful and not protected_metrics.memory_leak_detected
+    mem_anomaly = mem_scan_meaningful and protected_metrics.memory_leak_detected
 
     all_completed = unprotected_metrics.completed and protected_metrics.completed
-    protected_held = protected_metrics.completed and not protected_metrics.jsi_hook_success and not protected_metrics.memory_leak_detected and not protected_metrics.crypto_bypass_success
+    protected_held = (
+        protected_metrics.completed
+        and not protected_metrics.jsi_hook_success
+        and mem_extraction_pass  # requires payload_confirmed_resident -- see above
+        and not protected_metrics.crypto_bypass_success
+    )
 
     if not all_completed:
         overall_line = "❌ **Overall Status:** INCONCLUSIVE — one or more Frida runs did not complete, so this report is **not** valid security evidence. See errors below and re-run the pipeline."
@@ -136,7 +159,7 @@ This automated report compares the security posture of the application against a
 | :--- | :--- | :--- | :--- | :--- |
 | **Process Attachment (ptrace)** | {render_cell(unprotected_metrics, unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {render_cell(protected_metrics, protected_metrics.frida_attached, "🟡 Allowed (Contained)", "🟢 Blocked")} | Process intercepted at runtime | ℹ️ Neutralized |
 | **JSI Function Hooking** | {render_cell(unprotected_metrics, unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {render_cell(protected_metrics, protected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | Pointers validated via integrity | {verdict(protected_metrics.completed and not protected_metrics.jsi_hook_success)} |
-| **In-Memory Key Extraction** | {render_cell(unprotected_metrics, unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {render_cell(protected_metrics, protected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {protected_metrics.leakage_bytes if protected_metrics.completed else 'N/A'} B leaked (protected) | {"⚠️ ANOMALY" if mem_anomaly else verdict(mem_extraction_pass)} |
+| **In-Memory Key Extraction** | {render_cell(unprotected_metrics, unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {render_cell(protected_metrics, protected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {protected_metrics.leakage_bytes if protected_metrics.completed else 'N/A'} B leaked (protected) | {"⚠️ ANOMALY" if mem_anomaly else ("⚠️ NOT VALIDATED (payload never confirmed resident)" if protected_metrics.completed and not protected_metrics.payload_confirmed_resident else verdict(mem_extraction_pass))} |
 | **Ledger Alteration ($H_n$)** | {render_cell(unprotected_metrics, unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {render_cell(protected_metrics, protected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | C++ mutation detection | {verdict(protected_metrics.completed and not protected_metrics.crypto_bypass_success)} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
@@ -199,7 +222,19 @@ def install_android_apk(apk_path, package_name):
     dying with no artifact at all.
     """
     print(f"[!] Installing Android app: {apk_path}")
-    result = subprocess.run(f"adb install -r {apk_path}", shell=True, capture_output=True, text=True)
+    # Fresh CI emulators can report sys.boot_completed before the package
+    # manager service is actually ready to accept installs, which surfaces as
+    # transient errors like "Can't find service: package" or a broken pipe
+    # mid-stream. Retry a few times with a short backoff before giving up.
+    max_attempts = 4
+    result = None
+    for attempt in range(1, max_attempts + 1):
+        result = subprocess.run(f"adb install -r {apk_path}", shell=True, capture_output=True, text=True)
+        if result.returncode == 0 and "Failure" not in result.stdout and "Failure" not in result.stderr:
+            break
+        print(f"[!] adb install attempt {attempt}/{max_attempts} failed: {result.stdout.strip()} {result.stderr.strip()}")
+        if attempt < max_attempts:
+            time.sleep(5)
     if result.returncode != 0 or "Failure" in result.stdout or "Failure" in result.stderr:
         error = f"ADB install failed for {apk_path}: {result.stdout.strip()} {result.stderr.strip()}".strip()
         print(f"[-] {error}")
@@ -230,6 +265,134 @@ def install_ios_app(app_path, package_name, device_udid):
     print(f"[+] Successfully verified installation of {package_name} on iOS Simulator.")
     return None
 
+# --- Android UI automation ---------------------------------------------------
+# Earlier versions of this script drove the app with blind, hardcoded
+# coordinates ("adb shell input tap 300 800", ...), assuming a checkout
+# screen it never actually verified it had reached. That's why the ledger was
+# never populated and every attack vector always reported the same trivial
+# "nothing found" result on every build. Real navigation -- via the app's own
+# Developer Menu (testID'd, __DEV__-only, see src/features/dev-menu) -- reads
+# the on-screen text via `uiautomator dump` and taps the exact element found,
+# so it actually lands on the right screen and drives a real ledger
+# enqueue/dequeue instead of tapping blindly at fixed pixels.
+
+def _android_dump_nodes():
+    subprocess.run("adb shell uiautomator dump /sdcard/window_dump.xml", shell=True, capture_output=True, text=True)
+    result = subprocess.run("adb shell cat /sdcard/window_dump.xml", shell=True, capture_output=True, text=True)
+    if not result.stdout.strip():
+        return []
+    try:
+        root = ET.fromstring(result.stdout)
+    except ET.ParseError:
+        return []
+    return list(root.iter('node'))
+
+def _android_node_center(node):
+    bounds = node.get('bounds', '')
+    m = re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]', bounds)
+    if not m:
+        return None
+    x1, y1, x2, y2 = (int(v) for v in m.groups())
+    return (x1 + x2) // 2, (y1 + y2) // 2
+
+def _android_find_by_text(nodes, texts):
+    for node in nodes:
+        label = node.get('text') or node.get('content-desc') or ''
+        if label in texts:
+            return node
+    return None
+
+def _android_tap_by_text(texts, timeout=15, poll_interval=1.0):
+    """Poll the accessibility tree for an element with exact text/content-desc
+    in `texts`, and tap its center once found. Returns True on success."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        node = _android_find_by_text(_android_dump_nodes(), texts)
+        if node is not None:
+            center = _android_node_center(node)
+            if center:
+                subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
+                return True
+        time.sleep(poll_interval)
+    print(f"[-] Could not find any of {texts} on screen within {timeout}s.")
+    return False
+
+def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
+    """Find the (first) EditText on screen, tap it to focus, then type."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        for node in _android_dump_nodes():
+            if node.get('class') == 'android.widget.EditText':
+                center = _android_node_center(node)
+                if center:
+                    subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
+                    time.sleep(0.3)
+                    subprocess.run(f"adb shell input text {text}", shell=True)
+                    return True
+        time.sleep(poll_interval)
+    print(f"[-] Could not find an EditText on screen within {timeout}s.")
+    return False
+
+def drive_android_dev_menu_enqueue(test_nonce):
+    """Navigate Profile tab -> Developer Menu, force offline mode, type the
+    sentinel into the DAST test field, and enqueue it into the real native
+    ledger. Returns True if every step succeeded."""
+    steps = [
+        lambda: _android_tap_by_text(['Account']),
+        lambda: _android_tap_by_text(['Developer Menu']),
+    ]
+    for step in steps:
+        if not step():
+            return False
+
+    # Only tap "Simulate Network Offline" if we're not already offline --
+    # otherwise that same button now reads "Resume Network (Flush Queue)"
+    # and would flush/undo the very state we're trying to set up.
+    nodes = _android_dump_nodes()
+    if _android_find_by_text(nodes, ['Offline']) is None:
+        if not _android_tap_by_text(['Simulate Network Offline']):
+            return False
+
+    if not _android_type_into_edit_text(test_nonce):
+        return False
+
+    return _android_tap_by_text(['Enqueue Test Payload'])
+
+def drive_android_dev_menu_dequeue():
+    return _android_tap_by_text(['Dequeue & Zeroize'])
+
+# --- iOS UI automation --------------------------------------------------
+# Same navigation as Android, driven through the `tapAccessibilityId` /
+# `setTextByAccessibilityId` RPC exports (see the attacker_script JS above)
+# instead of uiautomator. "Account" has no testID of its own -- it's the
+# bottom tab's visible title -- so it's matched via accessibilityLabel,
+# which the JS side falls back to when accessibilityIdentifier doesn't match.
+
+def drive_ios_dev_menu_enqueue(script, test_nonce):
+    try:
+        script.exports_sync.tap_accessibility_id("Account")
+        time.sleep(1.5)
+        script.exports_sync.tap_accessibility_id("profile-dev-menu-row")
+        time.sleep(1.5)
+        script.exports_sync.tap_accessibility_id("dev-menu-toggle-network-btn")
+        time.sleep(1)
+        script.exports_sync.set_text_by_accessibility_id("dev-menu-custom-label-input", test_nonce)
+        time.sleep(0.5)
+        script.exports_sync.tap_accessibility_id("dev-menu-enqueue-btn")
+        time.sleep(1.5)
+        return True
+    except Exception as e:
+        print(f"[!] iOS dev-menu enqueue drive failed: {e}")
+        return False
+
+def drive_ios_dev_menu_dequeue(script):
+    try:
+        script.exports_sync.tap_accessibility_id("dev-menu-dequeue-btn")
+        return True
+    except Exception as e:
+        print(f"[!] iOS dev-menu dequeue drive failed: {e}")
+        return False
+
 def run_test_suite(package_name: str, is_protected: bool, platform: str = "android", device_udid: str = None) -> SecurityMetrics:
     metrics = SecurityMetrics()
     metrics.was_run = True  # "an attempt was made" -- NOT proof the attack executed
@@ -240,21 +403,36 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
     sentinel_bytes = [ord(c) for c in test_nonce]
     print(f"[*] Generated deterministic test payload: {test_nonce}")
 
+    needs_resume = False
     try:
         if platform == "ios":
+            # Simulators aren't addressable via frida.get_device(udid) -- that
+            # raised "device not found" in CI, because a booted simulator
+            # isn't enumerated as its own USB/remote device the way a
+            # physical iPhone is. The supported pattern for simulators is to
+            # go through the local device and launch the app suspended via
+            # `simctl launch --wait-for-debugger`, then attach; Frida resumes
+            # it as part of a successful attach, so no explicit resume call
+            # is needed (or possible) for this path.
             udid_str = device_udid if device_udid else "booted"
-            print(f"[*] Locating iOS Simulator device {udid_str}...")
-            # Use get_device() instead of local_device so it resolves the Simulator
-            device = frida.get_device(udid_str, timeout=10)
-            print(f"[*] Spawning app natively via Frida on Simulator...")
-            pid = device.spawn([package_name])
+            device = frida.get_local_device()
+            print(f"[*] Launching {package_name} on simulator {udid_str} suspended (--wait-for-debugger)...")
+            launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+            if launch_res.returncode != 0:
+                raise Exception(f"simctl launch failed: {launch_res.stderr.strip() or launch_res.stdout.strip()}")
+            pid_str = launch_res.stdout.split(":")[-1].strip()
+            if not pid_str.isdigit():
+                raise Exception(f"Could not parse PID from simctl launch output: {launch_res.stdout.strip()}")
+            pid = int(pid_str)
+            print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
             session = device.attach(pid)
         else:
             # CI emulators can take a while to become visible to frida-server
             device = frida.get_usb_device(timeout=60)
             pid = device.spawn([package_name])
             session = device.attach(pid)
-            
+            needs_resume = True
+
         metrics.frida_attached = True
         print(f"[+] Frida successfully spawned and attached to process ID: {pid}")
         
@@ -290,6 +468,33 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                     return target !== null;
                 }});
                 return target;
+            }}
+
+            // RN's `testID` becomes `accessibilityIdentifier` on iOS. Rather than
+            // guessing coordinates or blindly grabbing "the first UITextField/UIButton
+            // on screen" (which can't distinguish the right control across screens),
+            // walk the real view hierarchy looking for that identifier. Some elements
+            // we need to drive (like the bottom tab bar buttons) don't carry a testID,
+            // so this also matches on accessibilityLabel, which RN derives from the
+            // element's visible text (e.g. a tab's title).
+            function findViewByAccessibilityId(view, targetId) {{
+                if (!view) return null;
+                try {{
+                    var identifier = view.accessibilityIdentifier();
+                    if (identifier && identifier.toString() === targetId) return view;
+                }} catch (e) {{}}
+                try {{
+                    var label = view.accessibilityLabel();
+                    if (label && label.toString() === targetId) return view;
+                }} catch (e) {{}}
+                try {{
+                    var subviews = view.subviews();
+                    for (var i = 0; i < subviews.count(); i++) {{
+                        var found = findViewByAccessibilityId(subviews.objectAtIndex_(i), targetId);
+                        if (found) return found;
+                    }}
+                }} catch (e) {{}}
+                return null;
             }}
 
             rpc.exports = {{
@@ -379,21 +584,45 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                     }}
                 }},
 
-                triggerIosTransaction: function() {{
-                    if (ObjC.available) {{
-                        ObjC.schedule(ObjC.mainQueue, function() {{
-                            try {{
-                                var UITextField = ObjC.classes.UITextField;
-                                ObjC.chooseSync(UITextField).forEach(function(ui) {{
-                                    ui.setText_(TEST_NONCE);
-                                }});
-                                var UIButton = ObjC.classes.UIButton;
-                                ObjC.chooseSync(UIButton).forEach(function(btn) {{
-                                    btn.sendActionsForControlEvents_((1 << 6)); // UIControlEventTouchUpInside
-                                }});
-                            }} catch (e) {{}}
-                        }});
-                    }}
+                tapAccessibilityId: function(targetId) {{
+                    if (!ObjC.available) return;
+                    ObjC.schedule(ObjC.mainQueue, function() {{
+                        try {{
+                            var windows = ObjC.classes.UIApplication.sharedApplication().windows();
+                            for (var i = 0; i < windows.count(); i++) {{
+                                var view = findViewByAccessibilityId(windows.objectAtIndex_(i), targetId);
+                                if (view) {{
+                                    try {{ view.accessibilityActivate(); }} catch (e) {{}}
+                                    break;
+                                }}
+                            }}
+                        }} catch (e) {{}}
+                    }});
+                }},
+
+                setTextByAccessibilityId: function(targetId, value) {{
+                    if (!ObjC.available) return;
+                    ObjC.schedule(ObjC.mainQueue, function() {{
+                        try {{
+                            var windows = ObjC.classes.UIApplication.sharedApplication().windows();
+                            for (var i = 0; i < windows.count(); i++) {{
+                                var view = findViewByAccessibilityId(windows.objectAtIndex_(i), targetId);
+                                if (view) {{
+                                    try {{
+                                        view.setText_(value);
+                                        // Programmatic setText: doesn't fire UIKit's normal
+                                        // change callbacks on its own -- both of these are
+                                        // needed (across RN's old/new text input internals)
+                                        // to make the JS-side onChangeText actually observe it.
+                                        view.sendActionsForControlEvents_(1 << 17); // UIControlEventEditingChanged
+                                        ObjC.classes.NSNotificationCenter.defaultCenter()
+                                            .postNotificationName_object_('UITextFieldTextDidChangeNotification', view);
+                                    }} catch (e) {{}}
+                                    break;
+                                }}
+                            }}
+                        }} catch (e) {{}}
+                    }});
                 }}
             }};
         }})();
@@ -412,55 +641,72 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         script = session.create_script(attacker_script)
         script.on('message', local_on_message)
         script.load()
-        
-        device.resume(pid)
-        
+
+        # Hooks must be installed on the SUSPENDED process, before resume().
+        # The unprotected keyword set (hermes / JNI_OnLoad / UIApplicationMain)
+        # targets functions that only run once, during process startup. Calling
+        # device.resume(pid) before attaching the interceptors -- as this used
+        # to do -- means that startup window has already passed by the time the
+        # hook exists, so it can never fire. That's why both the protected AND
+        # unprotected builds were reporting identical "Blocked / Honeypot"
+        # results: the attack was never actually landing on either build.
         try:
             script.exports_sync.run_tests(is_protected)
             script.exports_sync.test_bypass(is_protected)
         except Exception as e:
             print(f"[!] RPC call failed: {e}. Continuing with metrics.")
-        
-        print("[*] Executing transaction batch to measure latency and trigger data flows...")
-        batch_size = 3
-        for _ in range(batch_size):
-            if platform == "ios":
-                try:
-                    script.exports_sync.trigger_ios_transaction()
-                except Exception:
-                    pass
-                time.sleep(1)
-            else:
-                subprocess.run(f"adb shell input text {test_nonce}", shell=True)
-                time.sleep(0.5)
-                # Broader coverage taps and keyboard events to ensure checkout triggers
-                subprocess.run("adb shell input tap 300 800", shell=True)
-                subprocess.run("adb shell input tap 500 1200", shell=True)
-                subprocess.run("adb shell input tap 700 1600", shell=True)
-                subprocess.run("adb shell input keyevent 61", shell=True) # TAB
-                subprocess.run("adb shell input keyevent 66", shell=True) # ENTER
-                time.sleep(0.5)
-        
+
+        if needs_resume:
+            device.resume(pid)
+
+        def run_memory_scan():
+            try:
+                script.exports_sync.scan_memory()
+            except Exception as e:
+                print(f"[!] Scan Memory RPC call failed: {e}")
+            time.sleep(2)  # let the async `send()` from the scan land before we read metrics
+
+        # Drive a REAL transaction through the app's own Developer Menu
+        # (dev-only, __DEV__-gated -- see src/features/dev-menu) instead of
+        # blind taps: it forces offline mode (so executeTransaction actually
+        # enqueues instead of no-op'ing -- see SovereignSecureClient.cpp) and
+        # enqueues the sentinel payload into the real native ledger. That
+        # enqueue call is also what fires the JSI hook installed above for
+        # the protected keyword set, giving a real per-transaction latency
+        # sample instead of hoping a blind tap landed on something.
+        print(f"[*] Driving a real ledger transaction via the Developer Menu ({platform})...")
+        if platform == "ios":
+            enqueued = drive_ios_dev_menu_enqueue(script, test_nonce)
+        else:
+            enqueued = drive_android_dev_menu_enqueue(test_nonce)
+
+        if not enqueued:
+            print("[-] Could not drive the app to enqueue a real transaction via the Developer Menu.")
+
         if measured_latencies:
             metrics.latency_ms = sum(measured_latencies) / len(measured_latencies)
             print(f"[+] Empirical C++ hook latency: {metrics.latency_ms:.2f} ms")
         else:
-            print("[-] No latency data received. Transaction may not have been triggered.")
-        
-        time.sleep(2)
+            print("[-] No latency data received. executeTransaction may not have been triggered.")
 
-        print("[*] Initiating real RAM scan for the deterministic payload...")
-        try:
-            script.exports_sync.scan_memory()
-        except Exception as e:
-            print(f"[!] Scan Memory RPC call failed: {e}")
-            
-        time.sleep(2)
+        print("[*] Scanning memory for the sentinel while the transaction is still queued...")
+        run_memory_scan()
+        metrics.payload_confirmed_resident = metrics.memory_leak_detected
+        if not metrics.payload_confirmed_resident:
+            print("[-] Sentinel not found even before zeroize -- the transaction likely never reached the ledger.")
+
+        print("[*] Dequeuing (zeroizing) the transaction, then re-scanning memory...")
+        if platform == "ios":
+            drive_ios_dev_menu_dequeue(script)
+        else:
+            drive_android_dev_menu_dequeue()
+        time.sleep(1)
+        run_memory_scan()
 
         try:
             session.detach()
         except Exception:
-            pass 
+            pass
 
         print("[+] Tests completed and session detached.")
         metrics.completed = True

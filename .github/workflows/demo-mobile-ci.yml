@@ -275,7 +275,14 @@ jobs:
           python-version: '3.11'
 
       - name: Install Frida & Tools
-        run: pip install frida==16.5.1 frida-tools
+        # Unlike Android, iOS doesn't need a separately-downloaded frida-server
+        # binary to match versions with -- Frida injects into the simulator
+        # directly. Pinning to the old 16.5.1 here (needed only so the Android
+        # job matches its downloaded frida-server release) made iOS attach
+        # fail with "unexpected error while probing dyld of target process",
+        # a known incompatibility between older frida-core and the newer dyld
+        # shared cache format used by current Xcode/iOS simulator runtimes.
+        run: pip install --upgrade frida frida-tools
 
       - name: Download Protected iOS App
         uses: actions/download-artifact@v4

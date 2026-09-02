@@ -98,4 +98,13 @@ export const stylesFactory = (colors: ThemeColors, insets?: EdgeInsets) =>
       color: colors.text + 'CC',
       marginTop: verticalScale(4),
     },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: scale(10),
+      paddingHorizontal: scale(12),
+      paddingVertical: verticalScale(10),
+      fontSize: scaleFont(14),
+      color: colors.text,
+    },
   });

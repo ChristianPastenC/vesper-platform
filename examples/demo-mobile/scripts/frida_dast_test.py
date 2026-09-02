@@ -190,7 +190,35 @@ def on_message(message, data, metrics):
     elif message['type'] == 'error':
         print(f"[*] Frida Error: {message['stack']}")
 
-def run_test_suite(package_name: str, is_protected: bool, platform: str = "android") -> SecurityMetrics:
+def install_android_apk(apk_path, package_name):
+    print(f"[!] Installing Android app: {apk_path}")
+    result = subprocess.run(f"adb install -r {apk_path}", shell=True, capture_output=True, text=True)
+    if result.returncode != 0 or "Failure" in result.stdout or "Failure" in result.stderr:
+        print(f"[-] ADB Install failed for {apk_path}:\n{result.stdout}\n{result.stderr}")
+        sys.exit(1)
+        
+    check_pkg = subprocess.run(f"adb shell pm list packages | grep {package_name}", shell=True, capture_output=True, text=True)
+    if package_name not in check_pkg.stdout:
+        print(f"[-] Application {package_name} not found after installation! Dumping all installed packages:")
+        subprocess.run("adb shell pm list packages", shell=True)
+        sys.exit(1)
+    print(f"[+] Successfully verified installation of {package_name} on Android.")
+
+def install_ios_app(app_path, package_name, device_udid):
+    udid_str = device_udid if device_udid else "booted"
+    print(f"[!] Installing iOS app: {app_path} on {udid_str}")
+    result = subprocess.run(f"xcrun simctl install {udid_str} {app_path}", shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[-] iOS Install failed for {app_path}:\n{result.stdout}\n{result.stderr}")
+        sys.exit(1)
+        
+    check_pkg = subprocess.run(f"xcrun simctl get_app_container {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+    if check_pkg.returncode != 0:
+        print(f"[-] Application {package_name} not found after installation on iOS! simctl error:\n{check_pkg.stderr}")
+        sys.exit(1)
+    print(f"[+] Successfully verified installation of {package_name} on iOS Simulator.")
+
+def run_test_suite(package_name: str, is_protected: bool, platform: str = "android", device_udid: str = None) -> SecurityMetrics:
     metrics = SecurityMetrics()
     metrics.was_run = True  # "an attempt was made" -- NOT proof the attack executed
     print(f"\n🚀 Starting Dynamic Analysis for {'PROTECTED' if is_protected else 'UNPROTECTED'} build: {package_name}")
@@ -203,12 +231,27 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
     try:
         if platform == "ios":
             device = frida.get_local_device()
+            udid_str = device_udid if device_udid else "booted"
+            print(f"[*] Launching iOS Simulator app with --wait-for-debugger to intercept early startup...")
+            launch_res = subprocess.run(f"xcrun simctl launch --wait-for-debugger {udid_str} {package_name}", shell=True, capture_output=True, text=True)
+            if launch_res.returncode != 0:
+                raise Exception(f"simctl launch failed: {launch_res.stderr}")
+            
+            # simctl launch output: "mx.edu.sovereign.core: 12345"
+            pid_str = launch_res.stdout.split(":")[-1].strip()
+            if not pid_str.isdigit():
+                raise Exception(f"Could not parse PID from simctl launch: {launch_res.stdout}")
+            
+            pid = int(pid_str)
+            print(f"[+] Application launched with PID: {pid}. Attaching Frida...")
+            session = device.attach(pid)
         else:
             # CI emulators can take a while to become visible to frida-server
             # after boot; 5s was too aggressive and caused spurious timeouts.
             device = frida.get_usb_device(timeout=60)
-        pid = device.spawn([package_name])
-        session = device.attach(pid)
+            pid = device.spawn([package_name])
+            session = device.attach(pid)
+            
         metrics.frida_attached = True
         print(f"[+] Frida successfully spawned and attached to process ID: {pid}")
         
@@ -417,31 +460,30 @@ if __name__ == "__main__":
     parser.add_argument("--protected-apk", type=str, default=None, help="Path to the protected APK/APP to install before testing")
     parser.add_argument("--baseline-apk", type=str, default=None, help="Path to the unprotected baseline APK/APP to install before testing")
     parser.add_argument("--platform", type=str, default="android", help="Platform to test on: android or ios")
+    parser.add_argument("--device-udid", type=str, default=None, help="Specific device UDID to use for iOS simulator")
     args = parser.parse_args()
     
     if args.baseline_package:
         if args.baseline_apk:
-            print(f"[!] Installing baseline app: {args.baseline_apk}")
             if args.platform == "ios":
-                subprocess.run(f"xcrun simctl install booted {args.baseline_apk}", shell=True)
+                install_ios_app(args.baseline_apk, args.baseline_package, args.device_udid)
             else:
-                subprocess.run(f"adb install -r {args.baseline_apk}", shell=True)
+                install_android_apk(args.baseline_apk, args.baseline_package)
             time.sleep(2)
         
         print(f"[!] Running baseline metrics for Unprotected Build: {args.baseline_package}")
-        unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False, platform=args.platform)
+        unprotected_metrics = run_test_suite(args.baseline_package, is_protected=False, platform=args.platform, device_udid=args.device_udid)
     else:
         print("[!] No baseline package provided. Skipping unprotected baseline (no hardcoded data).")
         unprotected_metrics = SecurityMetrics()
         
     if args.protected_apk:
-        print(f"[!] Installing protected app: {args.protected_apk}")
         if args.platform == "ios":
-            subprocess.run(f"xcrun simctl install booted {args.protected_apk}", shell=True)
+            install_ios_app(args.protected_apk, args.package, args.device_udid)
         else:
-            subprocess.run(f"adb install -r {args.protected_apk}", shell=True)
+            install_android_apk(args.protected_apk, args.package)
         time.sleep(2)
 
-    protected_metrics = run_test_suite(args.package, is_protected=True, platform=args.platform)
+    protected_metrics = run_test_suite(args.package, is_protected=True, platform=args.platform, device_udid=args.device_udid)
     
     generate_markdown_report(unprotected_metrics, protected_metrics, args.platform)

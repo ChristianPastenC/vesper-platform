@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, View, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../core/theme/useTheme';
@@ -17,13 +17,17 @@ export const DevMenuScreen: React.FC = () => {
     isSimulatedOffline,
     isBusy,
     lastFlushResult,
+    lastEnqueuedId,
     refreshStatus,
     simulateOffline,
     simulateOnline,
     stopOperation,
     simulateE2EEvent,
     flushTelemetryNow,
+    enqueueTestPayload,
+    dequeueTestPayload,
   } = useDevMenu();
+  const [customLabel, setCustomLabel] = useState('');
 
   return (
     <ScrollView style={styles.container} testID="dev-menu-scroll">
@@ -112,6 +116,51 @@ export const DevMenuScreen: React.FC = () => {
           >
             <Ionicons name="stop-circle-outline" size={18} color="#FFFFFF" />
             <Text style={styles.buttonText}>Stop Operation (Freeze &amp; Purge)</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>DAST Testing (Ledger Enqueue/Zeroize)</Text>
+        <View style={styles.card}>
+          <Text style={styles.statusLabel}>
+            Enqueues a transaction carrying the label below into the real Sovereign ledger, and
+            dequeues (zeroizes) it separately -- so a memory scan taken between the two steps can
+            observe the payload before and after zeroization.
+          </Text>
+          <TextInput
+            style={styles.input}
+            testID="dev-menu-custom-label-input"
+            placeholder="Transaction label / test payload"
+            placeholderTextColor={theme.colors.text + '80'}
+            value={customLabel}
+            onChangeText={setCustomLabel}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={[styles.button, styles.buttonPrimary]}
+            onPress={() => enqueueTestPayload(customLabel)}
+            disabled={isBusy || !customLabel}
+            testID="dev-menu-enqueue-btn"
+          >
+            {isBusy ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.buttonText}>Enqueue Test Payload</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.buttonDanger]}
+            onPress={dequeueTestPayload}
+            disabled={isBusy || !lastEnqueuedId}
+            testID="dev-menu-dequeue-btn"
+          >
+            <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.buttonText}>Dequeue &amp; Zeroize</Text>
           </TouchableOpacity>
         </View>
       </View>

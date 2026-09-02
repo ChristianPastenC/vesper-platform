@@ -233,4 +233,43 @@ describe('useDevMenu', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(result.current.lastFlushResult?.success).toBe(true);
   });
+
+  it('enqueues a labeled test payload and forces offline mode, without dequeuing it', async () => {
+    const { result } = renderHook(() => useDevMenu());
+
+    let requestId: string | undefined;
+    await act(async () => {
+      requestId = await result.current.enqueueTestPayload('GHOST_SEC_test');
+    });
+
+    expect(mockQueue.toggleNetworkSim).toHaveBeenCalledWith(false);
+    expect(mockQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(mockQueue.dequeue).not.toHaveBeenCalled();
+    expect(result.current.isSimulatedOffline).toBe(true);
+    expect(result.current.lastEnqueuedId).toBe(requestId);
+  });
+
+  it('dequeues the most recently enqueued test payload', async () => {
+    const { result } = renderHook(() => useDevMenu());
+
+    await act(async () => {
+      await result.current.enqueueTestPayload('GHOST_SEC_test');
+    });
+    await act(async () => {
+      await result.current.dequeueTestPayload();
+    });
+
+    expect(mockQueue.dequeue).toHaveBeenCalledTimes(1);
+    expect(result.current.lastEnqueuedId).toBeNull();
+  });
+
+  it('does nothing when dequeuing without a prior enqueue', async () => {
+    const { result } = renderHook(() => useDevMenu());
+
+    await act(async () => {
+      await result.current.dequeueTestPayload();
+    });
+
+    expect(mockQueue.dequeue).not.toHaveBeenCalled();
+  });
 });

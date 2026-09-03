@@ -133,19 +133,28 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
     mem_anomaly = mem_scan_meaningful and protected_metrics.memory_leak_detected
 
     all_completed = unprotected_metrics.completed and protected_metrics.completed
-    protected_held = (
-        protected_metrics.completed
-        and not protected_metrics.jsi_hook_success
-        and mem_extraction_pass  # requires payload_confirmed_resident -- see above
-        and not protected_metrics.crypto_bypass_success
-    )
+
+    # These two checks are installed on the process before device.resume()
+    # and never touch the Developer Menu, so a `.completed` run always gives
+    # a real, meaningful answer for them regardless of whether the UI
+    # automation later drove a transaction.
+    jsi_check_failed = protected_metrics.completed and protected_metrics.jsi_hook_success
+    crypto_check_failed = protected_metrics.completed and protected_metrics.crypto_bypass_success
+    # Memory extraction, in contrast, only means something once the
+    # sentinel was confirmed resident pre-zeroize (see mem_scan_meaningful
+    # above) -- a navigation failure that never enqueues anything looks
+    # identical to "zeroization worked" otherwise.
+    any_attack_succeeded = jsi_check_failed or crypto_check_failed or mem_anomaly
+    any_check_not_validated = not all_completed or not mem_scan_meaningful
 
     if not all_completed:
         overall_line = "❌ **Overall Status:** INCONCLUSIVE — one or more Frida runs did not complete, so this report is **not** valid security evidence. See errors below and re-run the pipeline."
-    elif protected_held:
-        overall_line = "✅ **Overall Status:** The Ghost Ledger library successfully maintained Zero-Trust runtime integrity under active instrumentation in this run."
-    else:
+    elif any_attack_succeeded:
         overall_line = "❌ **Overall Status:** At least one attack succeeded against the protected build. Investigate before treating this as a passing security gate."
+    elif any_check_not_validated:
+        overall_line = "⚠️ **Overall Status:** NOT FULLY VALIDATED — no attack that actually ran succeeded against the protected build, but at least one check above never got real data to evaluate (e.g. the Developer Menu automation didn't drive a transaction), so this is not a clean pass either. See the ⚠️ rows and errors above, and re-run the pipeline before treating this as a passing security gate."
+    else:
+        overall_line = "✅ **Overall Status:** The Ghost Ledger library successfully maintained Zero-Trust runtime integrity under active instrumentation in this run."
 
     errors_section = ""
     if unprotected_metrics.error or protected_metrics.error:
@@ -188,7 +197,7 @@ Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by
 
 ### 🔍 Technical Summary & Forensic Evidence
 - **Unprotected Build:** {("The attacker " + ("successfully" if unprotected_metrics.jsi_hook_success else "failed to") + " intercept JSI bindings, extracting " + ("plaintext keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing") + ". Transaction hashes were " + ("successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated") + " before reaching the network layer.") if unprotected_metrics.completed else f"⚠️ This run did not complete ({unprotected_metrics.error or 'unknown reason'}), so no baseline evidence was collected."}
-- **Protected Build:** {("The Ghost Ledger C++ runtime " + ("successfully obfuscated memory buffers and JSI function pointers were protected via integrity checks, causing malicious hooks to fail or return honeypot data rather than crashing the app." if protected_held else "did NOT fully block the attack in this run -- at least one attack vector above succeeded.")) if protected_metrics.completed else f"⚠️ This run did not complete ({protected_metrics.error or 'unknown reason'}), so no security evidence was collected for the protected build."}
+- **Protected Build:** {(("The Ghost Ledger C++ runtime did NOT fully block the attack in this run -- at least one attack vector above succeeded." if any_attack_succeeded else ("The Ghost Ledger C++ runtime successfully obfuscated memory buffers and JSI function pointers were protected via integrity checks, causing malicious hooks to fail or return honeypot data rather than crashing the app." if not any_check_not_validated else "No attack that actually ran succeeded against the protected build, but at least one check above (see the ⚠️ rows) never got real data to evaluate, so this run is not a clean pass."))) if protected_metrics.completed else f"⚠️ This run did not complete ({protected_metrics.error or 'unknown reason'}), so no security evidence was collected for the protected build."}
 
 <details>
 <summary>🔍 View Comparative Memory Trace (Hex Dump)</summary>

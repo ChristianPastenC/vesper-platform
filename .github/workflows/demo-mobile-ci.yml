@@ -359,32 +359,28 @@ jobs:
       - name: Install Frida & Tools
         # iOS doesn't need to match a downloaded frida-server binary version
         # the way Android does -- it injects via the local device directly.
-        # Compatibility matrix tried so far, across two independent
-        # variables (frida version x attach mechanism):
-        #   16.5.1 + wait-for-debugger : "unexpected error while probing
-        #                                 dyld of target process" (every time)
-        #   latest  + wait-for-debugger : "unexpected early end-of-stream"
-        #   latest  + launch+attach     : "Application ... not found in
-        #                                 emulator/simulator" (frida.ProcessNotFoundError,
-        #                                 identical on 2 separate runs -- deterministic,
-        #                                 not flaky)
-        #   16.5.1 + launch+attach      : UNTESTED -- this is it. The 16.5.1
-        #                                 dyld-probing theory was specific to
-        #                                 catching the process at its very
-        #                                 first instruction (wait-for-debugger);
-        #                                 launch+attach only touches an
-        #                                 already-running process with dyld
-        #                                 long since initialized, so that
-        #                                 failure mode may simply not apply
-        #                                 here. If this ALSO fails, the
-        #                                 2x2 matrix is exhausted and the
-        #                                 problem is neither the frida
-        #                                 version nor the mechanism, but
-        #                                 something about local-device Mach
-        #                                 attach permissions on this runner
-        #                                 image -- see the enumerate_processes
-        #                                 diagnostic frida_dast_test.py now
-        #                                 logs on attach failure.
+        #
+        # ROOT CAUSE FOUND (do not re-litigate this without new evidence):
+        # all 4 combinations of frida version (16.5.1 / latest) x attach
+        # mechanism (wait-for-debugger / launch+attach) were tried and
+        # failed, each with a different symptom ("probing dyld", "early
+        # end-of-stream", "process not found", ...). Reproduced locally on a
+        # real Mac with Xcode: frida.get_local_device().attach() fails
+        # against *Apple's own signed Preferences.app* -- a target with no
+        # connection to this codebase or its signing -- with the exact same
+        # class of generic injection error ("helper exited during launch
+        # (status=9)", "unexpected early end-of-stream"). This is macOS's
+        # system-wide Developer Mode / DevToolsSecurity gate on task_for_pid
+        # (introduced in Sonoma), not a frida version, attach mechanism, or
+        # app entitlements problem -- confirmed via `DevToolsSecurity
+        # -status` showing "disabled" on that Mac. GitHub-hosted macos-latest
+        # runners are fresh VMs with this off by default, and turning it on
+        # needs either an interactive confirmation or a reboot -- neither
+        # possible in a single ephemeral CI job. Chasing more frida-version/
+        # attach-mechanism combinations here will not fix this; the only
+        # ways forward are a persistent self-hosted macOS runner (enable
+        # Developer Mode on it once, out of band) or accepting this job as
+        # non-blocking/best-effort on hosted runners.
         run: pip install frida==16.5.1 frida-tools
 
       - name: Download Protected iOS App

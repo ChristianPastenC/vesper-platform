@@ -103,6 +103,14 @@ jobs:
         working-directory: examples/demo-mobile
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
+          # Must match the demo tenant that apps/vesper-ingestion auto-seeds
+          # into a fresh DB (see the "Start telemetry ingestion API" step in
+          # the DAST job below) -- otherwise the app's own TOFU bundle-ID
+          # binding or the API-key lookup rejects a genuine, correctly-formed
+          # request with 403, indistinguishable from a real security control
+          # firing. This is a test fixture value, not a production secret.
+          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
+          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
           mkdir -p android/app/src/main/assets
           npx expo export:embed \
@@ -125,6 +133,8 @@ jobs:
         working-directory: examples/demo-mobile
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
+          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
+          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
           mkdir -p android/app/src/main/assets
           npx expo export:embed \
@@ -202,6 +212,11 @@ jobs:
         working-directory: examples/demo-mobile/ios
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
+          # See the matching comment in build-android -- must match the demo
+          # tenant apps/vesper-ingestion auto-seeds for the DAST job's real
+          # telemetry check.
+          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
+          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
           xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Unprotected
           cd Build/Unprotected/Build/Products/Debug-iphonesimulator
@@ -211,6 +226,8 @@ jobs:
         working-directory: examples/demo-mobile/ios
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
+          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
+          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
           xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Protected
           cd Build/Protected/Build/Products/Debug-iphonesimulator
@@ -264,6 +281,36 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+          cache-dependency-path: apps/vesper-ingestion/go.sum
+
+      - name: Start telemetry ingestion API (real backend, not mocked)
+        # The app's "Simulate E2E Event & Send to Dashboard" / "Flush
+        # Buffered Telemetry" DAST actions do a real POST (binary payload,
+        # X-Sovereign-API-Key/X-Bundle-ID headers) to this service instead
+        # of asserting success locally. The emulator reaches the runner's
+        # localhost via 10.0.2.2, which is already what the app's
+        # getTelemetryEndpoint() fallback resolves to on Android -- no app
+        # code needs a CI-specific override, only the API key/bundle ID
+        # (baked into the bundle in build-android) matching this seed.
+        # continue-on-error so a backend hiccup degrades the telemetry
+        # check, not the whole security report.
+        continue-on-error: true
+        working-directory: apps/vesper-ingestion
+        env:
+          DB_PATH: ${{ runner.temp }}/telemetry-ci.db
+        run: |
+          go mod download
+          go run ./cmd/server &
+          for i in $(seq 1 60); do
+            (echo > /dev/tcp/127.0.0.1/8081) >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          echo "::warning::telemetry ingestion API never came up on :8081 -- the DAST report's telemetry check will show a real connection failure"
 
       - name: Run Frida Headless Emulation Script (Real Attack)
         uses: reactivecircus/android-emulator-runner@v2
@@ -351,6 +398,30 @@ jobs:
           xcrun simctl boot "$DEVICE_UUID" || true
           xcrun simctl bootstatus "$DEVICE_UUID" -b || true
           echo "DEVICE_UUID=$DEVICE_UUID" >> $GITHUB_ENV
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+          cache-dependency-path: apps/vesper-ingestion/go.sum
+
+      - name: Start telemetry ingestion API (real backend, not mocked)
+        # Same reasoning as the Android job's step of this name -- see there.
+        # The iOS Simulator shares the host's network namespace, so
+        # "localhost" (the app's getTelemetryEndpoint() fallback on iOS)
+        # already reaches this service with no extra config.
+        continue-on-error: true
+        working-directory: apps/vesper-ingestion
+        env:
+          DB_PATH: ${{ runner.temp }}/telemetry-ci.db
+        run: |
+          go mod download
+          go run ./cmd/server &
+          for i in $(seq 1 60); do
+            (echo > /dev/tcp/127.0.0.1/8081) >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          echo "::warning::telemetry ingestion API never came up on :8081 -- the DAST report's telemetry check will show a real connection failure"
 
       - name: Run Frida DAST on iOS Simulator
         run: |

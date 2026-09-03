@@ -35,6 +35,14 @@ class SecurityMetrics:
         # first place (e.g. the UI automation failed to drive a transaction),
         # not that zeroization worked.
         self.payload_confirmed_resident = False
+        # Whether the on-device "Simulate E2E Event & Send to Dashboard"
+        # action reported a real, successful POST to the telemetry
+        # ingestion API (apps/vesper-ingestion) -- this is a genuine network
+        # round trip (binary payload, API-key + bundle-ID headers), not a
+        # local-only assertion, so `telemetry_message` carries the actual
+        # on-screen result text (or a driving diagnostic) for evidence.
+        self.telemetry_sent = False
+        self.telemetry_message = ""
 
 def get_device_info(platform):
     if platform == "android":
@@ -172,6 +180,11 @@ This automated report compares the security posture of the application against a
   - *Protected:* `{f'{protected_metrics.leakage_bytes} bytes' if protected_metrics.completed else 'N/A - run did not complete'}` ({'Leaked' if protected_metrics.completed and protected_metrics.leakage_bytes > 0 else ('Active Zeroization' if protected_metrics.completed else 'no data')})
 - **Performance Overhead (Latency):**
   - The C++ Nitro Modules layer adds `{latency_str}` per transaction.
+
+### 📡 Telemetry Ingestion Check
+Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by this CI job) and successfully complete a full network round trip -- binary payload framing, `X-Sovereign-API-Key`/`X-Bundle-ID` headers, and the ingestion API's own validation -- rather than asserting success locally. This is a connectivity/config check, not an attack vector, so it does not factor into the Overall Status above.
+- **Unprotected:** {unprotected_metrics.telemetry_message if unprotected_metrics.completed else "⚠️ N/A - run did not complete"}
+- **Protected:** {protected_metrics.telemetry_message if protected_metrics.completed else "⚠️ N/A - run did not complete"}
 
 ### 🔍 Technical Summary & Forensic Evidence
 - **Unprotected Build:** {("The attacker " + ("successfully" if unprotected_metrics.jsi_hook_success else "failed to") + " intercept JSI bindings, extracting " + ("plaintext keys directly from RAM" if unprotected_metrics.memory_leak_detected else "nothing") + ". Transaction hashes were " + ("successfully manipulated" if unprotected_metrics.crypto_bypass_success else "not manipulated") + " before reaching the network layer.") if unprotected_metrics.completed else f"⚠️ This run did not complete ({unprotected_metrics.error or 'unknown reason'}), so no baseline evidence was collected."}
@@ -494,6 +507,41 @@ def drive_android_dev_menu_dequeue():
     ok, msg = _android_tap_by_text(['Dequeue & Zeroize'], partial=True, require_enabled=True)
     return ok, (f"[Dequeue & Zeroize button] {msg}" if not ok else None)
 
+def drive_android_dev_menu_telemetry_e2e(timeout=20):
+    """Tap "Simulate E2E Event & Send to Dashboard" -- a combined
+    enqueue+dequeue+flush that ends in a real POST to the telemetry
+    ingestion API (apps/vesper-ingestion, see the CI workflow's
+    "Start telemetry ingestion API" step) -- then read back the on-screen
+    result text (testID dev-menu-flush-result: "✓ ..."/"✗ ...") to confirm
+    the backend actually accepted it, not just that the tap landed.
+    Assumes the Developer Menu is already open (called after
+    drive_android_dev_menu_dequeue). Returns (success, message)."""
+    ok, msg = _android_tap_by_text(['Simulate E2E Event & Send to Dashboard'], partial=True, require_enabled=True)
+    if not ok:
+        return False, f"[Simulate E2E Event button] {msg}"
+    # The result Text sits right below "Flush Buffered Telemetry", off the
+    # bottom of the screen at this scroll position -- confirmed via a real
+    # device dump: the backend genuinely received the POST (a 403 showed up
+    # in its own access log within the same second as the tap) yet no
+    # amount of waiting surfaced the result here without scrolling, same
+    # class of below-the-fold issue as the DAST label EditText/button.
+    deadline = time.time() + timeout
+    polls_since_scroll = 0
+    scrolls_done = 0
+    max_scrolls = 4
+    while time.time() < deadline:
+        node = _android_find_by_text(_android_dump_nodes(), ['✓', '✗'], partial=True)
+        if node is not None:
+            text = (node.get('text') or node.get('content-desc') or '').strip()
+            return text.startswith('✓'), text
+        polls_since_scroll += 1
+        if polls_since_scroll >= 2 and scrolls_done < max_scrolls:
+            _android_scroll_down()
+            scrolls_done += 1
+            polls_since_scroll = 0
+        time.sleep(1)
+    return False, "No flush result appeared on screen within timeout"
+
 # --- iOS UI automation --------------------------------------------------
 # Same navigation as Android, driven through the `tapAccessibilityId` /
 # `setTextByAccessibilityId` RPC exports (see the attacker_script JS above)
@@ -527,6 +575,29 @@ def drive_ios_dev_menu_dequeue(script):
         message = f"iOS dev-menu dequeue drive failed: {e}"
         print(f"[!] {message}")
         return False, message
+
+def drive_ios_dev_menu_telemetry_e2e(script, timeout=20):
+    """Tap "Simulate E2E Event & Send to Dashboard" and read back the
+    on-screen result (accessibilityIdentifier dev-menu-flush-result) via the
+    readAccessibilityText RPC export, to confirm the real POST to the
+    telemetry ingestion API (apps/vesper-ingestion) actually succeeded --
+    same reasoning as drive_android_dev_menu_telemetry_e2e."""
+    try:
+        script.exports_sync.tap_accessibility_id("dev-menu-simulate-event-btn")
+    except Exception as e:
+        message = f"iOS Simulate E2E Event tap failed: {e}"
+        print(f"[!] {message}")
+        return False, message
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            text = script.exports_sync.read_accessibility_text("dev-menu-flush-result")
+        except Exception:
+            text = None
+        if text:
+            return text.startswith('✓'), text
+        time.sleep(1)
+    return False, "No flush result appeared on screen within timeout"
 
 def run_test_suite(package_name: str, is_protected: bool, platform: str = "android", device_udid: str = None) -> SecurityMetrics:
     metrics = SecurityMetrics()
@@ -819,6 +890,34 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                             }}
                         }} catch (e) {{}}
                     }});
+                }},
+
+                // Unlike tap/setText above (fire-and-forget UI mutations),
+                // this needs the *result* back, so it returns a Promise --
+                // exports_sync on the Python side blocks until it resolves,
+                // instead of racing the ObjC.schedule callback the way a
+                // plain synchronous return would.
+                readAccessibilityText: function(targetId) {{
+                    if (!ObjC.available) return null;
+                    return new Promise(function(resolve) {{
+                        ObjC.schedule(ObjC.mainQueue, function() {{
+                            var result = null;
+                            try {{
+                                var windows = ObjC.classes.UIApplication.sharedApplication().windows();
+                                for (var i = 0; i < windows.count(); i++) {{
+                                    var view = findViewByAccessibilityId(windows.objectAtIndex_(i), targetId);
+                                    if (view) {{
+                                        try {{ result = view.accessibilityLabel().toString(); }} catch (e) {{}}
+                                        if (!result) {{
+                                            try {{ result = view.text().toString(); }} catch (e) {{}}
+                                        }}
+                                        break;
+                                    }}
+                                }}
+                            }} catch (e) {{}}
+                            resolve(result);
+                        }});
+                    }});
                 }}
             }};
         }})();
@@ -907,6 +1006,22 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                 metrics.error = f"Developer Menu dequeue failed: {dequeue_error}"
         time.sleep(1)
         run_memory_scan()
+
+        # Real network round trip against apps/vesper-ingestion (started by
+        # the CI workflow before this script runs -- see
+        # "Start telemetry ingestion API") -- not local-only assertions, so
+        # a passing result here means the binary payload, API-key/bundle-ID
+        # headers and the ingestion API's own validation all actually
+        # worked end-to-end.
+        print("[*] Driving Simulate E2E Event -> real telemetry ingestion POST...")
+        if platform == "ios":
+            telemetry_sent, telemetry_message = drive_ios_dev_menu_telemetry_e2e(script)
+        else:
+            telemetry_sent, telemetry_message = drive_android_dev_menu_telemetry_e2e()
+        metrics.telemetry_sent = telemetry_sent
+        metrics.telemetry_message = telemetry_message
+        if not telemetry_sent:
+            print(f"[-] Telemetry E2E event was not confirmed sent: {telemetry_message}")
 
         try:
             session.detach()

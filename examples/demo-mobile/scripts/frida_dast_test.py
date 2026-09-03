@@ -299,40 +299,101 @@ def _android_node_center(node):
     x1, y1, x2, y2 = (int(v) for v in m.groups())
     return (x1 + x2) // 2, (y1 + y2) // 2
 
-def _android_find_by_text(nodes, texts, partial=False):
+def _android_find_by_text(nodes, texts, partial=False, require_enabled=False):
     """Exact match by default. `partial=True` does a substring match instead --
     needed for elements whose accessibility label isn't just the visible text
     (e.g. a tab button's content-desc can come out as "Account, tab, 4 of 4"
-    rather than plain "Account"), where an exact match would never hit."""
+    rather than plain "Account"), where an exact match would never hit.
+
+    `require_enabled=True` skips a text match whose node reports
+    `enabled="false"` -- a RN button keeps its label (and its onscreen
+    position) the moment it renders, but stays a no-op tap until the
+    surrounding React state marks it enabled, e.g. right after typing into
+    an adjacent field and before onChangeText has propagated. Matching on
+    label alone taps a real element and gets a clean `adb` exit code with no
+    error, even though the disabled control silently swallowed the touch and
+    no callback ever ran -- this treats "matched but disabled" as not found
+    yet, so the caller's poll loop keeps waiting instead of firing a no-op
+    tap and moving on as if it had worked."""
     for node in nodes:
         label = node.get('text') or node.get('content-desc') or ''
         if not label:
             continue
-        if partial:
-            if any(t in label for t in texts):
-                return node
-        elif label in texts:
-            return node
+        matched = any(t in label for t in texts) if partial else label in texts
+        if not matched:
+            continue
+        if require_enabled and node.get('enabled') == 'false':
+            continue
+        return node
     return None
 
-def _android_tap_by_text(texts, timeout=15, poll_interval=1.0, partial=False):
+def _android_screen_size():
+    """(width, height) in pixels, or None if it can't be determined."""
+    result = subprocess.run("adb shell wm size", shell=True, capture_output=True, text=True)
+    m = re.search(r'(\d+)x(\d+)', result.stdout)
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2))
+
+def _android_scroll_down():
+    """Nudge the screen up (scroll down) by a fixed fraction of the real
+    screen height -- computed from `wm size` rather than hardcoded pixels,
+    since the CI emulator's resolution won't necessarily match whatever
+    device this was last tested on."""
+    size = _android_screen_size()
+    if not size:
+        return
+    width, height = size
+    x = width // 2
+    y_start = int(height * 0.8)
+    y_end = int(height * 0.35)
+    subprocess.run(f"adb shell input swipe {x} {y_start} {x} {y_end} 300", shell=True)
+
+def _android_tap_by_text(texts, timeout=15, poll_interval=1.0, partial=False, allow_scroll=True, require_enabled=False):
     """Poll the accessibility tree for an element matching `texts`
-    (see _android_find_by_text for `partial`), and tap its center once
-    found. Returns (True, None) on success, or (False, diagnostic_message)
-    -- the diagnostic is meant to end up in the report's error field, since
-    that's the only way to see what a CI run's screen actually looked like
-    without direct access to its job logs."""
+    (see _android_find_by_text for `partial`/`require_enabled`), and tap its
+    center once found. Returns (True, None) on success, or (False,
+    diagnostic_message) -- the diagnostic is meant to end up in the report's
+    error field, since that's the only way to see what a CI run's screen
+    actually looked like without direct access to its job logs.
+
+    When `allow_scroll` is True (the default), scrolls down every couple of
+    empty polls -- confirmed necessary on a real device: e.g. "Developer
+    Menu" sits below "APP INFO" on the Account screen and was never found
+    without it, a screen worth of content below the fold that a fixed
+    timeout alone can't fix.
+
+    `require_enabled=True` is for buttons whose RN `disabled` prop depends
+    on state that lags the control's own appearance (e.g. enabled only once
+    a just-typed value has propagated through onChangeText) -- confirmed via
+    direct native hooking that tapping a still-disabled button this way taps
+    real screen coordinates and returns a clean exit code, but the control
+    swallows the touch and the native call it would have triggered never
+    happens, silently turning a no-op into a false "success"."""
     deadline = time.time() + timeout
+    polls_since_scroll = 0
+    scrolls_done = 0
+    max_scrolls = 6
+    saw_disabled_match = False
     while time.time() < deadline:
-        node = _android_find_by_text(_android_dump_nodes(), texts, partial=partial)
+        nodes = _android_dump_nodes()
+        node = _android_find_by_text(nodes, texts, partial=partial, require_enabled=require_enabled)
         if node is not None:
             center = _android_node_center(node)
             if center:
                 subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
                 return True, None
+        if require_enabled and _android_find_by_text(nodes, texts, partial=partial) is not None:
+            saw_disabled_match = True
+        polls_since_scroll += 1
+        if allow_scroll and polls_since_scroll >= 2 and scrolls_done < max_scrolls:
+            _android_scroll_down()
+            scrolls_done += 1
+            polls_since_scroll = 0
         time.sleep(poll_interval)
     visible = _android_visible_text()
-    message = f"Could not find any of {texts} on screen within {timeout}s. Visible text/content-desc: {visible}"
+    disabled_note = " Element matched but stayed disabled the whole time." if saw_disabled_match else ""
+    message = f"Could not find any of {texts} on screen within {timeout}s.{disabled_note} Visible text/content-desc: {visible}"
     print(f"[-] {message}")
     return False, message
 
@@ -347,8 +408,14 @@ def _android_visible_text():
 
 def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
     """Find the (first) EditText on screen, tap it to focus, then type.
-    Returns (True, None) or (False, diagnostic_message)."""
+    Returns (True, None) or (False, diagnostic_message). Scrolls down every
+    couple of empty polls, same reasoning as _android_tap_by_text -- the
+    DAST label field sits below "Simulate Network Offline"/"Stop Operation",
+    off the bottom of the screen on a real device."""
     deadline = time.time() + timeout
+    polls_since_scroll = 0
+    scrolls_done = 0
+    max_scrolls = 6
     while time.time() < deadline:
         for node in _android_dump_nodes():
             if node.get('class') == 'android.widget.EditText':
@@ -358,6 +425,11 @@ def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
                     time.sleep(0.3)
                     subprocess.run(f"adb shell input text {text}", shell=True)
                     return True, None
+        polls_since_scroll += 1
+        if polls_since_scroll >= 2 and scrolls_done < max_scrolls:
+            _android_scroll_down()
+            scrolls_done += 1
+            polls_since_scroll = 0
         time.sleep(poll_interval)
     visible = _android_visible_text()
     message = f"Could not find an EditText on screen within {timeout}s. Visible text/content-desc: {visible}"
@@ -403,19 +475,23 @@ def drive_android_dev_menu_enqueue(test_nonce):
     if not ok:
         return False, f"[DAST label EditText] {msg}"
 
-    # The "Enqueue" button stays disabled until the typed text propagates
-    # from the native EditText back to React state (onChangeText); give that
-    # a beat before hunting for the now-enabled button.
-    time.sleep(0.5)
-
+    # The button stays disabled (`disabled={isBusy || !customLabel}`) until
+    # the typed text propagates from the native EditText back to React state
+    # via onChangeText. A fixed sleep before tapping used to stand in for
+    # that wait, but direct native hooking proved it isn't reliable: a tap
+    # landing while still disabled reports a clean `adb` exit code and
+    # produces zero evidence of failure, yet the native `executeTransaction`
+    # this button should trigger is never called -- silently turning the
+    # supposedly-successful enqueue into a no-op. Polling for `enabled` is
+    # what actually confirms the tap can do something.
     print("[*] Tapping Enqueue Test Payload...")
-    ok, msg = _android_tap_by_text(['Enqueue Test Payload'], partial=True)
+    ok, msg = _android_tap_by_text(['Enqueue Test Payload'], partial=True, require_enabled=True)
     if not ok:
         return False, f"[Enqueue Test Payload button] {msg}"
     return True, None
 
 def drive_android_dev_menu_dequeue():
-    ok, msg = _android_tap_by_text(['Dequeue & Zeroize'], partial=True)
+    ok, msg = _android_tap_by_text(['Dequeue & Zeroize'], partial=True, require_enabled=True)
     return ok, (f"[Dequeue & Zeroize button] {msg}" if not ok else None)
 
 # --- iOS UI automation --------------------------------------------------

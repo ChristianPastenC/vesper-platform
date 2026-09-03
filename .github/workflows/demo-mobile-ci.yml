@@ -87,20 +87,55 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         
-      - name: Build Unprotected Android App (Baseline)
-        working-directory: examples/demo-mobile/android
+      # A debug APK normally expects Metro at runtime and embeds nothing --
+      # exactly the setup that produced RN's "Unable to load script" screen
+      # in the DAST job, since there's no Metro reachable on that emulator.
+      # react-native-gradle-plugin *can* embed a bundle into a debug build
+      # (see debuggableVariants in app/build.gradle), but the task it uses
+      # for that hardcodes `--dev false` unconditionally in the plugin's own
+      # Kotlin source (TaskConfiguration.kt) -- there's no way to get an
+      # embedded *and* dev-mode (`__DEV__`) bundle through that path, and
+      # __DEV__ is what gates the entire Developer Menu this pipeline drives.
+      # So: bundle it ourselves with --dev true and drop it where Android's
+      # build already expects a static JS asset, then let a completely
+      # stock `assembleDebug` package it like any other asset.
+      - name: Bundle JS (dev mode) for standalone testing
+        working-directory: examples/demo-mobile
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx expo export:embed \
+            --platform android \
+            --dev true \
+            --entry-file node_modules/expo/AppEntry.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
+      - name: Build Unprotected Android App (Baseline)
+        working-directory: examples/demo-mobile/android
         run: |
           chmod +x ./gradlew
           ./gradlew clean
           ./gradlew assembleDebug --no-daemon
           mv app/build/outputs/apk/debug/app-debug.apk ../app-unprotected.apk
-          
-      - name: Build Protected Android App
-        working-directory: examples/demo-mobile/android
+          rm -rf app/src/main/assets app/src/main/res/drawable-* app/src/main/res/raw
+
+      - name: Bundle JS (dev mode) for standalone testing (protected)
+        working-directory: examples/demo-mobile
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx expo export:embed \
+            --platform android \
+            --dev true \
+            --entry-file node_modules/expo/AppEntry.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
+      - name: Build Protected Android App
+        working-directory: examples/demo-mobile/android
         run: |
           ./gradlew clean
           ./gradlew assembleDebug --no-daemon
@@ -275,17 +310,19 @@ jobs:
           python-version: '3.11'
 
       - name: Install Frida & Tools
-        # Pinned to match Android's frida-server version for consistency.
-        # NOTE: this was briefly bumped to `--upgrade frida frida-tools` to
-        # chase a "probing dyld" error, but that error only ever showed up
-        # with the (since-reverted) frida.get_device(udid) + device.spawn()
-        # attach path. The current attach path -- frida.get_local_device() +
-        # `simctl launch --wait-for-debugger` + device.attach(pid), see
-        # run_test_suite() -- is what originally shipped and worked against
-        # this exact 16.5.1 build; pairing it with latest frida instead
-        # produced a new failure ("unexpected early end-of-stream"), so this
-        # stays pinned unless the attach mechanism changes again.
-        run: pip install frida==16.5.1 frida-tools
+        # iOS doesn't need to match a downloaded frida-server binary version
+        # the way Android does -- it injects via the local device directly.
+        # Every 16.5.1 attach attempt tried so far has failed with a
+        # dyld/module-resolution error of one flavor or another ("probing
+        # dyld", then "module not found at /usr/lib/libSystem.B.dylib" after
+        # switching from wait-for-debugger to a plain launch+attach) -- the
+        # common thread across mechanisms points at 16.5.1 not correctly
+        # parsing this simulator runtime's dyld shared cache, not at timing.
+        # Latest frida was tried once before, but paired with the
+        # wait-for-debugger mechanism (since replaced by launch+attach),
+        # where it failed differently ("early end-of-stream") -- that
+        # combination hasn't been tried yet.
+        run: pip install --upgrade frida frida-tools
 
       - name: Download Protected iOS App
         uses: actions/download-artifact@v4

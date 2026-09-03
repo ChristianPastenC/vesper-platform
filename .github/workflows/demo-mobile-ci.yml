@@ -162,89 +162,6 @@ jobs:
           name: app-unprotected-apk
           path: examples/demo-mobile/app-unprotected.apk
 
-  build-ios:
-    name: Build iOS (Simulator)
-    needs: lint-and-test
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: examples/demo-mobile
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: examples/demo-mobile/yarn.lock
-          
-      - name: Setup Ruby for Cocoapods
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-          working-directory: examples/demo-mobile/ios
-
-      - name: Build Vesper Ghost Ledger (Local Dependency)
-        working-directory: packages/ghost-ledger
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        with:
-          path: examples/demo-mobile/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('examples/demo-mobile/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
-      - name: Install Pods
-        working-directory: examples/demo-mobile/ios
-        run: pod install
-        
-      - name: Build Unprotected iOS App
-        working-directory: examples/demo-mobile/ios
-        env:
-          EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
-          # See the matching comment in build-android -- must match the demo
-          # tenant apps/vesper-ingestion auto-seeds for the DAST job's real
-          # telemetry check.
-          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
-          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
-        run: |
-          xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Unprotected
-          cd Build/Unprotected/Build/Products/Debug-iphonesimulator
-          zip -r ../../../../../app-unprotected.app.zip *.app
-
-      - name: Build Protected iOS App
-        working-directory: examples/demo-mobile/ios
-        env:
-          EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
-          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
-          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
-        run: |
-          xcodebuild -workspace SovereignCore.xcworkspace -scheme SovereignCore -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO -derivedDataPath Build/Protected
-          cd Build/Protected/Build/Products/Debug-iphonesimulator
-          zip -r ../../../../../app-protected.app.zip *.app
-
-      - name: Upload Unprotected iOS App
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-unprotected-app
-          path: examples/demo-mobile/ios/app-unprotected.app.zip
-
-      - name: Upload Protected iOS App
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-protected-app
-          path: examples/demo-mobile/ios/app-protected.app.zip
-
   security-dast-android:
     name: Anti-Tampering (Frida) Cross-Test
     needs: build-android
@@ -343,118 +260,9 @@ jobs:
           name: android-security-report
           path: examples/demo-mobile/security-report.md
 
-  security-dast-ios:
-    name: Anti-Tampering (Frida) Cross-Test (iOS)
-    needs: build-ios
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Frida & Tools
-        # iOS doesn't need to match a downloaded frida-server binary version
-        # the way Android does -- it injects via the local device directly.
-        #
-        # ROOT CAUSE FOUND (do not re-litigate this without new evidence):
-        # all 4 combinations of frida version (16.5.1 / latest) x attach
-        # mechanism (wait-for-debugger / launch+attach) were tried and
-        # failed, each with a different symptom ("probing dyld", "early
-        # end-of-stream", "process not found", ...). Reproduced locally on a
-        # real Mac with Xcode: frida.get_local_device().attach() fails
-        # against *Apple's own signed Preferences.app* -- a target with no
-        # connection to this codebase or its signing -- with the exact same
-        # class of generic injection error ("helper exited during launch
-        # (status=9)", "unexpected early end-of-stream"). This is macOS's
-        # system-wide Developer Mode / DevToolsSecurity gate on task_for_pid
-        # (introduced in Sonoma), not a frida version, attach mechanism, or
-        # app entitlements problem -- confirmed via `DevToolsSecurity
-        # -status` showing "disabled" on that Mac. GitHub-hosted macos-latest
-        # runners are fresh VMs with this off by default, and turning it on
-        # needs either an interactive confirmation or a reboot -- neither
-        # possible in a single ephemeral CI job. Chasing more frida-version/
-        # attach-mechanism combinations here will not fix this; the only
-        # ways forward are a persistent self-hosted macOS runner (enable
-        # Developer Mode on it once, out of band) or accepting this job as
-        # non-blocking/best-effort on hosted runners.
-        run: pip install frida==16.5.1 frida-tools
-
-      - name: Download Protected iOS App
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-protected-app
-          path: ./apks/protected-ios
-
-      - name: Download Unprotected iOS App
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-unprotected-app
-          path: ./apks/unprotected-ios
-
-      - name: Unzip Apps
-        run: |
-          cd apks/protected-ios && unzip app-protected.app.zip && rm *.zip
-          cd ../unprotected-ios && unzip app-unprotected.app.zip && rm *.zip
-
-      - name: Boot iOS Simulator
-        run: |
-          DEVICE_UUID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[].value[] | select(.isAvailable == true and .name == "iPhone 15") | .udid' | head -n 1)
-          if [ -z "$DEVICE_UUID" ]; then
-            DEVICE_UUID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[].value[] | select(.isAvailable == true) | .udid' | head -n 1)
-          fi
-          echo "Booting device $DEVICE_UUID"
-          xcrun simctl boot "$DEVICE_UUID" || true
-          xcrun simctl bootstatus "$DEVICE_UUID" -b || true
-          echo "DEVICE_UUID=$DEVICE_UUID" >> $GITHUB_ENV
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.26.3'
-          cache-dependency-path: apps/vesper-ingestion/go.sum
-
-      - name: Start telemetry ingestion API (real backend, not mocked)
-        # Same reasoning as the Android job's step of this name -- see there.
-        # The iOS Simulator shares the host's network namespace, so
-        # "localhost" (the app's getTelemetryEndpoint() fallback on iOS)
-        # already reaches this service with no extra config.
-        continue-on-error: true
-        working-directory: apps/vesper-ingestion
-        env:
-          DB_PATH: ${{ runner.temp }}/telemetry-ci.db
-        run: |
-          go mod download
-          go run ./cmd/server &
-          for i in $(seq 1 60); do
-            (echo > /dev/tcp/127.0.0.1/8081) >/dev/null 2>&1 && exit 0
-            sleep 1
-          done
-          echo "::warning::telemetry ingestion API never came up on :8081 -- the DAST report's telemetry check will show a real connection failure"
-
-      - name: Run Frida DAST on iOS Simulator
-        run: |
-          PROTECTED_APP=$(ls apks/protected-ios | grep '\.app$' | head -n 1)
-          UNPROTECTED_APP=$(ls apks/unprotected-ios | grep '\.app$' | head -n 1)
-          
-          echo "⚔️ Triggering DAST Python Script for iOS..."
-          cd examples/demo-mobile && python scripts/frida_dast_test.py --package mx.edu.sovereign.core --protected-apk ../../apks/protected-ios/$PROTECTED_APP --baseline-package mx.edu.sovereign.core --baseline-apk ../../apks/unprotected-ios/$UNPROTECTED_APP --platform ios --device-udid $DEVICE_UUID
-            
-          if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi
-
-      - name: Upload iOS Security Report Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-security-report
-          path: examples/demo-mobile/security-report.md
-
   security-report-convergence:
     name: Final Verification & Results
-    needs: [security-dast-android, security-dast-ios]
+    needs: [security-dast-android]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -468,16 +276,9 @@ jobs:
           name: android-security-report
           path: ./reports/android
 
-      - name: Download iOS Report
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: ios-security-report
-          path: ./reports/ios
-
       - name: Merge Reports
         run: |
-          echo "# 🛡️ Vesper Ghost Ledger: Multi-Platform Security Audit" > final_report.md
+          echo "# 🛡️ Vesper Ghost Ledger: Security Audit" > final_report.md
           echo "## 📱 Android Analysis" >> final_report.md
           if [ -f ./reports/android/security-report.md ]; then
             cat ./reports/android/security-report.md >> final_report.md
@@ -486,12 +287,7 @@ jobs:
           fi
           echo "" >> final_report.md
           echo "---" >> final_report.md
-          echo "## 🍏 iOS Analysis" >> final_report.md
-          if [ -f ./reports/ios/security-report.md ]; then
-            cat ./reports/ios/security-report.md >> final_report.md
-          else
-            echo "⚠️ **No report produced.** The iOS job (\`security-dast-ios\`) did not complete far enough to generate one." >> final_report.md
-          fi
+          echo "_iOS Frida DAST is not run in this pipeline: GitHub-hosted macos-latest runners ship with macOS's system-wide Developer Mode disabled, which blocks task_for_pid for any local debugger (Frida, lldb) regardless of frida version, attach mechanism, or app entitlements -- confirmed by reproducing the identical failure against Apple's own signed Preferences.app. Real iOS DAST coverage would need a persistent self-hosted macOS runner with Developer Mode enabled once, out of band._" >> final_report.md
 
           cat final_report.md >> $GITHUB_STEP_SUMMARY
 

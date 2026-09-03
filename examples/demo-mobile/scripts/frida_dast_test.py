@@ -473,6 +473,39 @@ def drive_android_dev_menu_enqueue(test_nonce):
     if not ok:
         return False, f"[Account tab] {msg}"
 
+    # A tap on the Account tab can report success -- a real tab-bar element
+    # was found and a coordinate tap was dispatched -- without the app ever
+    # actually switching tabs: confirmed against real CI runs where this
+    # exact sequence stayed on the Home screen every time despite that
+    # "successful" tap (this never reproduced against a local emulator, so
+    # it's specific to the timing/load of CI's real x86_64 runner). Confirm
+    # against "Hello, Guest!" -- ProfileHeader's unauthenticated greeting,
+    # rendered synchronously at the very top of the Account screen, no
+    # scrolling needed -- before hunting for "Developer Menu" (which does
+    # need scrolling, and would otherwise conflate "wrong screen" with
+    # "right screen but not scrolled to it yet"). Re-tapping Account when
+    # it doesn't show up is what actually confirms whether the first tap
+    # landed; tapping an already-active tab again is a no-op, so this costs
+    # nothing on the common path where it worked the first time.
+    max_account_retaps = 3
+    navigated = False
+    for attempt in range(1, max_account_retaps + 1):
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            if _android_find_by_text(_android_dump_nodes(), ['Hello, Guest!'], partial=True) is not None:
+                navigated = True
+                break
+            time.sleep(1)
+        if navigated or attempt == max_account_retaps:
+            break
+        print(f"[!] Account screen not confirmed after tapping Account (attempt {attempt}/{max_account_retaps}) -- re-tapping...")
+        retap_ok, retap_msg = _android_tap_by_text(['Account'], timeout=10, partial=True)
+        if not retap_ok:
+            return False, f"[Account tab retap] {retap_msg}"
+    if not navigated:
+        visible = _android_visible_text()
+        return False, f"[Account tab] Never reached the Account screen after {max_account_retaps} attempts. Visible text/content-desc: {visible}"
+
     print("[*] Opening Developer Menu...")
     ok, msg = _android_tap_by_text(['Developer Menu'], timeout=15, partial=True)
     if not ok:

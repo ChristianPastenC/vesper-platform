@@ -25,6 +25,10 @@ jest.mock('@vesper-core/ghost-ledger', () => ({
   encodeJsonBody: jest.fn((body) => JSON.stringify(body)),
 }));
 
+jest.mock('../../../core/config', () => ({
+  getApiUrl: jest.fn(() => 'http://10.0.2.2:8080'),
+}));
+
 describe('useSovereignCheckout', () => {
   const mockExecuteRequest = jest.fn();
 
@@ -57,7 +61,7 @@ describe('useSovereignCheckout', () => {
       'checkout-mock-uuid',
       expect.objectContaining({
         method: 'POST',
-        url: '/api/v1/checkout/pay',
+        url: 'http://10.0.2.2:8080/api/v1/checkout/pay',
         headers: expect.objectContaining({
           Authorization: 'DPoP mock-token',
         }),

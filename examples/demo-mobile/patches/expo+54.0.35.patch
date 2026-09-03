@@ -1,0 +1,32 @@
+diff --git a/node_modules/expo/src/async-require/messageSocket.native.ts b/node_modules/expo/src/async-require/messageSocket.native.ts
+index 55b3c43..9a28943 100644
+--- a/node_modules/expo/src/async-require/messageSocket.native.ts
++++ b/node_modules/expo/src/async-require/messageSocket.native.ts
+@@ -6,10 +6,16 @@ declare namespace globalThis {
+ }
+ 
+ if (__DEV__) {
+-  const socket: WebSocket = (() => {
++  const socket: WebSocket | undefined = (() => {
+     const devServer = getDevServer();
+     if (!devServer.bundleLoadedFromServer) {
+-      throw new Error('Cannot create devtools websocket connections in embedded environments.');
++      // A dev-mode (`__DEV__`) bundle running from an embedded/standalone
++      // asset with no live Metro connection is a valid combination (e.g. a
++      // self-contained debug build for automated testing) -- there's just
++      // nothing to open this RSC-reload notification channel to. Skip it
++      // instead of throwing, which previously crashed the whole app at
++      // startup in exactly that setup.
++      return undefined;
+     }
+ 
+     const devServerUrl = new URL(devServer.url);
+@@ -17,7 +23,7 @@ if (__DEV__) {
+     return new WebSocket(`${serverScheme}://${devServerUrl.host}/message`);
+   })();
+ 
+-  socket.onmessage = (message: { data: any }) => {
++  if (socket) socket.onmessage = (message: { data: any }) => {
+     const data = JSON.parse(String(message.data));
+     switch (data.method) {
+       case 'sendDevCommand':

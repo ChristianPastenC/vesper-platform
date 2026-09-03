@@ -483,6 +483,20 @@ def _android_type_into_edit_text(text, timeout=10, poll_interval=1.0):
                     subprocess.run(f"adb shell input tap {center[0]} {center[1]}", shell=True)
                     time.sleep(0.3)
                     subprocess.run(f"adb shell input text {text}", shell=True)
+                    # Focusing the field opens the soft keyboard, and nothing
+                    # else in this flow ever dismisses it -- confirmed on a
+                    # real device that it stays open (with Gboard's own
+                    # clipboard-suggestion strip) covering the entire lower
+                    # half of the screen for the rest of the session,
+                    # silently breaking every later scroll/tap in this same
+                    # run (e.g. the telemetry E2E check, which sits further
+                    # down and never got found -- not because of anything
+                    # wrong with that step itself, but because the keyboard
+                    # was still up hiding it). KEYCODE_BACK dismisses the
+                    # IME without navigating away, since Android delivers
+                    # back-button presses to a focused soft keyboard first.
+                    time.sleep(0.3)
+                    subprocess.run("adb shell input keyevent 4", shell=True)
                     return True, None
         polls_since_scroll += 1
         if polls_since_scroll >= 2 and scrolls_done < max_scrolls:

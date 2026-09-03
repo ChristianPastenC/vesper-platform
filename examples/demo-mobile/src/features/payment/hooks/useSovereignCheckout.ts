@@ -4,6 +4,7 @@ import { useSovereignClient } from '../../../providers/sovereign/SovereignClient
 import { SovereignAdapterRequest, encodeJsonBody } from '@vesper-core/ghost-ledger';
 import { buildTransactionLedger, TransactionBlock } from '../ledger/buildTransactionLedger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
+import { getApiUrl } from '../../../core/config';
 
 export interface CheckoutResponse {
   success: boolean;
@@ -40,7 +41,7 @@ export const useSovereignCheckout = () => {
       // which is triggered upon detecting "DPoP" within the authorization header.
       const request: SovereignAdapterRequest = {
         method: 'POST',
-        url: '/api/v1/checkout/pay',
+        url: `${getApiUrl()}/api/v1/checkout/pay`,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `DPoP ${token}`,

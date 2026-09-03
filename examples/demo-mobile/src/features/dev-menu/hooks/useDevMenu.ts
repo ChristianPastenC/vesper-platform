@@ -8,7 +8,7 @@ import {
 import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
 import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
 import { validateHandshake } from '../../../core/network/handshakeValidator';
-import { getTelemetryApiKey, getTelemetryBundleId, getTelemetryEndpoint } from '../../../core/config';
+import { getApiUrl, getTelemetryApiKey, getTelemetryBundleId, getTelemetryEndpoint } from '../../../core/config';
 import { useAppStore } from '../../../store/useAppStore';
 
 export interface DevMenuStatus {
@@ -25,7 +25,7 @@ export interface FlushResult {
 
 const buildSimulatedRequest = (label: string): SovereignAdapterRequest => ({
   method: 'POST',
-  url: '/dev-menu/simulated-transaction',
+  url: `${getApiUrl()}/dev-menu/simulated-transaction`,
   headers: { 'Content-Type': 'application/json' },
   body: encodeJsonBody({ simulated: true, label, ts: Date.now() }),
 });

@@ -140,7 +140,10 @@ export const DevMenuScreen: React.FC = () => {
           />
           <TouchableOpacity
             style={[styles.button, styles.buttonPrimary]}
-            onPress={() => enqueueTestPayload(customLabel)}
+            onPress={async () => {
+              await enqueueTestPayload(customLabel);
+              setCustomLabel('');
+            }}
             disabled={isBusy || !customLabel}
             testID="dev-menu-enqueue-btn"
           >

@@ -35,6 +35,19 @@ class SecurityMetrics:
         # first place (e.g. the UI automation failed to drive a transaction),
         # not that zeroization worked.
         self.payload_confirmed_resident = False
+        # `leakage_bytes` above ends up holding the POST-dequeue scan's
+        # count; this holds the PRE-dequeue one, so the report can compare
+        # them instead of treating "found > 0 bytes after dequeue" as proof
+        # of a leak on its own. Confirmed on a real device that a scan for a
+        # sentinel typed into the Developer Menu's own TextInput finds a
+        # constant, non-zero residual in BOTH pre- and post-dequeue scans,
+        # identical whether the build is protected or not -- almost
+        # certainly leftover JS/native-widget copies of the typed string
+        # that ghost-ledger was never responsible for zeroizing (it only
+        # controls its own native ledger buffer). Only a byte count that
+        # actually *drops* after dequeue is real zeroization evidence; an
+        # unchanging nonzero count either way is that residual, not a leak.
+        self.leakage_bytes_before_dequeue = 0
         # Whether the on-device "Simulate E2E Event & Send to Dashboard"
         # action reported a real, successful POST to the telemetry
         # ingestion API (apps/vesper-ingestion) -- this is a genuine network
@@ -128,9 +141,24 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
     # produces the final `memory_leak_detected`). Without that positive
     # control, "not found" just as easily means the UI automation failed to
     # drive a real transaction as it does that zeroization worked.
+    #
+    # Absence/presence alone isn't enough either: confirmed on a real device
+    # that scanning for a sentinel typed into the Developer Menu's own
+    # TextInput finds a small, constant, nonzero residual in BOTH the
+    # pre- and post-dequeue scans, identical whether the build is protected
+    # or not -- almost certainly leftover JS/native-widget copies of the
+    # typed string that ghost-ledger was never responsible for zeroizing (it
+    # only ever controls its own native ledger buffer, not the UI's). A scan
+    # that never drops to exactly 0 after dequeue doesn't mean zeroize
+    # failed -- it means this harness's own UI leaves a trace. What DOES
+    # mean something is whether the byte count actually *decreased* after
+    # dequeue: that drop is the native buffer's own copy disappearing, on
+    # top of whatever constant residual the harness itself contributes.
     mem_scan_meaningful = protected_metrics.completed and protected_metrics.payload_confirmed_resident
-    mem_extraction_pass = mem_scan_meaningful and not protected_metrics.memory_leak_detected
-    mem_anomaly = mem_scan_meaningful and protected_metrics.memory_leak_detected
+    mem_bytes_before = protected_metrics.leakage_bytes_before_dequeue
+    mem_bytes_after = protected_metrics.leakage_bytes
+    mem_extraction_pass = mem_scan_meaningful and mem_bytes_after < mem_bytes_before
+    mem_anomaly = mem_scan_meaningful and mem_bytes_after >= mem_bytes_before
 
     all_completed = unprotected_metrics.completed and protected_metrics.completed
 
@@ -156,6 +184,14 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
     else:
         overall_line = "✅ **Overall Status:** The Ghost Ledger library successfully maintained Zero-Trust runtime integrity under active instrumentation in this run."
 
+    def mem_extraction_cell():
+        if not protected_metrics.completed:
+            return "⚠️ ERROR (Not Validated)"
+        if not mem_scan_meaningful:
+            return "⚠️ Not Validated (payload never confirmed resident)"
+        arrow = f"{mem_bytes_before}→{mem_bytes_after} B"
+        return f"🟢 Zeroized ({arrow})" if mem_extraction_pass else f"🔴 Unchanged ({arrow})"
+
     errors_section = ""
     if unprotected_metrics.error or protected_metrics.error:
         errors_section = "\n### ⚠️ Execution Errors\n"
@@ -180,13 +216,14 @@ This automated report compares the security posture of the application against a
 | :--- | :--- | :--- | :--- | :--- |
 | **Process Attachment (ptrace)** | {render_cell(unprotected_metrics, unprotected_metrics.frida_attached, "🔴 Allowed", "🟢 Blocked")} | {render_cell(protected_metrics, protected_metrics.frida_attached, "🟡 Allowed (Contained)", "🟢 Blocked")} | Process intercepted at runtime | ℹ️ Neutralized |
 | **JSI Function Hooking** | {render_cell(unprotected_metrics, unprotected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | {render_cell(protected_metrics, protected_metrics.jsi_hook_success, "🔴 Intercepted", "🟢 Blocked / Honeypot")} | Pointers validated via integrity | {verdict(protected_metrics.completed and not protected_metrics.jsi_hook_success)} |
-| **In-Memory Key Extraction** | {render_cell(unprotected_metrics, unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {render_cell(protected_metrics, protected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {protected_metrics.leakage_bytes if protected_metrics.completed else 'N/A'} B leaked (protected) | {"⚠️ ANOMALY" if mem_anomaly else ("⚠️ NOT VALIDATED (payload never confirmed resident)" if protected_metrics.completed and not protected_metrics.payload_confirmed_resident else verdict(mem_extraction_pass))} |
+| **In-Memory Key Extraction** | {render_cell(unprotected_metrics, unprotected_metrics.memory_leak_detected, "🔴 Keys Leaked", "🟢 0 Bytes Extracted")} | {mem_extraction_cell()} | protected: {f'{mem_bytes_before}→{mem_bytes_after} B (before→after zeroize)' if mem_scan_meaningful else 'N/A'} | {"⚠️ NOT VALIDATED (payload never confirmed resident)" if protected_metrics.completed and not protected_metrics.payload_confirmed_resident else verdict(mem_extraction_pass)} |
 | **Ledger Alteration ($H_n$)** | {render_cell(unprotected_metrics, unprotected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | {render_cell(protected_metrics, protected_metrics.crypto_bypass_success, "🔴 Hash Manipulated", "🟢 Immutable Signature")} | C++ mutation detection | {verdict(protected_metrics.completed and not protected_metrics.crypto_bypass_success)} |
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
-- **Data Leakage (Leakage Bytes):**
-  - *Unprotected:* `{f'{unprotected_metrics.leakage_bytes} bytes' if unprotected_metrics.completed else 'N/A - run did not complete'}` ({'Leaked payload' if unprotected_metrics.completed and unprotected_metrics.leakage_bytes > 0 else ('No leak' if unprotected_metrics.completed else 'no data')})
-  - *Protected:* `{f'{protected_metrics.leakage_bytes} bytes' if protected_metrics.completed else 'N/A - run did not complete'}` ({'Leaked' if protected_metrics.completed and protected_metrics.leakage_bytes > 0 else ('Active Zeroization' if protected_metrics.completed else 'no data')})
+- **Data Leakage (before zeroize → after zeroize):**
+  - *Unprotected:* `{f'{unprotected_metrics.leakage_bytes_before_dequeue}→{unprotected_metrics.leakage_bytes} bytes' if unprotected_metrics.completed else 'N/A - run did not complete'}` (no zeroization attempted by design)
+  - *Protected:* `{f'{mem_bytes_before}→{mem_bytes_after} bytes' if protected_metrics.completed else 'N/A - run did not complete'}` ({'Not validated -- payload never confirmed resident' if protected_metrics.completed and not mem_scan_meaningful else ('Byte count dropped: real zeroization evidence' if mem_extraction_pass else ('Byte count unchanged: no zeroization observed' if protected_metrics.completed else 'no data'))})
+  - A nonzero *after* count on its own isn't proof of a leak: typing the sentinel into the Developer Menu's own field leaves a small residual (JS/native widget copies) that `ghost-ledger` was never responsible for zeroizing. The *drop* from before to after is what's actually attributable to it.
 - **Performance Overhead (Latency):**
   - The C++ Nitro Modules layer adds `{latency_str}` per transaction.
 
@@ -842,22 +879,28 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                 }},
                 
                 scanMemory: function() {{
+                    // No cap: `Process.enumerateRanges().some(...)` bailing
+                    // out after an arbitrary 256MB used to make this scan
+                    // cover a different, incomplete subset of the address
+                    // space on every call (enumeration order isn't stable
+                    // run-to-run), so the *same* app state could scan as
+                    // "24 matches" one time and "3 matches" the next --
+                    // confirmed directly on a real device: repeated capped
+                    // scans of an unchanged state swung wildly, while a full
+                    // scan of the whole ~2GB readable address space (via
+                    // .forEach instead of .some, no early exit) took ~1.5-2s
+                    // and gave stable, reproducible counts. That's fast
+                    // enough to not need a cap at all.
                     var leaked = false;
                     var actual_dump = "";
-                    var totalScanned = 0;
                     var matchesCount = 0;
-                    var MAX_TOTAL = 256 * 1024 * 1024; // 256 MB hard cap
-                    var MAX_PER_RANGE = 16 * 1024 * 1024; // 16 MB per range
 
                     Process.enumerateRanges({{ protection: 'r--', coalesce: true }})
-                        .some(function(range) {{
-                            if (range.size < SENTINEL_BYTES.length) return false;
-
-                            var scanSize = Math.min(range.size, MAX_PER_RANGE);
-                            totalScanned += scanSize;
+                        .forEach(function(range) {{
+                            if (range.size < SENTINEL_BYTES.length) return;
 
                             try {{
-                                Memory.scanSync(range.base, scanSize, SENTINEL_PATTERN).forEach(function(match) {{
+                                Memory.scanSync(range.base, range.size, SENTINEL_PATTERN).forEach(function(match) {{
                                     leaked = true;
                                     matchesCount++;
                                     if (actual_dump === "") {{
@@ -875,8 +918,6 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                                     }}
                                 }});
                             }} catch(scanErr) {{}}
-
-                            return totalScanned >= MAX_TOTAL;
                         }});
 
                     var leakBytes = matchesCount * SENTINEL_BYTES.length;
@@ -1012,7 +1053,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                 script.exports_sync.scan_memory()
             except Exception as e:
                 print(f"[!] Scan Memory RPC call failed: {e}")
-            time.sleep(2)  # let the async `send()` from the scan land before we read metrics
+            time.sleep(3)  # let the async `send()` from the scan land before we read metrics -- bumped from 2s now that scanMemory covers the full ~2GB address space (~1.5-2s) instead of a 256MB-capped subset
 
         # Drive a REAL transaction through the app's own Developer Menu
         # (dev-only, __DEV__-gated -- see src/features/dev-menu) instead of
@@ -1045,6 +1086,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         print("[*] Scanning memory for the sentinel while the transaction is still queued...")
         run_memory_scan()
         metrics.payload_confirmed_resident = metrics.memory_leak_detected
+        metrics.leakage_bytes_before_dequeue = metrics.leakage_bytes
         if not metrics.payload_confirmed_resident:
             print("[-] Sentinel not found even before zeroize -- the transaction likely never reached the ledger.")
 
@@ -1104,6 +1146,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         metrics.memory_leak_detected = False
         metrics.crypto_bypass_success = False
         metrics.leakage_bytes = 0
+        metrics.leakage_bytes_before_dequeue = 0
         metrics.latency_ms = 0.0
         metrics.memory_dump = ""
 

@@ -674,7 +674,18 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                     time.sleep(3)
             if session is None:
                 subprocess.run(f"xcrun simctl terminate {udid_str} {package_name}", shell=True, capture_output=True, text=True)
-                raise last_error
+                # If this is ever hit again, the report needs to say whether
+                # Frida's own local-device process list even contained our
+                # PID -- "not found" could mean simctl's PID was wrong, the
+                # process died right after launch, or Frida's local device
+                # simply can't see into the simulator's process namespace on
+                # this runner at all. Each points to a different fix.
+                try:
+                    seen = [f"{p.pid}:{p.name}" for p in device.enumerate_processes()]
+                    diagnostic = f"Frida's local device saw {len(seen)} process(es); target pid {pid} {'WAS' if any(str(pid) == s.split(':')[0] for s in seen) else 'was NOT'} among them: {seen}"
+                except Exception as diag_err:
+                    diagnostic = f"could not enumerate Frida's local-device process list either: {diag_err}"
+                raise Exception(f"{last_error} -- {diagnostic}")
         else:
             # CI emulators can take a while to become visible to frida-server
             device = frida.get_usb_device(timeout=60)
@@ -1043,8 +1054,8 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
     except frida.TimedOutError:
         metrics.error = "USB/emulator device not found within timeout"
         print(f"[-] {metrics.error}. Frida never attached -- this run produces NO valid security evidence.")
-    except frida.ProcessNotFoundError:
-        metrics.error = f"Application {package_name} not found in emulator/simulator"
+    except frida.ProcessNotFoundError as e:
+        metrics.error = f"Application {package_name} not found in emulator/simulator: {e}"
         print(f"[-] {metrics.error}. Frida never attached -- this run produces NO valid security evidence.")
     except Exception as e:
         metrics.error = f"Unexpected error during Frida attachment: {e}"

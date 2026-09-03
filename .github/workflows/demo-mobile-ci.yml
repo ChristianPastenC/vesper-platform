@@ -359,17 +359,33 @@ jobs:
       - name: Install Frida & Tools
         # iOS doesn't need to match a downloaded frida-server binary version
         # the way Android does -- it injects via the local device directly.
-        # Every 16.5.1 attach attempt tried so far has failed with a
-        # dyld/module-resolution error of one flavor or another ("probing
-        # dyld", then "module not found at /usr/lib/libSystem.B.dylib" after
-        # switching from wait-for-debugger to a plain launch+attach) -- the
-        # common thread across mechanisms points at 16.5.1 not correctly
-        # parsing this simulator runtime's dyld shared cache, not at timing.
-        # Latest frida was tried once before, but paired with the
-        # wait-for-debugger mechanism (since replaced by launch+attach),
-        # where it failed differently ("early end-of-stream") -- that
-        # combination hasn't been tried yet.
-        run: pip install --upgrade frida frida-tools
+        # Compatibility matrix tried so far, across two independent
+        # variables (frida version x attach mechanism):
+        #   16.5.1 + wait-for-debugger : "unexpected error while probing
+        #                                 dyld of target process" (every time)
+        #   latest  + wait-for-debugger : "unexpected early end-of-stream"
+        #   latest  + launch+attach     : "Application ... not found in
+        #                                 emulator/simulator" (frida.ProcessNotFoundError,
+        #                                 identical on 2 separate runs -- deterministic,
+        #                                 not flaky)
+        #   16.5.1 + launch+attach      : UNTESTED -- this is it. The 16.5.1
+        #                                 dyld-probing theory was specific to
+        #                                 catching the process at its very
+        #                                 first instruction (wait-for-debugger);
+        #                                 launch+attach only touches an
+        #                                 already-running process with dyld
+        #                                 long since initialized, so that
+        #                                 failure mode may simply not apply
+        #                                 here. If this ALSO fails, the
+        #                                 2x2 matrix is exhausted and the
+        #                                 problem is neither the frida
+        #                                 version nor the mechanism, but
+        #                                 something about local-device Mach
+        #                                 attach permissions on this runner
+        #                                 image -- see the enumerate_processes
+        #                                 diagnostic frida_dast_test.py now
+        #                                 logs on attach failure.
+        run: pip install frida==16.5.1 frida-tools
 
       - name: Download Protected iOS App
         uses: actions/download-artifact@v4

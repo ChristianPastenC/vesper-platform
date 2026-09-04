@@ -46,6 +46,22 @@
       "recent_activity": "Recent Support Activity",
       "view_console": "View Full Console",
       "waiting_events": "Waiting for telemetry events..."
+    },
+    "integration": {
+      "title": "Quick Integration (React Native)",
+      "desc1": "Protect sensitive data when network fails. @vesper-core/ghost-ledger requires ",
+      "desc_bold": "Nitro Modules",
+      "desc2": " for high-performance C++ execution.",
+      "step1": "Install Dependencies",
+      "terminal": "Terminal",
+      "step2": "Initialize the Client",
+      "code": "App.tsx / Context",
+      "testing_title": "Testing Environments (Jest)",
+      "testing_desc1": "Remember to enable ",
+      "testing_code1": "mock: true",
+      "testing_desc2": " or ",
+      "testing_code2": "globalThis.__SOVEREIGN_MOCK__ = true",
+      "testing_desc3": " in your tests, since native C++ modules cannot be executed in standard Node.js."
     }
   },
   "console": {
@@ -124,9 +140,9 @@
       "p1_desc": "Requests are serialized to binary and queued in a static C++ ledger in physical memory. Each block is cryptographically linked with SHA-256.",
       "p2_desc": "Active erasure using <code>std::fill</code> and <code>SecureZeroMemory</code> immediately after dispatch or TTL expiration to prevent leaks to the JS Heap.",
       "p3_desc": "Background engine that detects dynamic manipulation (injection or memory corruption). Freezes execution and preserves evidence.",
-      "p4_desc": "Ephemeral generation and signing of Proofs of Possession (DPoP - RFC 9449) using WebCrypto to avoid overloading the C++ core.",
+      "p4_desc": "Ephemeral generation and signing of Proofs of Possession (DPoP - RFC 9449) using react-native-quick-crypto to avoid overloading the C++ core.",
       "p5_desc": "Decoupled from the network via the Command pattern. Native adapters for Fetch, Axios or GraphQL included.",
-      "p6_desc": "Native support for <em>fallback engine</em> without JSI. Ideal for CI/CD pipelines, web and component testing without real hardware."
+      "p6_desc": "Native support for <em>mock engine</em> without JSI. Ideal for CI/CD pipelines and Jest testing without real hardware."
     },
     "flow": {
       "title": "In-Memory Operational Flow",
@@ -139,6 +155,8 @@
     },
     "examples": {
       "title": "Conceptual Usage Examples",
+      "crypto_title": "Dependency Injection (CryptoProvider)",
+      "crypto_desc": "To keep the library agnostic to the specific React Native architecture (Expo vs Bare), <strong>we require injecting a cryptographic provider</strong>. All examples assume you have injected <code>react-native-quick-crypto</code> into the <code>cryptoProvider</code> property for maximum C++ speed.",
       "ex1": "1. Basic Setup (Queue & Replay)",
       "ex2": "2. Axios Integration",
       "ex3": "3. Fetch Integration",

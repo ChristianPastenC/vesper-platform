@@ -5,6 +5,7 @@ import { ApiKeyManager } from '../components/dashboard/ApiKeyManager';
 import { TelemetryPanel } from '../components/dashboard/TelemetryPanel';
 import { SecurityPosture } from '../components/dashboard/SecurityPosture';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
+import { IntegrationGuide } from '../components/dashboard/IntegrationGuide';
 ---
 
 <Layout title="Sovereign Telemetry | Dashboard">
@@ -17,15 +18,16 @@ import { DashboardHeader } from '../components/dashboard/DashboardHeader';
       <DashboardHeader client:load />
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <!-- Columna Izquierda: API Keys y Postura -->
+        <!-- Left Column: API Keys and Security Posture -->
         <div class="space-y-8 lg:col-span-1">
           <ApiKeyManager client:load />
           <SecurityPosture client:load />
         </div>
 
-        <!-- Columna Derecha: Gráficos de Telemetría -->
+        <!-- Right Column: Telemetry Graphs and Guide -->
         <div class="lg:col-span-2">
           <TelemetryPanel client:load />
+          <IntegrationGuide client:load />
         </div>
       </div>
     </main>

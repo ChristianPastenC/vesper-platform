@@ -1,12 +1,132 @@
-# @vesper-core/ghost-ledger
+# @vesper-core/ghost-ledger (v0.0.1-beta.2)
 
-`@vesper-core/ghost-ledger` is a transport-agnostic cryptographic resilience library designed to sequester pending request payloads securely in volatile RAM during connection failures. It guarantees the cryptographic integrity of enqueued transactions.
+[![npm version](https://img.shields.io/npm/v/@vesper-core/ghost-ledger.svg?style=flat-square)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
+[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg?style=flat-square)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/npm/l/@vesper-core/ghost-ledger.svg?style=flat-square)](https://github.com/vesper-core/ghost-ledger/blob/main/LICENSE)
+
+`@vesper-core/ghost-ledger` is a cryptographic middleware for **React Native** designed to solve a critical problem: **protecting your HTTP request payloads in volatile memory (RAM) when the network fails**.
+
+When your mobile app loses connection or faces server errors (like 503 or 504), pending requests with sensitive payloads can be left exposed in the JavaScript heap. This library prevents payload theft by automatically catching these failed requests, encrypting them, and securely locking them down in a native C++ memory ledger until the network is restored.
+
+Built exclusively for React Native using high-performance **Nitro Modules**, it offers robust, offline-capable security and optional end-to-end telemetry observability without dealing with the underlying cryptographic complexity.
 
 ---
 
-## Core Security Features
+## Installation
 
-The security architecture of the library is built upon 5 fundamental implementation pillars:
+You can install the package using your preferred package manager:
+
+```bash
+# Using yarn
+yarn add @vesper-core/ghost-ledger@0.0.1-beta.2
+
+# Using npm
+npm install @vesper-core/ghost-ledger@0.0.1-beta.2
+```
+
+### Peer Dependencies & Requirements
+
+This library uses [Nitro Modules](https://nitro.margelo.com/) for its core C++ execution. It is **exclusively for React Native** and will not run in standard web environments. Ensure the peer dependency is installed:
+
+```bash
+yarn add react-native-nitro-modules
+```
+
+To maintain strict multi-platform compatibility across iOS and Android without bloating the core, we require a native cryptographic provider. We highly recommend `react-native-quick-crypto`:
+
+```bash
+yarn add react-native-quick-crypto
+```
+
+---
+
+## Getting Started
+
+Integrating `@vesper-core/ghost-ledger` is straightforward. The usage is split into two simple steps.
+
+### Step 1: Initialize the `SovereignClientCore`
+
+Set up the client at the root of your React Native application.
+
+> [!IMPORTANT]
+> **Dependency Injection:** The library requires you to provide a `nativeCryptoProvider`. By injecting `react-native-quick-crypto`, `@vesper-core/ghost-ledger` avoids being tightly coupled to specific React Native architectures while maximizing hashing performance.
+
+```typescript
+import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
+import QuickCrypto from 'react-native-quick-crypto';
+import NetInfo from '@react-native-community/netinfo';
+
+const client = SovereignClientCore.getInstance({
+  cryptoProvider: {
+    getRandomBytes: (n) => QuickCrypto.randomBytes(n),
+    sha256: async (d) => new Uint8Array(QuickCrypto.createHash('sha256').update(d).digest())
+  },
+  networkResolver: async () => {
+    const state = await NetInfo.fetch();
+    return state.isConnected ?? false;
+  },
+  networkAdapter: new FetchAdapter(),
+  // Optional: Enable real-time telemetry to track integrity breaches or queue drops
+  telemetry: {
+    apiKey: 'your-vesper-api-key',
+    bundleId: 'com.your.app',
+    endpoint: 'https://api.vesper.local/v1/support/telemetry'
+  }
+});
+```
+
+### Step 2: Execute Requests
+
+Once initialized, use `executeRequest()` to send your secure HTTP requests. You can easily encode JSON payloads using `encodeJsonBody()`.
+
+```typescript
+import { encodeJsonBody } from '@vesper-core/ghost-ledger';
+
+// If the network drops or returns 503/504, the payload is securely sequestered in C++ RAM.
+const response = await client.executeRequest('tx_123', {
+  method: 'POST',
+  url: 'https://api.yourdomain.com/v1/secure-endpoint',
+  body: encodeJsonBody({
+    amount: 1500,
+    currency: 'USD'
+  })
+});
+```
+
+---
+
+## Testing Environments (Mock Mode)
+
+> [!TIP]
+> **Gotcha:** For Jest test setups or Node.js scripting where compile-time native code linking (Nitro Modules) is not possible, you **must** use Mock Mode.
+
+`@vesper-core/ghost-ledger` provides a built-in pure JavaScript fallback engine to prevent Metro or Jest resolution errors during unit testing.
+
+### Enabling Mock Mode
+
+#### 1. Via Global Flag (Recommended for Jest)
+Define `globalThis.__SOVEREIGN_MOCK__ = true` globally in your test setup file (`jest.setup.js`):
+
+```typescript
+// Define mock flag globally to skip native C++ JSI loading during tests
+globalThis.__SOVEREIGN_MOCK__ = true;
+```
+
+#### 2. Via Client Configuration
+Pass `mock: true` in the `SovereignClientCoreConfig`:
+
+```typescript
+const client = SovereignClientCore.getInstance({
+  // ... other config
+  mock: true
+});
+```
+
+---
+
+## Advanced: Core Security Features
+
+For those interested in the underlying mechanics, the security architecture of the library is built upon 5 fundamental implementation pillars:
 
 1. **Volatile RAM Ledger (C++ Engine Core):** 
    During connectivity failures or transient server responses (such as HTTP 503/504), outgoing requests are serialized to binary format (`Uint8Array`) and enqueued in a native C++ static ledger (`SovereignSecureCore`) in physical RAM (`std::vector<uint8_t>`). Each block is cryptographically linked to its predecessor using chained SHA-256 hashes.
@@ -25,115 +145,43 @@ The security architecture of the library is built upon 5 fundamental implementat
 
 ---
 
-## Architecture & Directory Layout
 
-The directory layout separates JSI JNI wrappers, pure C++ core domain logic, and TypeScript adapters:
-
-<details>
-<summary><strong>View Detailed Directory Structure</strong></summary>
-
-```
-├── cpp/
-│   ├── SovereignSecureClient.h   # JSI Hybrid Object wrapper class definition.
-│   ├── SovereignSecureClient.cpp # JSI mapping and core delegation.
-│   ├── SovereignSecureCore.h     # Pure standard C++ Core engine definition.
-│   └── SovereignSecureCore.cpp   # Core ledger logic and SHA-256 implementation.
-├── src/
-│   ├── specs/
-│   │   └── SovereignSecureClient.nitro.ts # typescript specs contract for Nitrogen.
-│   ├── ledger/
-│   │   ├── index.ts              # Entry point for the ledger module.
-│   │   ├── crypto.ts             # Synchronous SHA-256 fallback algorithm.
-│   │   ├── fallback.ts           # SovereignSecureClientFallback pure JS fallback.
-│   │   └── queue.ts              # SovereignMemoryQueue: dynamic environment loader.
-│   ├── core/
-│   │   ├── index.ts              # Entry point for orchestration.
-│   │   ├── client.ts             # SovereignClientCore orchestrator class.
-│   │   ├── config.ts             # Trapping configurations and HTTP status codes.
-│   │   ├── error-matrix.ts       # Transport error matrix decisions.
-│   │   └── utils.ts              # DPoP context resolution helpers.
-│   ├── dpop/
-│   │   ├── index.ts              # Entry point for the DPoP signature engine.
-│   │   ├── executor.ts           # Interceptor/executor bridge.
-│   │   ├── keys.ts               # Asymmetric keys generation (RSA/EC).
-│   │   ├── signer.ts             # JWT proof generator and signer.
-│   │   ├── types.ts              # DPoP types.
-│   │   └── utils.ts              # DPoP cryptographic utilities.
-│   ├── contracts/
-│   │   ├── index.ts              # Entry point for abstract interfaces.
-│   │   ├── crypto.ts             # Cryptographic provider contracts.
-│   │   └── network.ts            # Network transport contracts.
-│   ├── adapters/
-│   │   ├── index.ts              # Entry point for transport adapters.
-│   │   ├── axios/                # Axios adapter and interceptors.
-│   │   ├── fetch/                # Fetch adapter and error handlers.
-│   │   └── graphql/              # GraphQL client post adapters.
-│   ├── binary.ts                 # Binary pack/unpack serialization.
-│   ├── index.ts                  # Public library exports surface.
-│   └── types.ts                  # Package-wide types and error definitions.
-├── CMakeLists.txt                # Unified target-splitting compiler configuration.
-└── package.json                  # Package configuration with peerDependencies.
-```
-
-</details>
-
----
-
-## Cryptographic Chain Formulation
-
-The in-memory ledger chains each block to its predecessor. The mathematical formulation of the block hashing is:
-
-$$H_n = \text{SHA256}(P_n \parallel H_{n-1} \parallel \text{Timestamp\\_local\\_utf8})$$
-
-### Variable Definitions:
-* **$H_n$**: The resulting SHA-256 hash of the current block $n$ (32-byte array).
-* **$P_n$**: The binary payload of the current request (`serializedRequest`).
-* **$H_{n-1}$**: The SHA-256 hash of the preceding block (or 32-byte zero vector for genesis block).
-* **`Timestamp_local_utf8`**: UTF-8 encoded local timestamp string (`timestamp.toString()`).
-* **$\parallel$**: Binary concatenation operator.
----
 
 ## Operational In-Memory Flow
 
 The sequence diagram below outlines the runtime lifecycle of a request, demonstrating error trapping, memory sequestration, and native C++ core delegation:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor App as Application (App)
-    participant Core as SovereignClientCore
-    participant Queue as SovereignMemoryQueue
-    participant Native as SovereignSecureCore (C++)
-    participant Net as ISovereignNetworkAdapter
-    
-    App->>Core: executeRequest(requestId, request, dpop, config)
-    alt Ledger Compromised
-        Core-->>App: Throw IntegrityBreachError
-    else Ledger Intact
-        Core->>Core: Check connection status (isOnline)
-        alt Online & Queue Not Replaying
-            Core->>Core: Resolve / Attach DPoP Proof
-            Core->>Net: request(dispatchRequest)
-            alt Success (HTTP 2xx)
-                Net-->>Core: Response
-                Core->>Core: Zeroize request buffers
-                Core-->>App: Return Response Data
-            else Trappable Failure (HTTP 503 / Transport Error)
-                Core->>Core: shouldFreezeSession(error) -> true
-                Core->>Core: enqueueStructuredRequest()
-                Core->>Queue: enqueue(...)
-                Queue->>Native: executeTransaction(id, payload, ttl)
-                Native->>Native: Chain hash H_n (C++ std::fill zeroize)
-                Core-->>App: Return Pending Promise
-            end
-        else Offline
-            Core->>Core: enqueueStructuredRequest()
-            Core->>Queue: enqueue(...)
-            Queue->>Native: executeTransaction(id, payload, ttl)
-            Native->>Native: Chain hash H_n (C++ std::fill zeroize)
-            Core-->>App: Return Pending Promise
-        end
-    end
+```text
+  [ Application ]
+        │
+        ▼ executeRequest(payload)
+ ┌─────────────┐
+ │ Sovereign   │───(Compromised)──► [ Throw IntegrityBreachError ]
+ │ ClientCore  │
+ └──────┬──────┘
+        │ (Intact)
+        ▼
+   [ Network Check ]
+        ├─────────────────────────┐
+        │ (Online & Stable)       │ (Offline or HTTP 503/504)
+        ▼                         ▼
+  ┌──────────┐             ┌───────────────┐
+  │ Network  │             │ Sovereign     │
+  │ Adapter  │             │ MemoryQueue   │
+  └─────┬────┘             └──────┬────────┘
+        │                         │ enqueue()
+        ▼                         ▼
+   [ HTTP 2xx ]            ┌───────────────┐
+        │                  │ Native C++    │
+        ▼                  │ Engine (JSI)  │
+ [ Zeroize RAM ]           └──────┬────────┘
+                                  │
+                                  ▼
+                          [ Cryptographic Block Hash ]
+                          [ Zeroize Temp RAM ]
+                                  │
+                                  ▼
+                          [ Return Promise ]
 ```
 
 ---
@@ -158,134 +206,10 @@ sequenceDiagram
 
 ---
 
-## Conceptual Usage Examples
+## Contributing
 
-### 1. Basic Setup (Offline Queueing & Replay)
+We welcome contributions! If you find a bug or want to propose a new feature, please open an issue or submit a pull request.
 
-<details>
-<summary><strong>View Fetch Adapter & Telemetry setup</strong></summary>
+## License
 
-```typescript
-import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
-
-const client = SovereignClientCore.getInstance({
-  cryptoProvider: {
-    getRandomBytes: (n) => window.crypto.getRandomValues(new Uint8Array(n)),
-    sha256: async (d) => new Uint8Array(await window.crypto.subtle.digest('SHA-256', d))
-  },
-  networkResolver: async () => navigator.onLine,
-  networkAdapter: new FetchAdapter(),
-  defaultTTL: 60_000,
-  telemetry: {
-    apiKey: 'your-vesper-api-key',
-    bundleId: 'com.your.app',
-    endpoint: 'https://api.vesper.local/v1/support/telemetry'
-  }
-});
-
-// Traps in C++ memory if connection drops
-const pendingResponse = client.executeRequest('tx_101', {
-  method: 'POST',
-  url: 'https://api.sovereign.local/v1/ledger',
-  body: new TextEncoder().encode(JSON.stringify({ amount: 500 }))
-});
-
-// Replay queue synchronously upon reconnection
-await client.processSynchronizedQueue(async () => true);
-```
-</details>
-
-### 2. Transport Integrations
-
-<details>
-<summary><strong>View Axios, Fetch, and GraphQL Integration Code</strong></summary>
-
-**Axios Integration with Error Trapping:**
-```typescript
-import { SovereignClientCore, AxiosAdapter } from '@vesper-core/ghost-ledger';
-import axios from 'axios';
-
-const client = SovereignClientCore.getInstance({
-  cryptoProvider: myCryptoProvider,
-  networkResolver: async () => true,
-  networkAdapter: new AxiosAdapter({ axiosInstance: axios.create() }),
-  errorTrapping: { freezeOn503_504: true }
-});
-
-client.executeRequest('tx_102', { method: 'POST', url: '/api/ledger/degraded', body: myPayload });
-```
-
-**Fetch Integration with Trapping:**
-```typescript
-import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
-
-const client = SovereignClientCore.getInstance({
-  cryptoProvider: myCryptoProvider,
-  networkResolver: async () => navigator.onLine,
-  networkAdapter: new FetchAdapter()
-});
-
-client.executeRequest('tx_103', { method: 'GET', url: 'https://api.sovereign.local/v1/data' });
-```
-
-**GraphQL Integration with Trapping:**
-```typescript
-import { SovereignClientCore, GraphQLAdapter } from '@vesper-core/ghost-ledger';
-
-const client = SovereignClientCore.getInstance({
-  cryptoProvider: myCryptoProvider,
-  networkResolver: async () => navigator.onLine,
-  networkAdapter: new GraphQLAdapter({ endpoint: 'https://api.sovereign.local/graphql' })
-});
-
-client.executeRequest('tx_104', {
-  method: 'POST',
-  url: '',
-  body: new TextEncoder().encode(JSON.stringify({ query: 'mutation { createTx(amount: 1500) }' }))
-});
-```
-</details>
-
----
-
-## Pure JavaScript Mock Mode
-
-> [!TIP]
-> For environments where compile-time native code linking or runtime C++ execution is not possible (such as in pure JavaScript/TypeScript, web applications, or test setups), `@vesper-core/ghost-ledger` provides a built-in pure JavaScript fallback engine.
->
-> This mode skips all attempts to load the native JSI/Nitro modules or Node `.node` addons, preventing Metro/Webpack static analysis or compile-time resolution errors.
-
-### Enabling Mock Mode
-
-You can enable mock mode in one of two ways:
-
-#### 1. Via Client Configuration (Instance Level)
-Pass `mock: true` in the `SovereignClientCoreConfig` when instantiating the core client:
-
-```typescript
-import { SovereignClientCore } from '@vesper-core/ghost-ledger';
-
-const client = SovereignClientCore.getInstance({
-  cryptoProvider: myCryptoProvider,
-  networkResolver: async () => navigator.onLine,
-  networkAdapter: new FetchAdapter(),
-  mock: true // <-- Force pure JS fallback engine and skip native C++ loading
-});
-```
-
-#### 2. Via Global Flag (Environment Level)
-Define `globalThis.__SOVEREIGN_MOCK__ = true` before the library is imported or evaluated. This is especially useful for setting mock behavior globally across an entire test execution or environment:
-
-```typescript
-// Define mock flag globally in your app entrypoint or test setup file
-globalThis.__SOVEREIGN_MOCK__ = true;
-```
-
----
-
-## Build Pipelines
-
-```bash
-yarn install  # Installs dependencies and generates lockfile
-yarn build    # Compiles and outputs type-safe TS build
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -1,6 +1,6 @@
 {
   "name": "@vesper-core/ghost-ledger",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.2",
   "description": "Cryptographic resilience middleware: volatile RAM ledger, Error Trapping Matrix, DPoP asymmetric proof-of-possession signing, and platform-agnostic transport adapters.",
   "license": "MIT",
   "type": "module",

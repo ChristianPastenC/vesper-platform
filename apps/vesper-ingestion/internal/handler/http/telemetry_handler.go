@@ -1,16 +1,16 @@
-﻿package http
+package http
 
 import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"log/slog"
 	"math"
 	"net/http"
+	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 
 	"vesper-core/vesper-ingestion/internal/domain"
 	"vesper-core/vesper-ingestion/internal/middleware"
@@ -72,6 +72,7 @@ func applyXOR(buf []byte, sessionKey, iv []byte, startIndex uint64) {
 // @Param X-Bundle-ID header string true "Bundle ID of the mobile app"
 // @Param X-Sovereign-Session-Key header string false "Hex-encoded 32-byte session key (required when sending raw XOR-encrypted mmap bytes)"
 // @Param X-Sovereign-IV header string false "Hex-encoded 32-byte IV from the mmap header (required together with X-Sovereign-Session-Key)"
+// @Param X-Sovereign-Start-Index header integer false "Start index for XOR keystream (default 0)"
 // @Param payload body []byte true "Binary telemetry payload"
 // @Success 202 {string} string "Accepted"
 // @Failure 400 {string} string "Invalid payload format"
@@ -115,6 +116,7 @@ func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	// tenant master secret. The backend never stores them.
 	sessionKeyHex := r.Header.Get("X-Sovereign-Session-Key")
 	ivHex := r.Header.Get("X-Sovereign-IV")
+	startIndexStr := r.Header.Get("X-Sovereign-Start-Index")
 
 	if sessionKeyHex != "" && ivHex != "" {
 		sessionKey, errK := hex.DecodeString(sessionKeyHex)
@@ -124,9 +126,17 @@ func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid X-Sovereign-Session-Key or X-Sovereign-IV header", http.StatusBadRequest)
 			return
 		}
-		// Apply in-place XOR. startIndex=0 mirrors the sequential index used
-		// by MmapTelemetryStorage when the ring buffer starts from the oldest entry.
-		applyXOR(body, sessionKey, iv, 0)
+
+		var startIndex uint64 = 0
+		if startIndexStr != "" {
+			parsedIndex, err := strconv.ParseUint(startIndexStr, 10, 64)
+			if err == nil {
+				startIndex = parsedIndex
+			}
+		}
+
+		// Apply in-place XOR.
+		applyXOR(body, sessionKey, iv, startIndex)
 	}
 
 	// -- Parse and validate each 17-byte struct --------------------------------
@@ -163,8 +173,12 @@ func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Also persist locally in SQLite for the Support Portal Dashboard
+		idSeed := fmt.Sprintf("%s|%d|%d", tenantID, timestamp, eventType)
+		idHash := sha256.Sum256([]byte(idSeed))
+		deterministicID := hex.EncodeToString(idHash[:16])
+
 		dbMetric := domain.Metric{
-			ID:         uuid.NewString(),
+			ID:         deterministicID,
 			TenantID:   tenantID,
 			MetricType: int(eventType),
 			Value:      value,

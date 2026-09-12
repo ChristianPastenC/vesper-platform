@@ -85,6 +85,32 @@ Beyond standard DPoP, this backend implements enterprise-grade middleware (`inte
 
 ---
 
+## Environment Variables
+
+The server uses the following environment variables. You can configure these in a `.env` file in the root directory.
+
+| Variable | Description |
+| :--- | :--- |
+| `PORT` | **Optional.** The port the server binds to. Defaults to `8080`. |
+| `DB_PATH` | **Optional.** Path to the BoltDB file. Defaults to `./data/sovereign.db`. |
+| `PAYLOAD_SECRET_KEY` | **Recommended.** Secret key (min 32 chars) used to validate the HMAC-SHA256 signature of request payloads. If not set, modifying requests will be rejected by the HashValidator. |
+| `ECDSA_PRIVATE_KEY_PEM` | **Optional.** Base64URL-encoded DER EC private key. If provided, the server persists JWT signatures across restarts. If missing, an ephemeral key is auto-generated. |
+
+### Development Security Bypasses
+
+Special environment variables are provided to allow seamless local testing (e.g., using Bruno/Postman) without triggering strict cryptographic security blocks.
+
+| Variable | Description |
+| :--- | :--- |
+| `BUILD_ENV` | Setting this to `development` enables development-only routes (e.g., `POST /api/v1/dev/dpop-token`) which generate valid DPoP tokens automatically for API clients. |
+| `DEV_DPOP_BYPASS` | Setting to `true` bypasses the ECDSA signature verification (DPoP). |
+| `DEV_HASH_BYPASS` | Setting to `true` bypasses the payload integrity verification (HMAC-SHA256). |
+
+> [!CAUTION]
+> These variables bypass all Zero-Trust mechanisms and must **never** be injected or present in a production environment. Furthermore, without these bypasses enabled, testing modifying endpoints via Postman or Bruno is virtually impossible due to the dynamic C++ cryptographic requirements.
+
+---
+
 ## Local Development & Commands
 
 To run this backend locally, ensure you have **Go 1.22+** installed. Rename `.env.example` to `.env` in the root of `examples/demo-backend`.
@@ -112,15 +138,3 @@ To run this backend locally, ensure you have **Go 1.22+** installed. Rename `.en
 
 Once the server is running, the API documentation is available at:
 **http://localhost:8080/swagger/index.html**
-
----
-
-## Development Security Bypasses
-
-Special environment variables are provided to allow seamless local testing (e.g., using Bruno/Postman) without triggering strict cryptographic security blocks:
-- `BUILD_ENV=development`: Enables development-only routes, such as the `POST /api/v1/dev/dpop-token` endpoint which generates valid DPoP tokens automatically for API clients.
-- `DEV_DPOP_BYPASS=true`: Bypasses the ECDSA signature verification (DPoP).
-- `DEV_HASH_BYPASS=true`: Bypasses payload integrity verification (HMAC-SHA256).
-
-> [!CAUTION]
-> These variables bypass all Zero-Trust mechanisms and must **never** be injected or present in a production environment. Furthermore, without these bypasses enabled, testing modifying endpoints via Postman or Bruno is virtually impossible due to the dynamic C++ cryptographic requirements.

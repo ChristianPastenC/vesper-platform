@@ -45,6 +45,7 @@ func TestTelemetryIngest(t *testing.T) {
 	buf.Write(value)
 
 	req, _ := http.NewRequest("POST", "/ingest", buf)
+	req.Header.Set("X-Sovereign-Start-Index", "0")
 	
 	// Inject TenantID into Context (Simulating ApiKeyValidator)
 	ctx := context.WithValue(req.Context(), middleware.TenantIDKey, "tenant_123")

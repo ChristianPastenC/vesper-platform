@@ -42,6 +42,7 @@ inline void secure_zero(void* ptr, size_t size) noexcept {
     for (size_t i = 0; i < size; ++i) {
         p[i] = 0;
     }
+    __asm__ __volatile__("" : : "r"(ptr) : "memory");
 }
 
 } // namespace sovereign::secure::crypto

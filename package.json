@@ -1,0 +1,8 @@
+{
+  "name": "sovereign-core-platform",
+  "version": "1.0.0",
+  "scripts": {
+    "test:go": "cd apps/vesper-ingestion && go test ./... -cover",
+    "test:load": "k6 run scripts/load_tests/telemetry_stress_test.js"
+  }
+}

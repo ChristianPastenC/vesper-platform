@@ -1,6 +1,7 @@
 name: ghost-ledger-ci
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'packages/ghost-ledger/**'

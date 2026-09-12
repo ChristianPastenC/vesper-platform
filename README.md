@@ -1,13 +1,13 @@
-# Vesper Core Platform
+# V.E.S.P.E.R. Core Platform
 
 [![Console Deployment](https://img.shields.io/badge/Console-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://vesper-console.netlify.app/)
 [![Ingestion API Deployment](https://img.shields.io/badge/Ingestion_API-Render-46E3B7?style=for-the-badge&logo=render)](https://vesper-ingestion.onrender.com/)
 [![Demo Backend Deployment](https://img.shields.io/badge/Demo_Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
 [![Ghost Ledger](https://img.shields.io/badge/@vesper/ghost--ledger-blue?style=for-the-badge&logo=npm)](./packages/ghost-ledger)
 
-This repository contains the Vesper Developer Platform, a B2B SaaS system that provides a portal and an ingestion API for the Vesper Client SDK telemetry data.
+This repository contains the **V.E.S.P.E.R. (Volatile Enclave for Secure Payload Encryption & Routing)** Developer Platform. It is a comprehensive B2B SaaS system and Zero-Trust cryptographic ecosystem providing core telemetry ingestion APIs, a management portal, a native C++ security SDK, and complete sample reference applications (mobile and backend) demonstrating how to implement a Zero-Trust architecture.
 
-## 🚀 Live Environments
+## Live Environments
 
 You can explore the deployed platform and API implementations via the following public URLs:
 
@@ -19,25 +19,72 @@ You can explore the deployed platform and API implementations via the following 
 
 ---
 
-## Architecture
+## Why V.E.S.P.E.R.? (The Zero-Trust Philosophy)
 
-The project is structured as a monorepo containing two main applications and a core library:
+Modern mobile applications are inherently vulnerable. Attackers can reverse-engineer standard APIs, extract static JWT Bearer tokens to perform replay attacks, or use dynamic instrumentation tools (like Frida) to manipulate memory and bypass security checks at runtime. 
+
+The **V.E.S.P.E.R.** architecture solves this by applying strict **Zero-Trust** principles through multiple defense layers:
+
+1. **Volatile Enclave (Memory Isolation):** Sensitive cryptographic operations do not happen in the vulnerable JavaScript runtime. They are executed directly in a native C++ Volatile RAM Ledger that actively detects memory tampering and triggers an `IntegrityBreachError` if hooked.
+2. **Secure Payload Encryption (DPoP & HMAC):** Instead of relying solely on a static Bearer token, the mobile client uses an ephemeral ECDSA key pair to dynamically sign *every single HTTP request*. Request bodies are also cryptographically hashed via HMAC-SHA256. A stolen token is useless without the private key, and payloads cannot be altered in transit (MitM).
+3. **Routing & Active Telemetry:** When tampering is detected locally on the device, the C++ SDK bypasses standard HTTP layers to emit a 17-byte XOR-encrypted binary payload. This gets routed directly to the Vesper Ingestion API, alerting administrators in real-time.
+
+---
+
+## Ecosystem Architecture
+
+To implement this philosophy, the project is structured as a monorepo containing the core platform, the security library, and the integration examples:
 
 1. **[`vesper-ingestion`](./apps/vesper-ingestion)** (Backend - Go)
    - A high-performance Go HTTP server using `go-chi`.
-   - Exposes REST endpoints for the B2B SaaS authentication and API Key generation.
-   - Exposes a binary ingestion endpoint (`/api/v1/support/telemetry`) that receives compressed telemetry data from client SDKs.
-   - Implements Zero-Trust Log Sanitization middleware to scrub any accidental PII via Regex before processing.
-   - Forwards telemetry to an OpenTelemetry collector (like VictoriaMetrics) and stores a local copy in SQLite for the real-time developer dashboard.
+   - Exposes REST endpoints for B2B SaaS authentication and API Key generation.
+   - Exposes a binary ingestion endpoint (`/api/v1/support/telemetry`) that receives raw, XOR-encrypted telemetry data from client SDKs.
+   - Forwards telemetry to OpenTelemetry collectors and stores a local copy in SQLite.
 
 2. **[`vesper-console`](./apps/vesper-console)** (Frontend - Astro)
-   - A lightweight, ultra-fast frontend built entirely in Astro and Vanilla JS.
-   - Provides authentication (Login/Signup) for tenant organizations.
-   - Allows developers to generate API Keys (`X-Sovereign-API-Key`) to embed in their `SovereignClientCore` implementations.
-   - Features a real-time dashboard using `Chart.js` that visualizes the telemetry metrics (Integrity & Latency) ingested by the backend.
+   - A lightweight, fast frontend built in Astro and hydrated with React ("Islands Architecture").
+   - Allows organizations to manage their tenant profiles and generate `X-Sovereign-API-Key` strings for their mobile apps.
+   - Features a real-time dashboard using **Recharts** that visualizes incoming telemetry metrics.
 
 3. **[`@vesper-core/ghost-ledger`](./packages/ghost-ledger)** (SDK - C++/TypeScript)
-   - The native cryptographic engine that integrates securely into client applications.
+   - The native cryptographic engine that integrates securely into client mobile applications.
+   - Calculates dynamic DPoP signatures and detects memory tampering via its C++ Volatile RAM Ledger.
+
+4. **[`demo-backend`](./examples/demo-backend)** (Backend - Go)
+   - A sample reference implementation of an E-commerce API built with Clean Architecture.
+   - Acts as the verifier. It strictly validates the ECDSA DPoP signatures and HMAC payloads generated by the mobile SDK before fulfilling business logic (like checkouts).
+
+5. **[`demo-mobile`](./examples/demo-mobile)** (Mobile - React Native)
+   - A sample mobile e-commerce application demonstrating the proper integration of the `@vesper-core/ghost-ledger` library.
+
+### Full System Workflow
+
+```mermaid
+graph TD
+    subgraph Client [Mobile Environment]
+        App[Demo Mobile App] -->|Embeds| SDK[Ghost Ledger SDK]
+    end
+
+    subgraph Vesper Platform [Vesper B2B Services]
+        Ingestion[Ingestion API] -->|Feeds Metrics| Console[Vesper Console]
+    end
+    
+    subgraph Customer Backend [Customer Infrastructure]
+        DemoAPI[Demo Backend API]
+    end
+
+    %% Auth and Setup
+    Admin[Tenant Admin] -->|1. Register & Request Keys| Console
+    
+    %% Telemetry Flow
+    SDK -.->|2. Emit Binary Telemetry| Ingestion
+    
+    %% Business Flow
+    App -->|3. Secure E-commerce Request| DemoAPI
+    SDK -.->|Generates DPoP Signature| DemoAPI
+```
+
+---
 
 ## Getting Started
 
@@ -58,23 +105,25 @@ npm run dev
 ```
 *The portal will run on `http://localhost:4000` (port fixed in `package.json`, not Astro's default 4321).*
 
-## Database Management
-To clear the SQLite database and start fresh:
+### Database Management
+To clear the SQLite database in `vesper-ingestion` and start fresh:
 ```bash
 cd apps/vesper-ingestion
 go run ./cmd/cli clean-db
 ```
 
+---
+
 ## API Testing with Bruno
 
 This repository includes a native [Bruno](https://www.usebruno.com/) collection for API testing:
 > [!TIP]
-> Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081`.
+> Ensure you select the `Local` environment in Bruno so the `{{base_url}}` points to `http://127.0.0.1:8081` (Ingestion) or `http://127.0.0.1:8080` (Demo Backend).
 
-- **`bruno/demo-backend/`**: Contains the E-Commerce backend endpoints (if applicable).
+- **`bruno/demo-backend/`**: Contains the E-Commerce backend endpoints. **Note:** Most endpoints will fail without the Development Bypasses enabled due to strict DPoP validations.
 - **`bruno/vesper-ingestion/`**: Contains the B2B Auth and Ingestion endpoints.
 
-### Endpoints Overview
+### Ingestion Endpoints Overview
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -86,6 +135,8 @@ This repository includes a native [Bruno](https://www.usebruno.com/) collection 
 | `GET` | `/api/v1/b2b/metrics` | Real-time data for the chart |
 | `GET` | `/api/v1/support/ping` | Health check |
 | `POST` | `/api/v1/support/telemetry` | SDK Binary ingestion |
+
+---
 
 ## Continuous Integration & Security Pipelines
 
@@ -106,6 +157,8 @@ Tests the mobile application and runs live anti-tampering validation:
 - **`security-dast` (Anti-Tampering Cross-Test)**: Boots a headless Android emulator with KVM acceleration. It then injects **Frida** into the compiled APK to simulate a real-world memory tampering attack. This guarantees the `IntegrityBreachError` mechanism functions flawlessly against dynamic runtime hooks. It posts the security report directly to Pull Requests.
 
 </details>
+
+---
 
 ## License
 

@@ -13,7 +13,7 @@ export const TelemetryPanel: React.FC = () => {
   const [recentLogs, setRecentLogs] = useState<LogDetails[]>([]);
 
   useEffect(() => {
-    const t = localStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('sovereign_session_token');
     if (!t) {
       setToken('demo_token');
     } else {
@@ -56,27 +56,8 @@ export const TelemetryPanel: React.FC = () => {
         });
       }
     } catch (err) {
-      // Offline Mock Generator
-      const date = formatTime(new Date());
-      const r = Math.random();
-      const isBreach = r > 0.95;
-      const latency = 15 + Math.random() * 50;
-
-      setIntegrityData(prev => {
-        const d = [...prev, { x: date, y: isBreach ? 1 : 0 }];
-        return d.length > 20 ? d.slice(d.length - 20) : d;
-      });
-
-      setLatencyData(prev => {
-        const d = [...prev, { x: date, y: latency }];
-        return d.length > 20 ? d.slice(d.length - 20) : d;
-      });
-
-      setRecentLogs(prev => {
-        const details = getLogDetails(isBreach ? 2 : 3, isBreach ? 1 : latency);
-        const l = [...prev, { ...details, time: date }];
-        return l.length > 10 ? l.slice(l.length - 10) : l;
-      });
+      // API error or network unreachable. Stop mocking data.
+      console.error('Metrics fetch failed', err);
     }
   }, [token]);
 

@@ -67,3 +67,46 @@ jobs:
       - name: Run JS Unit Tests
         working-directory: ./packages/ghost-ledger
         run: yarn test:js
+
+  report-results:
+    name: Final Verification & Results
+    needs: [cpp-tests, js-lint-test]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Generate Report
+        run: |
+          echo "# 🛡️ Vesper Ghost Ledger: CI Execution Report" > final_report.md
+          echo "### Job Status" >> final_report.md
+          echo "- **C++ Tests:** ${{ needs.cpp-tests.result }}" >> final_report.md
+          echo "- **TS/JS Tests & Build:** ${{ needs.js-lint-test.result }}" >> final_report.md
+          echo "" >> final_report.md
+          echo "You can check the full logs in the [Actions tab](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." >> final_report.md
+          
+          cat final_report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post CI Report to PR or Issue
+        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('final_report.md', 'utf8');
+            if (context.eventName === 'pull_request') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            } else if (context.eventName === 'workflow_dispatch') {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Ghost Ledger CI Report - Manual Run ${context.runId}`,
+                body: report
+              });
+            }

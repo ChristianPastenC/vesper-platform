@@ -11,11 +11,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
   const [tenantName, setTenantName] = useState('');
 
   useEffect(() => {
-    setTenantName(localStorage.getItem('sovereign_tenant_name') || 'Tenant');
+    setTenantName(sessionStorage.getItem('sovereign_tenant_name') || 'Tenant');
   }, []);
 
   const handleLogout = () => {
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '/login';
   };
 
@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
               <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
             </svg>
           </span>
-          <span className="hidden sm:inline">Sovereign Console</span>
+          <span className="hidden sm:inline">Vesper Console</span>
         </h1>
 
         <div className="hidden md:block h-6 w-[1px] bg-white/10 mx-2"></div>

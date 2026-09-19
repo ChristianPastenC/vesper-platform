@@ -22,7 +22,7 @@ export const ApiKeyManager: React.FC = () => {
   const [keyToRevoke, setKeyToRevoke] = useState<string | null>(null);
 
   useEffect(() => {
-    const t = localStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('sovereign_session_token');
     if (!t) {
       setToken('demo_token');
     } else {
@@ -38,7 +38,7 @@ export const ApiKeyManager: React.FC = () => {
         headers: { 'Authorization': token }
       });
       if (res.status === 401) {
-        localStorage.removeItem('sovereign_session_token');
+        sessionStorage.removeItem('sovereign_session_token');
         window.location.href = '/login';
         return;
       }
@@ -146,7 +146,7 @@ export const ApiKeyManager: React.FC = () => {
                   onClick={() => confirmRevoke(k.key)}
                   className="absolute top-3 right-3 text-red-400 opacity-0 group-hover/key:opacity-100 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 transform translate-y-1 group-hover/key:translate-y-0"
                 >
-                  <RiDeleteBinLine size={14} /> Revocar
+                  <RiDeleteBinLine size={14} /> {t('dashboard.api_keys.revoke')}
                 </button>
 
                 <div>
@@ -175,22 +175,24 @@ export const ApiKeyManager: React.FC = () => {
         </div>
 
         <form onSubmit={handleCreateKey} className="space-y-4">
-          <fieldset disabled={keys.length > 0 || isGenerating} className="space-y-3">
+          <div className="space-y-3">
             <input
               type="text"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
               placeholder={t("dashboard.api_keys.placeholder")}
               required
+              disabled={keys.length > 0 || isGenerating}
               className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               type="submit"
+              disabled={keys.length > 0 || isGenerating}
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transform hover:-translate-y-0.5 active:translate-y-0"
             >
               {isGenerating ? t('dashboard.api_keys.generating') : keys.length > 0 ? t('dashboard.api_keys.limit') : t('dashboard.api_keys.generate')}
             </button>
-          </fieldset>
+          </div>
         </form>
       </div>
 

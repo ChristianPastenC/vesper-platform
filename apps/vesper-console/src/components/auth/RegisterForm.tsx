@@ -7,40 +7,48 @@ export const RegisterForm: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(false);
+    setErrorMsg(null);
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/register`, {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/b2b/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
-      if (!res.ok) throw new Error('Error registering');
+      if (!res.ok) {
+        throw new Error(res.status === 400 ? 'invalid' : 'server');
+      }
 
       const data = await res.json();
-      localStorage.setItem('sovereign_session_token', data.token);
-      localStorage.setItem('sovereign_tenant_id', data.tenant_id);
-      localStorage.setItem('sovereign_tenant_name', data.name);
+      sessionStorage.setItem('sovereign_session_token', data.token);
+      sessionStorage.setItem('sovereign_tenant_id', data.tenant_id);
+      sessionStorage.setItem('sovereign_tenant_name', data.name);
 
       window.location.href = '/dashboard';
-    } catch (err) {
-      setError(true);
+    } catch (err: any) {
+      if (err instanceof TypeError || err.message === 'Failed to fetch') {
+        setErrorMsg('Network error or CORS issue. Server unreachable.');
+      } else if (err.message === 'invalid') {
+        setErrorMsg(t('auth.register.error'));
+      } else {
+        setErrorMsg('Server error. Please try again later.');
+      }
       setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
+      {errorMsg && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl text-center shadow-inner">
-          {t('auth.register.error')}
+          {errorMsg}
         </div>
       )}
 
@@ -51,6 +59,8 @@ export const RegisterForm: React.FC = () => {
         <input
           type="text"
           id="name"
+          name="name"
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -66,6 +76,8 @@ export const RegisterForm: React.FC = () => {
         <input
           type="email"
           id="email"
+          name="email"
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -81,9 +93,12 @@ export const RegisterForm: React.FC = () => {
         <input
           type="password"
           id="password"
+          name="password"
+          autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={8}
           className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner"
           placeholder="••••••••"
         />

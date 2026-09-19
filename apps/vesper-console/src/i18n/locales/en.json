@@ -112,11 +112,11 @@
       "title_start": "Zero-Trust Security for",
       "title_end": "React Native",
       "subtitle": "Enterprise-grade cryptographic library natively compiled. Asymmetric DPoP signatures and strict memory zeroization operating below the V8/Hermes engine via JSI Bridge.",
-      "doc_btn": "View Documentation",
-      "bundle_btn": "Generate Bundle ID"
+      "doc_btn": "Docs",
+      "bundle_btn": "Get API Key"
     },
     "nav": {
-      "title": "Sovereign SDK",
+      "title": "Vesper SDK",
       "login": "Login",
       "register": "Get API Key"
     },
@@ -136,7 +136,7 @@
     "footer": "© 2026 Vesper Core Platform. B2B Dashboard.",
     "architecture": {
       "title": "Core Security Architecture",
-      "subtitle": "Based on 5 fundamental pillars to protect transaction integrity under a volatile and hostile memory environment.",
+      "subtitle": "Based on 6 fundamental pillars to protect transaction integrity under a volatile and hostile memory environment.",
       "p1_desc": "Requests are serialized to binary and queued in a static C++ ledger in physical memory. Each block is cryptographically linked with SHA-256.",
       "p2_desc": "Active erasure using <code>std::fill</code> and <code>SecureZeroMemory</code> immediately after dispatch or TTL expiration to prevent leaks to the JS Heap.",
       "p3_desc": "Background engine that detects dynamic manipulation (injection or memory corruption). Freezes execution and preserves evidence.",
@@ -151,7 +151,7 @@
       "step2": "Memory integrity is verified. If the Ledger has been compromised (e.g. code injection or memory dump), an <code class=\"text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">IntegrityBreachError</code> is immediately thrown.",
       "step3": "If the environment is safe, network connection is checked:",
       "step3_online": "<strong class=\"text-white\">Online:</strong> The ephemeral DPoP proof is attached and the request is dispatched to the <code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">NetworkAdapter</code>. Upon success, hardware secure erasure (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">SecureZeroMemory</code>) is executed on the buffers to leave no trace in memory, and the response is returned.",
-      "step3_offline": "<strong class=\"text-white\">Offline or HTTP 503:</strong> The request is queued in the volatile ledger (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">MemoryQueue</code>). The C++ core cryptographically links the payload using SHA-256 chaining (hash $H_n$) and initiates a zeroize of temporary variables, returning a pending Promise to the application that will automatically resolve on reconnection."
+      "step3_offline": "<strong class=\"text-white\">Offline or HTTP 503:</strong> The request is queued in the volatile ledger (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">MemoryQueue</code>). The C++ core cryptographically links the payload using SHA-256 chaining (hash H<sub>n</sub>) and initiates a zeroize of temporary variables, returning a pending Promise to the application that will automatically resolve on reconnection."
     },
     "examples": {
       "title": "Conceptual Usage Examples",

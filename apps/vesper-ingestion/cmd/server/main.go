@@ -42,7 +42,7 @@ func main() {
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			allowed := os.Getenv("ALLOWED_ORIGINS")
 			if allowed == "*" || allowed == "" {
-				return origin == "http://localhost:4000" || origin == "http://127.0.0.1:4000" || origin == "http://localhost:3000"
+				return origin == "http://localhost:4000" || origin == "http://127.0.0.1:4000" || origin == "http://localhost:3000" || origin == "https://vesper-console.netlify.app"
 			}
 			return origin == allowed
 		},

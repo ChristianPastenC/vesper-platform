@@ -17,11 +17,11 @@ const client = SovereignClientCore.getInstance({
   telemetry: {
     apiKey: 'YOUR_API_KEY',
     bundleId: 'com.your.app',
-    endpoint: 'https://api.vesper.local/v1/support/telemetry'
+    endpoint: 'https://vesper-ingestion.onrender.com/api/v1/support/telemetry'
   }
 });
 
-// 2. Execute Requests safely (Payload encrypted if network fails)
+// 2. Execute Requests safely (Payload hash-chained if network fails)
 const response = await client.executeRequest('tx_123', {
   method: 'POST',
   url: 'https://api.yourdomain.com/v1/secure-endpoint',
@@ -33,7 +33,11 @@ const response = await client.executeRequest('tx_123', {
   <div class="px-4 md:px-8">
     <div class="text-center max-w-3xl mx-auto mb-8">
       <h2 class="text-3xl font-bold text-white" data-i18n="dashboard.integration.title">Integración Rápida (React Native)</h2>
-      <p class="text-slate-400 mt-4" data-i18n="dashboard.integration.desc1">Protege los datos sensibles de tu app cuando falla la red. @vesper-core/ghost-ledger requiere <strong>Nitro Modules</strong> para ejecutar C++ de alto rendimiento.</p>
+      <p class="text-slate-400 mt-4">
+        <span data-i18n="dashboard.integration.desc1">Protege los datos sensibles de tu app cuando falla la red. @vesper-core/ghost-ledger requiere </span>
+        <strong data-i18n="dashboard.integration.desc_bold">Nitro Modules</strong>
+        <span data-i18n="dashboard.integration.desc2"> para ejecutar C++ de alto rendimiento.</span>
+      </p>
     </div>
     <div
       class="bg-[#0d1117] border border-slate-800 rounded-xl overflow-hidden shadow-2xl max-w-3xl mx-auto ring-1 ring-white/10"

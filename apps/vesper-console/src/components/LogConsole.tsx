@@ -14,10 +14,10 @@ export const LogConsole: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<Metric | null>(null);
 
   useEffect(() => {
-    const t = localStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('sovereign_session_token');
     if (!t) {
-      localStorage.setItem('sovereign_session_token', 'demo_token');
-      localStorage.setItem('sovereign_tenant_name', 'Demo Corp (Offline Mode)');
+      sessionStorage.setItem('sovereign_session_token', 'demo_token');
+      sessionStorage.setItem('sovereign_tenant_name', 'Demo Corp (Offline Mode)');
       setToken('demo_token');
     } else {
       setToken(t);
@@ -33,8 +33,6 @@ export const LogConsole: React.FC = () => {
       if (!res.ok) throw new Error('API Error');
       const metrics: Metric[] = await res.json();
 
-      metrics.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
       setLogs((prevLogs) => {
         const newLogs = [...prevLogs];
         metrics.forEach((m) => {
@@ -42,7 +40,8 @@ export const LogConsole: React.FC = () => {
             newLogs.push(m);
           }
         });
-        if (newLogs.length > 200) return newLogs.slice(newLogs.length - 200);
+        newLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        if (newLogs.length > 100) return newLogs.slice(0, 100);
         return newLogs;
       });
     } catch (err) {
@@ -60,8 +59,8 @@ export const LogConsole: React.FC = () => {
           timestamp: new Date().toISOString()
         };
 
-        const newLogs = [...prevLogs, mockLog];
-        if (newLogs.length > 100) return newLogs.slice(newLogs.length - 100);
+        const newLogs = [mockLog, ...prevLogs];
+        if (newLogs.length > 100) return newLogs.slice(0, 100);
         return newLogs;
       });
     }

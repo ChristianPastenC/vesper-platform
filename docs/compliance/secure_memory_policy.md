@@ -14,7 +14,7 @@ The cornerstone of the Vesper Edge Architecture is the strict prohibition of non
 
 * **The Vulnerability**: Traditional systems rely on unencrypted physical flash storage (e.g., `AsyncStorage`, `UserDefaults`, `SQLite`) to cache transaction payloads when network connectivity drops. This creates a severe data-at-rest exposure vector, heavily penalized by PCI-DSS v4.0 and GDPR.
 * **The Vesper Standard**: All unsubmitted transaction payloads, DPoP signatures, and session tokens **must be retained exclusively within volatile RAM boundaries** inside the C++ native JSI context. 
-* **Enforcement**: Code reviews and static analysis must block any attempt to serialize the `SovereignSecureClient` offline queue to disk. All state persistence across application reboots is strictly forbidden for cryptographic ledgers.
+* **Enforcement**: Code reviews and static analysis must block any attempt to serialize the `@vesper-core/ghost-ledger` (`Ghost Ledger`) offline queue to disk. All state persistence across application reboots is strictly forbidden for cryptographic ledgers.
 
 ---
 
@@ -27,7 +27,7 @@ To counter this, `@vesper-core/ghost-ledger` leverages the React Native JSI (Jav
 * **The JSI Memory Boundary**: Once a payload enters the C++ queue, no references are kept in the JavaScript heap. The C++ engine takes absolute ownership of the memory pointer.
 * **Deterministic Destruction**: When a transaction payload successfully synchronizes with the backend, or when its deterministic Time-To-Live (TTL) expires, the native C++ engine does not simply "free" the memory. It executes an active memory wipe.
 * **Defeating Compiler Dead Store Elimination (DSE)**: Modern C++ compilers (Clang, GCC) aggressively optimize code. If a developer uses a standard `memset()` or `std::fill()` on a buffer right before freeing it, the compiler often deletes the zeroization step entirely (Dead Store Elimination) to save CPU cycles, assuming the data is no longer needed. 
-  * To prevent this catastrophic security failure, the Vesper C++ engine utilizes compiler-safe zeroization functions (e.g., `explicit_bzero` on Linux/macOS, `SecureZeroMemory` on Windows, or `memset_s`) to guarantee the CPU executes the binary overwrite (`\0`) regardless of optimization flags.
+  * To prevent this catastrophic security failure, the Ghost Ledger C++ engine utilizes compiler-safe zeroization (`secure_zero`) with a volatile-pointer idiom and a compiler memory barrier (`__asm__ __volatile__("" : : "r"(ptr) : "memory")`), guaranteeing the CPU executes the binary overwrite (`\0`) regardless of optimization flags (`-O2`/`-O3`).
 * **Forensic Outcome**: If forensics tools (like `fridump`) attempt to dump the application's memory heap after a transaction is synchronized or evicted, they will extract only an empty array of binary zeroes.
 
 ---

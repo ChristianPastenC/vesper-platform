@@ -86,7 +86,7 @@ graph TD
 * **Likelihood:** Unlikely (2)
 * **Impact:** Major (4)
 * **Inherent Risk:** 🟡 **Medium**
-* **Mitigation:** **Active Byte-Level Zeroization.** Expired memory buffers are actively overwritten with binary zeroes (`std::fill`) before C++ pointers are discarded, leaving zero forensic trace for memory scrapers.
+* **Mitigation:** **Active Byte-Level Zeroization.** Expired memory buffers are actively overwritten with binary zeroes using compiler-safe zeroization (`secure_zero` with volatile pointers and `__asm__ __volatile__` memory barriers) before C++ pointers are discarded, defeating Dead Store Elimination and leaving zero forensic trace for memory scrapers.
 * **Residual Risk:** 🟢 **Low**
 
 ### 3.4. Denial of Service (D)

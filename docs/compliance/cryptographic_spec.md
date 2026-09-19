@@ -35,12 +35,12 @@ Data sent over hostile networks is strictly protected against tampering.
 
 ### 3.3. Offline Transaction Ledger (Cryptographic Chaining)
 The platform ensures that transactions queued locally during network outages cannot be tampered with, reordered, or manipulated prior to synchronization.
-* **Engineered Component**: `internal/usecase/ledger_validator.go` & `SovereignSecureClient` (C++)
+* **Engineered Component**: `@vesper-core/ghost-ledger` (`Ghost Ledger` C++ `VolatileQueue.hpp`) & `demo-backend` validator
 * **Mechanism**: Transactions are cryptographically chained in volatile RAM using the following mathematical formulation:
   
   $$ H_n = \text{SHA256}(Payload_n \parallel H_{n-1} \parallel Timestamp_n) $$
 
-* **Security Outcome**: This creates a localized, immutable ledger. If a hostile actor or debugger attempts to drop, modify, or insert a transaction while the device is offline, the mathematical chain breaks. Upon reconnection, the `ledger_validator.go` backend immediately detects the invalid cryptographic proof and rejects the entire synchronized batch.
+* **Security Outcome**: This creates a localized, immutable ledger. If a hostile actor or debugger attempts to drop, modify, or insert a transaction while the device is offline, the mathematical chain breaks. Upon reconnection, the backend immediately detects the invalid cryptographic proof and rejects the entire synchronized batch.
 
 ### 3.4. Identity & Session Tokens (JWT)
 * **Engineered Component**: `internal/adapter/auth/token_service.go` & `middleware/jwt_auth.go`

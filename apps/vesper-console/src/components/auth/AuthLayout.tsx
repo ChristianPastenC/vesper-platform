@@ -16,6 +16,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ titleKey, subtitleKey, i
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
+      {/* Home Link */}
+      <a href="/" className="absolute top-6 left-6 z-50 flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-4.28 9.22a.75.75 0 000 1.06l3 3a.75.75 0 101.06-1.06l-1.72-1.72h5.69a.75.75 0 000-1.5h-5.69l1.72-1.72a.75.75 0 00-1.06-1.06l-3 3z" clipRule="evenodd" />
+        </svg>
+        <span className="text-sm font-bold">Home</span>
+      </a>
+
       {/* Language Switcher for Auth Pages */}
       <div className="absolute top-6 right-6 z-50">
         <div className="flex items-center gap-1 bg-black/30 p-1 rounded-xl border border-white/5 shadow-inner">

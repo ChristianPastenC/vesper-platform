@@ -8,26 +8,31 @@ import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { IntegrationGuide } from '../components/dashboard/IntegrationGuide';
 ---
 
-<Layout title="Sovereign Telemetry | Dashboard">
+<Layout title="Vesper Console | Dashboard">
   <div
     class="min-h-screen bg-slate-950 font-sans text-slate-300 selection:bg-emerald-500/30 overflow-x-hidden"
   >
-    <Header activeTab="dashboard" client:load />
+    <script>
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('sovereign_session_token')) {
+        window.location.href = '/login';
+      }
+    </script>
+    <Header activeTab="dashboard" client:only="react" />
 
     <main class="max-w-7xl mx-auto px-4 md:px-8 py-8 w-full">
-      <DashboardHeader client:load />
+      <DashboardHeader client:only="react" />
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <!-- Left Column: API Keys and Security Posture -->
         <div class="space-y-8 lg:col-span-1">
-          <ApiKeyManager client:load />
-          <SecurityPosture client:load />
+          <ApiKeyManager client:only="react" />
+          <SecurityPosture client:only="react" />
         </div>
 
         <!-- Right Column: Telemetry Graphs and Guide -->
         <div class="lg:col-span-2">
-          <TelemetryPanel client:load />
-          <IntegrationGuide client:load />
+          <TelemetryPanel client:only="react" />
+          <IntegrationGuide client:only="react" />
         </div>
       </div>
     </main>

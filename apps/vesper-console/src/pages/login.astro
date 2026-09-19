@@ -3,6 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import { LoginPage } from '../components/auth/LoginPage';
 ---
 
-<Layout title="Sovereign Telemetry | Login">
-  <LoginPage client:load />
+<Layout title="Vesper Console | Login">
+  <LoginPage client:only="react" />
 </Layout>

@@ -4,12 +4,17 @@ import { Header } from '../components/Header';
 import { LogConsole } from '../components/LogConsole';
 ---
 
-<Layout title="Sovereign Telemetry | Support Console">
+<Layout title="Vesper Console | Support">
   <main
     class="w-full h-screen bg-[#0d1117] flex flex-col font-sans overflow-hidden"
     id="app-container"
   >
-    <Header activeTab="console" client:load />
-    <LogConsole client:load />
+    <script>
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('sovereign_session_token')) {
+        window.location.href = '/login';
+      }
+    </script>
+    <Header activeTab="console" client:only="react" />
+    <LogConsole client:only="react" />
   </main>
 </Layout>

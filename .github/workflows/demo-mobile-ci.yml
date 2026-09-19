@@ -292,16 +292,25 @@ jobs:
 
           cat final_report.md >> $GITHUB_STEP_SUMMARY
 
-      - name: Post Combined Security Report to PR
-        if: always() && github.event_name == 'pull_request'
+      - name: Post Combined Security Report to PR or Issue
+        if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('final_report.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+            if (context.eventName === 'pull_request') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            } else if (context.eventName === 'workflow_dispatch') {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Security Audit Report - Manual Run ${context.runId}`,
+                body: report
+              });
+            }

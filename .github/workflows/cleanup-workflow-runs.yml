@@ -1,0 +1,59 @@
+name: Cleanup Old Workflow Runs
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Run weekly on Sundays at 00:00
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  cleanup-actions:
+    name: Cleanup Workflow Runs
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 14
+          keep_minimum_runs: 5
+          delete_run_by_conclusion_pattern: >-
+            "cancelled, skipped, success, failure"
+
+  cleanup-deployments:
+    name: Cleanup Inactive Deployments (Render/Netlify)
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - name: Delete Inactive Deployments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: deployments } = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            for (const deployment of deployments) {
+              const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id
+              });
+              
+              const isInactive = statuses.length > 0 && statuses[0].state === 'inactive';
+              
+              if (isInactive) {
+                console.log(`Deleting inactive deployment ${deployment.id}`);
+                await github.rest.repos.deleteDeployment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  deployment_id: deployment.id
+                });
+              }
+            }

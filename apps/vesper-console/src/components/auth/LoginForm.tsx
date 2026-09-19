@@ -6,24 +6,12 @@ export const LoginForm: React.FC = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
-  const [loadingState, setLoadingState] = useState<'idle' | 'pinging' | 'authenticating'>('pinging');
-
-  useEffect(() => {
-    const ping = async () => {
-      try {
-        await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8081'}/api/v1/support/ping`);
-      } catch (e) {
-      } finally {
-        setLoadingState('idle');
-      }
-    };
-    ping();
-  }, []);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadingState, setLoadingState] = useState<'idle' | 'authenticating'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(false);
+    setErrorMsg(null);
     setLoadingState('authenticating');
 
     try {
@@ -33,31 +21,39 @@ export const LoginForm: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) throw new Error('Invalid credentials');
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) throw new Error('invalid');
+        throw new Error('server');
+      }
 
       const data = await res.json();
-      localStorage.setItem('sovereign_session_token', data.token);
-      localStorage.setItem('sovereign_tenant_id', data.tenant_id);
-      localStorage.setItem('sovereign_tenant_name', data.name);
+      sessionStorage.setItem('sovereign_session_token', data.token);
+      sessionStorage.setItem('sovereign_tenant_id', data.tenant_id);
+      sessionStorage.setItem('sovereign_tenant_name', data.name);
 
       window.location.href = '/dashboard';
-    } catch (err) {
-      setError(true);
+    } catch (err: any) {
+      if (err instanceof TypeError || err.message === 'Failed to fetch') {
+        setErrorMsg('Network error or CORS issue. Server unreachable.');
+      } else if (err.message === 'invalid') {
+        setErrorMsg(t('auth.login.invalid'));
+      } else {
+        setErrorMsg('Server error. Please try again later.');
+      }
       setLoadingState('idle');
     }
   };
 
   const getButtonText = () => {
-    if (loadingState === 'pinging') return t('auth.login.connecting');
     if (loadingState === 'authenticating') return t('auth.login.authenticating');
     return t('auth.login.submit');
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
+      {errorMsg && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl text-center shadow-inner">
-          {t('auth.login.invalid')}
+          {errorMsg}
         </div>
       )}
 
@@ -68,6 +64,8 @@ export const LoginForm: React.FC = () => {
         <input
           type="email"
           id="email"
+          name="email"
+          autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -77,15 +75,23 @@ export const LoginForm: React.FC = () => {
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="password" className="block text-xs font-bold tracking-wide text-slate-300 uppercase">
-          {t('auth.login.password')}
-        </label>
+        <div className="flex justify-between items-center">
+          <label htmlFor="password" className="block text-xs font-bold tracking-wide text-slate-300 uppercase">
+            {t('auth.login.password')}
+          </label>
+          <a href="#" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+            Forgot password?
+          </a>
+        </div>
         <input
           type="password"
           id="password"
+          name="password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={8}
           className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner"
           placeholder="••••••••"
         />

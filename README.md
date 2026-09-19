@@ -160,6 +160,22 @@ Tests the mobile application and runs live anti-tampering validation:
 
 ---
 
+## Security, Compliance & Operational Resilience Documentation
+
+Comprehensive technical specifications, threat models, and operational resilience frameworks are documented in the [`docs/`](./docs) directory:
+
+| Document | Primary Focus | Regulatory / Industry Standard |
+| :--- | :--- | :--- |
+| [**Business Impact Analysis (BIA)**](./docs/business_context_bia.md) | Quantitative recovery metrics ($RTO < 100\text{ms}$, $RPO = 0\text{s}$, MTPD), tiering hierarchy, and BCP execution sequence. | ISO 22301:2019 Cl. 8.2.2, DORA Art. 11 |
+| [**DORA Operational Resilience**](./docs/compliance/dora_operational_resilience.md) | ICT risk management, zero-disk volatile memory policy, and Threat-Led Penetration Testing (TLPT) automation via Frida. | Regulation (EU) 2022/2554 |
+| [**NIST CSF 2.0 Gap Analysis**](./docs/compliance/gap_analysis_nist_csf.md) | Assessment across Govern, Identify, Protect, Detect, Respond, Recover; prioritized engineering roadmap to Tier 4. | NIST CSF 2.0 |
+| [**BCP & DRP Operational Runbook**](./docs/operational_resilience/bcp_drp_runbook.md) | Standard Operating Procedures for edge sequestration, telemetry triage, backend reconciliation, and kill-switch revocation. | ISO 22301 Cl. 8.4, SRE SOP |
+| [**Cryptographic Specification**](./docs/compliance/cryptographic_spec.md) | Mathematical specifications for DPoP (RFC 9449), HMAC-SHA256, and SHA-256 block hash chaining. | FIPS 180-4, RFC 9449 |
+| [**Secure Memory Policy**](./docs/compliance/secure_memory_policy.md) | Compiler Dead Store Elimination (DSE) barriers, deterministic TTL zeroization, and zero-disk policy. | PCI-DSS v4.0 Req 3.2, GDPR Art. 32 |
+| [**STRIDE Threat Model**](./docs/compliance/stride_threat_model.md) | Endpoint and transport threat enumeration, attack surface mitigations, and fail-secure countermeasures. | Microsoft STRIDE Framework |
+
+---
+
 ## License
 
 This project is proprietary software. See the [LICENSE](./LICENSE) file for details.

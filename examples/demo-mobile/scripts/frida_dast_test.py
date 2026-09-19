@@ -793,6 +793,17 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         else:
             # CI emulators can take a while to become visible to frida-server
             device = frida.get_usb_device(timeout=60)
+            
+            # Clean up any lingering state from previous runs
+            try:
+                subprocess.run(f"adb shell am force-stop {package_name}", shell=True, capture_output=True)
+                for pending in device.enumerate_pending_spawns():
+                    if getattr(pending, 'identifier', '') == package_name or pending.identifier == package_name:
+                        print(f"[*] Pre-emptively killing lingering pending spawn for {package_name} (PID: {pending.pid})")
+                        device.kill(pending.pid)
+            except Exception as e:
+                print(f"[*] Non-fatal error cleaning up pre-existing spawns: {e}")
+
             max_attempts = 3
             last_error = None
             session = None
@@ -807,6 +818,15 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                 except Exception as e:
                     last_error = e
                     print(f"[!] Spawn/attach attempt {attempt}/{max_attempts} failed: {e}")
+                    
+                    try:
+                        for pending in device.enumerate_pending_spawns():
+                            if getattr(pending, 'identifier', '') == package_name or pending.identifier == package_name:
+                                print(f"[*] Killing pending spawn for {package_name} (PID: {pending.pid})")
+                                device.kill(pending.pid)
+                    except Exception as pending_err:
+                        print(f"[!] Failed to clear pending spawns: {pending_err}")
+
                     if pid is not None:
                         # spawn() succeeded but attach() didn't -- the process
                         # is left suspended and Frida's device-side spawn gate
@@ -819,6 +839,10 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
                             device.kill(pid)
                         except Exception:
                             pass
+                    
+                    # Fallback to force-stop via ADB
+                    subprocess.run(f"adb shell am force-stop {package_name}", shell=True, capture_output=True)
+                    
                     time.sleep(3)
             if session is None:
                 raise last_error

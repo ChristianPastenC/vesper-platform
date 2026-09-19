@@ -28,7 +28,7 @@ export const ghostClient = SovereignClientCore.getInstance({
   telemetry: {
     apiKey: 'YOUR_API_KEY',
     bundleId: 'com.your.app',
-    endpoint: 'https://api.vesper.local/v1/support/telemetry'
+    endpoint: 'https://vesper-ingestion.onrender.com/api/v1/support/telemetry'
   }
 });`;
 
@@ -57,7 +57,7 @@ export const ghostClient = SovereignClientCore.getInstance({
       {'  '}<span className="text-slate-400">telemetry</span>: {'{'}{'\n'}
       {'    '}<span className="text-slate-400">apiKey</span>: <span className="text-emerald-300">'YOUR_API_KEY'</span>,{'\n'}
       {'    '}<span className="text-slate-400">bundleId</span>: <span className="text-emerald-300">'com.your.app'</span>,{'\n'}
-      {'    '}<span className="text-slate-400">endpoint</span>: <span className="text-emerald-300">'https://api.vesper.local/v1/support/telemetry'</span>{'\n'}
+      {'    '}<span className="text-slate-400">endpoint</span>: <span className="text-emerald-300">'https://vesper-ingestion.onrender.com/api/v1/support/telemetry'</span>{'\n'}
       {'  }'}{'\n'}
       {'});'}
     </pre>

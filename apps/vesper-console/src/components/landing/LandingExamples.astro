@@ -47,7 +47,7 @@ const client = SovereignClientCore.getInstance({
 
 client.executeRequest('tx_103', { 
   method: 'GET', 
-  url: 'https://api.vesper.local/v1/data' 
+  url: 'https://api.yourdomain.com/v1/data' 
 });`;
 
 const example4 = `import { SovereignClientCore, GraphQLAdapter } from '@vesper-core/ghost-ledger';
@@ -57,7 +57,7 @@ const client = SovereignClientCore.getInstance({
   cryptoProvider: myQuickCryptoProvider,
   networkResolver: async () => (await NetInfo.fetch()).isConnected ?? false,
   networkAdapter: new GraphQLAdapter({ 
-    endpoint: 'https://api.vesper.local/graphql' 
+    endpoint: 'https://api.yourdomain.com/graphql' 
   })
 });
 
@@ -91,7 +91,7 @@ client.executeRequest('tx_104', {
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Example 1 -->
-    <div class="bg-[#0d1117] border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
+    <div class="bg-[#0d1117] min-w-0 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
       <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
         <span class="text-xs font-mono text-slate-400 font-medium" data-i18n="landing.examples.ex1">1. Setup Básico (Queue & Replay)</span>
       </div>
@@ -101,7 +101,7 @@ client.executeRequest('tx_104', {
     </div>
 
     <!-- Example 2 -->
-    <div class="bg-[#0d1117] border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
+    <div class="bg-[#0d1117] min-w-0 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
       <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
         <span class="text-xs font-mono text-slate-400 font-medium" data-i18n="landing.examples.ex2">2. Integración con Axios</span>
       </div>
@@ -111,7 +111,7 @@ client.executeRequest('tx_104', {
     </div>
 
     <!-- Example 3 -->
-    <div class="bg-[#0d1117] border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
+    <div class="bg-[#0d1117] min-w-0 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
       <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
         <span class="text-xs font-mono text-slate-400 font-medium" data-i18n="landing.examples.ex3">3. Integración con Fetch</span>
       </div>
@@ -121,7 +121,7 @@ client.executeRequest('tx_104', {
     </div>
 
     <!-- Example 4 -->
-    <div class="bg-[#0d1117] border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
+    <div class="bg-[#0d1117] min-w-0 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col ring-1 ring-white/5 transition-all hover:ring-white/10">
       <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex justify-between items-center">
         <span class="text-xs font-mono text-slate-400 font-medium" data-i18n="landing.examples.ex4">4. Integración con GraphQL</span>
       </div>

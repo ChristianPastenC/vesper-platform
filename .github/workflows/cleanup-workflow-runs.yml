@@ -20,8 +20,6 @@ jobs:
           repository: ${{ github.repository }}
           retain_days: 1
           keep_minimum_runs: 1
-          delete_run_by_conclusion_pattern: >-
-            "cancelled, skipped, success, failure"
 
   cleanup-deployments:
     name: Cleanup Inactive Deployments (Render/Netlify)

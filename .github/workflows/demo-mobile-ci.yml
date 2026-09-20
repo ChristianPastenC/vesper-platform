@@ -110,9 +110,11 @@ jobs:
           # binding or the API-key lookup rejects a genuine, correctly-formed
           # request with 403, indistinguishable from a real security control
           # firing. This is a test fixture value, not a production secret.
-          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
-          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
+          TELEMETRY_API_KEY: sk_test_demo123
+          TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
+          echo "TELEMETRY_API_KEY=sk_test_demo123" > .env
+          echo "TELEMETRY_BUNDLE_ID=com.demo.app" >> .env
           mkdir -p android/app/src/main/assets
           npx expo export:embed \
             --platform android \
@@ -134,9 +136,11 @@ jobs:
         working-directory: examples/demo-mobile
         env:
           EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
-          EXPO_PUBLIC_TELEMETRY_API_KEY: sk_test_demo123
-          EXPO_PUBLIC_TELEMETRY_BUNDLE_ID: com.demo.app
+          TELEMETRY_API_KEY: sk_test_demo123
+          TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
+          echo "TELEMETRY_API_KEY=sk_test_demo123" > .env
+          echo "TELEMETRY_BUNDLE_ID=com.demo.app" >> .env
           mkdir -p android/app/src/main/assets
           npx expo export:embed \
             --platform android \

@@ -127,12 +127,10 @@ def generate_markdown_report(unprotected_metrics, protected_metrics, platform):
             return "⚠️ NO BASELINE"
         return "✅ PASS" if condition_pass else "❌ FAIL"
 
-    latency_delta = 0.0
-    latency_valid = protected_metrics.completed and unprotected_metrics.completed
-    if latency_valid:
-        latency_delta = protected_metrics.latency_ms - unprotected_metrics.latency_ms
-
-    latency_str = (f"+{latency_delta:.2f} ms" if latency_delta > 0 else f"{latency_delta:.2f} ms") if latency_valid else "N/A (incomplete run)"
+    latency_valid = protected_metrics.completed
+    # El baseline desprotegido mide JNI_OnLoad mientras que el protegido mide executeTransaction.
+    # Restarlos genera un falso negativo (-6ms). Reportamos el tiempo absoluto de la transacción.
+    latency_str = f"{protected_metrics.latency_ms:.2f} ms" if latency_valid else "N/A (incomplete run)"
 
     # In-memory extraction is deliberately NOT a pass/fail gate below.
     # ghost-ledger's own C++ source (packages/ghost-ledger/cpp/VolatileQueue.hpp)
@@ -212,7 +210,7 @@ This automated report compares the security posture of the application against a
 
 ### 📈 Quantitative Metrics (Enterprise Evidence)
 - **Performance Overhead (Latency):**
-  - The C++ Nitro Modules layer adds `{latency_str}` per transaction.
+  - The protected C++ Nitro Modules layer executes transactions in `{latency_str}` on average.
 
 ### 📡 Telemetry Ingestion Check
 Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by this CI job) and successfully complete a full network round trip -- binary payload framing, `X-Sovereign-API-Key`/`X-Bundle-ID` headers, and the ingestion API's own validation -- rather than asserting success locally. This is a connectivity/config check, not an attack vector, so it does not factor into the Overall Status above.
@@ -231,7 +229,7 @@ Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by
 {unprotected_dump_str}
 ```
 
-**Protected Build (Ghost Ledger Zeroization):**
+**Protected Build (Residual JS Heap Snapshot):**
 ```text
 {protected_dump_str}
 ```
@@ -914,6 +912,8 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
 
             rpc.exports = {{
                 runTests: function(isProtected) {{
+                    // El build desprotegido no ejecuta la transacción nativa (usa un mock JS),
+                    // así que debemos interceptar JNI_OnLoad para probar que el hooking base funciona.
                     var keywords = isProtected ? ["executeTransaction", "enqueue", "verifyIntegrity"] : ["hermes", "JNI_OnLoad", "UIApplicationMain"];
                     var addr = findTargetAddress(keywords);
                     if (addr) {{

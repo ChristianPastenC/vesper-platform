@@ -135,7 +135,7 @@ describe('useDevMenu', () => {
     expect(flushResult).toEqual({
       success: false,
       eventCount: 1,
-      message: 'EXPO_PUBLIC_TELEMETRY_API_KEY is not configured.',
+      message: 'TELEMETRY_API_KEY is not configured.',
     });
   });
 

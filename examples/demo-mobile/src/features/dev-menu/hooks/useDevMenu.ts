@@ -97,7 +97,7 @@ export const useDevMenu = () => {
       result = {
         success: false,
         eventCount,
-        message: 'EXPO_PUBLIC_TELEMETRY_API_KEY is not configured.',
+        message: 'TELEMETRY_API_KEY is not configured.',
       };
       setLastFlushResult(result);
       return result;

@@ -15,7 +15,7 @@ import { useAppStore } from '../../store/useAppStore';
 const telemetryApiKey = getTelemetryApiKey();
 if (!telemetryApiKey) {
   console.warn(
-    '[SovereignClient] EXPO_PUBLIC_TELEMETRY_API_KEY is not set. Telemetry ingestion is disabled.',
+    '[SovereignClient] TELEMETRY_API_KEY is not set. Telemetry ingestion is disabled.',
   );
 }
 

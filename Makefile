@@ -32,3 +32,31 @@ dev-console: ## Inicia la consola administrativa Astro en :4000 (Tier 3 BIA)
 clean-db: ## Restablece la base de datos embebida SQLite de telemetria
 	@echo "$(CYAN)==> Limpiando telemetry.db en vesper-ingestion...$(RESET)"
 	cd apps/vesper-ingestion && go run ./cmd/cli clean-db
+
+.PHONY: test test-ingestion test-backend test-console test-ledger lint
+
+test: test-ingestion test-backend test-console ## Ejecuta la suite de pruebas unitarias en todos los servicios
+
+test-ingestion: ## Ejecuta pruebas unitarias con cobertura en vesper-ingestion
+	@echo "$(CYAN)==> Pruebas vesper-ingestion (Go)...$(RESET)"
+	cd apps/vesper-ingestion && go test -v ./... -cover
+
+test-backend: ## Ejecuta pruebas unitarias con cobertura en demo-backend
+	@echo "$(CYAN)==> Pruebas demo-backend (Go)...$(RESET)"
+	cd examples/demo-backend && go test -v ./... -cover
+
+test-console: ## Ejecuta pruebas unitarias en vesper-console (Vitest)
+	@echo "$(CYAN)==> Pruebas vesper-console (Vitest)...$(RESET)"
+	cd apps/vesper-console && npm test
+
+test-ledger: ## Ejecuta pruebas del motor criptografico Ghost Ledger (C++/TS)
+	@echo "$(CYAN)==> Pruebas ghost-ledger...$(RESET)"
+	cd packages/ghost-ledger && npm test
+
+lint: ## Ejecuta analisis estatico (go vet, astro check)
+	@echo "$(CYAN)==> Verificando vesper-ingestion...$(RESET)"
+	cd apps/vesper-ingestion && go vet ./...
+	@echo "$(CYAN)==> Verificando demo-backend...$(RESET)"
+	cd examples/demo-backend && go vet ./...
+	@echo "$(CYAN)==> Verificando vesper-console...$(RESET)"
+	cd apps/vesper-console && npx astro check

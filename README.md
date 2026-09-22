@@ -88,7 +88,36 @@ graph TD
 
 ## Getting Started
 
-### 1. Run the Telemetry API Backend
+### Unified Developer Lifecycle (`Makefile`)
+
+The repository includes a native `Makefile` to orchestrate services, run cross-workspace tests, and verify ports without container daemons or external database clusters. This preserves the lightweight, embedded-first architecture documented in [Secure Memory Policy (`docs/compliance/secure_memory_policy.md`)](./docs/compliance/secure_memory_policy.md) and aligns with the recovery tiering defined in [Business Impact Analysis (`docs/business_context_bia.md`)](./docs/business_context_bia.md#3-tiering-hierarchy--recovery-metrics):
+
+| Service | Command | Port | Persistence Engine | BIA Tier | Target Recovery |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Demo Backend Verifier** | `make dev-backend` | `8080` | Embedded BoltDB (`sovereign.db`) | **Tier 1** | RTO $\le 15$ min, RPO $= 0$ |
+| **Vesper Ingestion API** | `make dev-ingestion` | `8081` | Embedded SQLite (`telemetry.db`) | **Tier 2** | RTO $\le 30$ min, RPO $\le 5$ min |
+| **Vesper Console Portal** | `make dev-console` | `4000` | Astro SSG / React Client | **Tier 3** | RTO $\le 4$ h, RPO $\le 1$ h |
+
+#### Common Developer Commands:
+```bash
+# 1. Diagnose local toolchains (Go 1.22+, Node 18+) and port availability
+make verify-env
+
+# 2. Run unit and integration tests across all microservices
+make test
+
+# 3. Perform static analysis across Go and Astro workspaces
+make lint
+
+# 4. Reset local embedded telemetry database (re-seeds default tenant)
+make clean-db
+```
+
+### Manual Individual Service Execution
+
+If you prefer executing services manually in separate terminals:
+
+#### 1. Run the Telemetry API Backend
 ```bash
 cd apps/vesper-ingestion
 go mod download
@@ -97,7 +126,7 @@ go run ./cmd/server
 *The server will run on `http://127.0.0.1:8081`.*
 *SQLite database `telemetry.db` will be automatically generated and seeded.*
 
-### 2. Run the B2B Portal
+#### 2. Run the B2B Portal
 ```bash
 cd apps/vesper-console
 npm install
@@ -105,7 +134,7 @@ npm run dev
 ```
 *The portal will run on `http://localhost:4000` (port fixed in `package.json`, not Astro's default 4321).*
 
-### Database Management
+#### 3. Database Management
 To clear the SQLite database in `vesper-ingestion` and start fresh:
 ```bash
 cd apps/vesper-ingestion

@@ -1,0 +1,55 @@
+name: Vesper Console CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apps/vesper-console/**'
+      - '.github/workflows/vesper-console-ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'apps/vesper-console/**'
+      - '.github/workflows/vesper-console-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    name: Netlify Build Parity & Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/vesper-console
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/vesper-console/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Unit Tests (Vitest)
+        run: npm test
+
+      - name: Typecheck Astro Templates
+        run: npx astro check
+
+      - name: Build Astro SSG
+        env:
+          PUBLIC_API_URL: https://vesper-ingestion.onrender.com
+        run: npm run build
+
+      - name: Verify Build Output
+        run: |
+          test -f dist/index.html || exit 1
+          echo "### 🚀 Astro SSG Production Bundle Verified" >> $GITHUB_STEP_SUMMARY

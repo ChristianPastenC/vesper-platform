@@ -1,0 +1,57 @@
+name: Vesper Ingestion CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apps/vesper-ingestion/**'
+      - '.github/workflows/vesper-ingestion-ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'apps/vesper-ingestion/**'
+      - '.github/workflows/vesper-ingestion-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-vet:
+    name: Go Vet & Code Verification
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/vesper-ingestion
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: apps/vesper-ingestion/go.sum
+
+      - name: Run Go Vet
+        run: go vet ./...
+
+  build-validation:
+    name: Build Parity with Render
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/vesper-ingestion
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: apps/vesper-ingestion/go.sum
+
+      - name: Build Binary (Render Parity)
+        run: go build -v -ldflags="-w -s" -o server ./cmd/server

@@ -1,0 +1,24 @@
+title = "Vesper Platform Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Vesper test keys, synthetic local secrets, and mock fixtures"
+paths = [
+  '''apps/vesper-ingestion/internal/adapter/db/sqlite\.go''',
+  '''examples/demo-backend/\.env\.example''',
+  '''bruno/.*''',
+  '''docs/.*''',
+  '''Makefile''',
+  '''scripts/verify_dev_env\.sh''',
+  '''\.gitleaks\.toml'''
+]
+regexes = [
+  '''sk_test_demo123''',
+  '''demo@sovereign\.local''',
+  '''demo123''',
+  '''test-challenge-key''',
+  '''vesper-payload-secret-hmac-key-min-32-chars-2026''',
+  '''generateValue:\s*true'''
+]

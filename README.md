@@ -185,6 +185,23 @@ Tests the mobile application and runs live anti-tampering validation:
 - **`build-android` & `build-ios`**: Assembles the Android APK (Gradle) and iOS Simulator build (Xcodebuild).
 - **`security-dast` (Anti-Tampering Cross-Test)**: Boots a headless Android emulator with KVM acceleration. It then injects **Frida** into the compiled APK to simulate a real-world memory tampering attack. This guarantees the `IntegrityBreachError` mechanism functions flawlessly against dynamic runtime hooks. It posts the security report directly to Pull Requests.
 
+### 3. Vesper Ingestion API CI (`vesper-ingestion-ci.yml`)
+Enforces quality gates and strict build parity with Render:
+- **`lint-and-vet`**: Performs static analysis (`go vet ./...`) and ensures code cleanliness.
+- **`test-and-coverage`**: Runs unit test suite with Go concurrency race detector (`-race`) and publishes coverage metrics to `$GITHUB_STEP_SUMMARY`.
+- **`build-validation`**: Verifies binary compilation with production flags (`-ldflags="-w -s"`).
+
+### 4. Vesper Console CI (`vesper-console-ci.yml`)
+Guarantees frontend integrity and build parity with Netlify:
+- **`verify-and-build`**: Runs Vitest test suites, checks Astro template type diagnostics (`npx astro check`), and builds production SSG distribution assets (`dist/`).
+
+### 5. Multi-Engine DevSecOps Scan (`security-scan.yml`)
+Continuous automated threat mitigation aligned with NIST CSF 2.0 (`DE.CM`) and DORA Art. 13:
+- **`gitleaks-scan`**: Scans git commit history against `.gitleaks.toml` rules to block secret leaks.
+- **`trufflehog-scan`**: Deep entropy and verified credential detection across git branches.
+- **`dependency-vulnerabilities`**: Executes `govulncheck` on Go services and `npm audit --omit=dev --audit-level=high` on frontend packages.
+- **`security-summary`**: Renders unified security compliance matrix directly in Pull Requests and CI step summaries.
+
 </details>
 
 ---

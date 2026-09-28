@@ -45,3 +45,51 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --debug --only-verified=false
+
+  dependency-vulnerabilities:
+    name: SAST & Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck on Ingestion API
+        working-directory: apps/vesper-ingestion
+        run: govulncheck ./...
+
+      - name: Run govulncheck on Demo Backend
+        working-directory: examples/demo-backend
+        run: govulncheck ./...
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit Console Dependencies
+        working-directory: apps/vesper-console
+        run: npm audit --omit=dev --audit-level=high
+
+  security-summary:
+    name: Posture & DORA Compliance Report
+    needs: [gitleaks-scan, trufflehog-scan, dependency-vulnerabilities]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Security Summary
+        run: |
+          echo "# 🛡️ Vesper Platform: DevSecOps Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Engine | Target | Status | Regulatory Alignment |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Gitleaks** | Repository History & Workspaces | ${{ needs.gitleaks-scan.result }} | NIST CSF 2.0 PR.DS-01 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **TruffleHog** | Deep Git Commits & Entropy | ${{ needs.trufflehog-scan.result }} | DORA Art. 13 Incident Detection |" >> $GITHUB_STEP_SUMMARY
+          echo "| **govulncheck & npm audit** | Go & Node Dependencies | ${{ needs.dependency-vulnerabilities.result }} | NIST CSF 2.0 DE.CM-01 |" >> $GITHUB_STEP_SUMMARY

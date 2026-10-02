@@ -123,3 +123,46 @@ Rather than choosing between TEE and JSI, Vesper implements a **Hybrid Isolation
 1. **Root Cryptographic Custody (TEE)**: Hardware-backed keystores (Android KeyStore / Apple Keychain Secure Enclave) generate and custody the non-exportable asymmetric master key pair (ECDSA Curve P-256).
 2. **Volatile Payload Sequestration (C++ JSI)**: Transaction queues, HMAC signing buffers, and in-flight telemetry payloads are held exclusively in native C++ RAM via JSI HostObjects.
 3. **Runtime Anti-Hooking Watchdog**: If dynamic instrumentation (e.g., Frida memory hooks) is detected on the JSI boundary during execution, an `IntegrityBreachError` is thrown, triggering a fail-secure global purge of all volatile RAM structures ([`docs/compliance/secure_memory_policy.md`](../compliance/secure_memory_policy.md#5-runtime-anti-tampering--memory-purge)).
+
+
+---
+
+## 4. Eventual Consistency and Cryptographic Chaining in Hostile Mobile Networks
+
+### 4.1. Cellular Partition Models (CAP & PACELC at the Edge)
+
+Mobile clients operate across unstable cellular transitions (LTE to 5G handovers, RF shadow zones, cellular tower saturation). Under the **PACELC theorem** (Abadi, 2012), during a network partition ($P$), a distributed system must choose between Availability ($A$) and Consistency ($C$); otherwise, it trades Latency ($L$) for Consistency ($C$).
+
+Traditional approaches attempt one of two flawed extremes:
+- **Strict ACID Online Requirement ($CP$)**: Drops client transactions when the cellular interface experiences high latency or packet loss, resulting in abandoned shopping carts and broken user experience.
+- **Unsecured Client-Side Caching ($AP$)**: Persists transactions to local disk and flushes them when reconnected, exposing the system to replay attacks, double-spending, and transaction tampering.
+
+### 4.2. Mathematical Formalization of the Volatile Hash Chain
+
+To achieve transactional continuity while eliminating security liabilities, Vesper models the offline queue as an **ephemeral, volatile, single-producer cryptographic ledger**.
+
+Let $T_n$ represent the $n$-th offline transaction payload containing the serialized business operation, nonce, and client metadata. Let $H_n \in \{0,1\}^{256}$ represent the cryptographic state digest at step $n$.
+
+The genesis block is bound to the nonced session handshake established with the backend verifier:
+$$H_0 = \text{SHA-256}(SessionKey_{root} \parallel Nonce_{handshake})$$
+
+For each subsequent transaction $T_n$ appended to the volatile queue while offline, the cryptographic state is updated deterministically:
+$$H_n = \text{SHA-256}(T_n \parallel H_{n-1} \parallel Timestamp_n \parallel \text{Seq}_n)$$
+
+#### Cryptographic Invariants & Security Guarantees:
+1. **Pre-image & Second Pre-image Resistance**: Due to the cryptographic properties of SHA-256 (FIPS 180-4), an attacker with memory access cannot forge a transaction $T_n'$ such that $\text{SHA-256}(T_n') = \text{SHA-256}(T_n)$ without breaking the collision resistance of the hash primitive.
+2. **Forward Integrity & Tamper-Evidence**: Any unauthorized injection, deletion, or reordering of transactions in the volatile queue breaks the chain continuity:
+   $$\exists i \in [1, n], \quad H_i \neq \text{SHA-256}(T_i \parallel H_{i-1} \parallel Timestamp_i \parallel \text{Seq}_i) \implies \text{Batch Rejected}$$
+3. **Bounded Replay Protection**: Each transaction block incorporates an incremental monotonic sequence counter $\text{Seq}_n$ verified against the backend's distributed idempotency manager ([`examples/demo-backend/internal/handler/middleware/idempotency.go`](../../examples/demo-backend/cmd/server/main.go)), satisfying $RPO = 0$ as documented in the [BIA (docs/business_context_bia.md)](../business_context_bia.md#3-tiering-hierarchy--recovery-metrics).
+
+### 4.3. Contrast with Conflict-Free Replicated Data Types (CRDTs)
+
+Academic literature in distributed systems frequently promotes CRDTs (Shapiro et al., 2011) for eventual consistency in offline-first applications. However, CRDTs are structurally unsuited for high-assurance financial settlement:
+
+| Feature | State-based / Op-based CRDTs | Vesper Cryptographic Hash-Chained Queue |
+| :--- | :--- | :--- |
+| **Concurrency Semantics** | Concurrent merge via join-semilattice ($\sqcup$) | Strict monotonic serial ordering ($\text{Seq}_n$) |
+| **Financial Reversibility** | Commutative mutations permit conflicting writes | Strictly non-commutative; invalid state halts processing |
+| **Tamper Detection** | None (Assumes honest, non-byzantine nodes) | Byzantine fault-resistant hash chaining |
+| **Memory Footprint** | Monotonically grows with metadata (tombstones) | Strict TTL bound with active memory wipe (`secure_zero`) |
+| **Backend Settlement** | Eventual convergence (silent conflict resolution) | Deterministic idempotent verification with atomic commit |

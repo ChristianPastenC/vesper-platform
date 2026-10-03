@@ -1,4 +1,4 @@
-.PHONY: help verify-env dev-ingestion dev-backend dev-console clean-db
+.PHONY: help verify-env dev-ingestion dev-backend dev-console clean-db test test-ingestion test-backend test-console test-ledger lint
 
 # Default target
 .DEFAULT_GOAL := help
@@ -8,55 +8,53 @@ CYAN  := \033[36m
 GREEN := \033[32m
 RESET := \033[0m
 
-help: ## Muestra este menu de ayuda con los comandos disponibles
+help: ## Display this help menu with available commands
 	@echo "$(CYAN)V.E.S.P.E.R. Platform - Native DevSecOps Lifecycle Management$(RESET)"
-	@echo "Uso: make [target]"
+	@echo "Usage: make [target]"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-18s$(RESET) %s\n", $$1, $$2}'
 
-verify-env: ## Diagnostica versiones de herramientas (Go, Node) y puertos del sistema
+verify-env: ## Diagnose toolchain versions (Go, Node) and system port allocations
 	@bash scripts/verify_dev_env.sh
 
-dev-ingestion: ## Inicia el servidor de ingestion de telemetria en :8081 (Tier 2 BIA)
-	@echo "$(CYAN)==> Levantando vesper-ingestion en :8081...$(RESET)"
+dev-ingestion: ## Start telemetry ingestion server on :8081 (BIA Tier 2)
+	@echo "$(CYAN)==> Starting vesper-ingestion on :8081...$(RESET)"
 	cd apps/vesper-ingestion && go run ./cmd/server
 
-dev-backend: ## Inicia el backend de e-commerce verifier en :8080 (Tier 1 BIA)
-	@echo "$(CYAN)==> Levantando demo-backend en :8080...$(RESET)"
+dev-backend: ## Start e-commerce verifier backend on :8080 (BIA Tier 1)
+	@echo "$(CYAN)==> Starting demo-backend on :8080...$(RESET)"
 	cd examples/demo-backend && go run ./cmd/server
 
-dev-console: ## Inicia la consola administrativa Astro en :4000 (Tier 3 BIA)
-	@echo "$(CYAN)==> Levantando vesper-console en :4000...$(RESET)"
+dev-console: ## Start Astro management portal on :4000 (BIA Tier 3)
+	@echo "$(CYAN)==> Starting vesper-console on :4000...$(RESET)"
 	cd apps/vesper-console && npm run dev
 
-clean-db: ## Restablece la base de datos embebida SQLite de telemetria
-	@echo "$(CYAN)==> Limpiando telemetry.db en vesper-ingestion...$(RESET)"
+clean-db: ## Reset local embedded SQLite telemetry database
+	@echo "$(CYAN)==> Cleaning telemetry.db in vesper-ingestion...$(RESET)"
 	cd apps/vesper-ingestion && go run ./cmd/cli clean-db
 
-.PHONY: test test-ingestion test-backend test-console test-ledger lint
+test: test-ingestion test-backend test-console ## Run unit and integration test suites across all services
 
-test: test-ingestion test-backend test-console ## Ejecuta la suite de pruebas unitarias en todos los servicios
-
-test-ingestion: ## Ejecuta pruebas unitarias con cobertura en vesper-ingestion
-	@echo "$(CYAN)==> Pruebas vesper-ingestion (Go)...$(RESET)"
+test-ingestion: ## Run unit tests with coverage in vesper-ingestion
+	@echo "$(CYAN)==> Testing vesper-ingestion (Go)...$(RESET)"
 	cd apps/vesper-ingestion && go test -v ./... -cover
 
-test-backend: ## Ejecuta pruebas unitarias con cobertura en demo-backend
-	@echo "$(CYAN)==> Pruebas demo-backend (Go)...$(RESET)"
+test-backend: ## Run unit tests with coverage in demo-backend
+	@echo "$(CYAN)==> Testing demo-backend (Go)...$(RESET)"
 	cd examples/demo-backend && go test -v ./... -cover
 
-test-console: ## Ejecuta pruebas unitarias en vesper-console (Vitest)
-	@echo "$(CYAN)==> Pruebas vesper-console (Vitest)...$(RESET)"
+test-console: ## Run unit tests in vesper-console (Vitest)
+	@echo "$(CYAN)==> Testing vesper-console (Vitest)...$(RESET)"
 	cd apps/vesper-console && npm test
 
-test-ledger: ## Ejecuta pruebas del motor criptografico Ghost Ledger (C++/TS)
-	@echo "$(CYAN)==> Pruebas ghost-ledger...$(RESET)"
+test-ledger: ## Run cryptographic engine tests for Ghost Ledger (C++/TS)
+	@echo "$(CYAN)==> Testing ghost-ledger...$(RESET)"
 	cd packages/ghost-ledger && npm test
 
-lint: ## Ejecuta analisis estatico (go vet, astro check)
-	@echo "$(CYAN)==> Verificando vesper-ingestion...$(RESET)"
+lint: ## Run static analysis (go vet, astro check)
+	@echo "$(CYAN)==> Linting vesper-ingestion...$(RESET)"
 	cd apps/vesper-ingestion && go vet ./...
-	@echo "$(CYAN)==> Verificando demo-backend...$(RESET)"
+	@echo "$(CYAN)==> Linting demo-backend...$(RESET)"
 	cd examples/demo-backend && go vet ./...
-	@echo "$(CYAN)==> Verificando vesper-console...$(RESET)"
+	@echo "$(CYAN)==> Linting vesper-console...$(RESET)"
 	cd apps/vesper-console && npx astro check

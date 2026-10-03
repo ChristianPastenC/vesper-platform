@@ -219,6 +219,7 @@ Comprehensive technical specifications, threat models, and operational resilienc
 | [**Cryptographic Specification**](./docs/compliance/cryptographic_spec.md) | Mathematical specifications for DPoP (RFC 9449), HMAC-SHA256, and SHA-256 block hash chaining. | FIPS 180-4, RFC 9449 |
 | [**Secure Memory Policy**](./docs/compliance/secure_memory_policy.md) | Compiler Dead Store Elimination (DSE) barriers, deterministic TTL zeroization, and zero-disk policy. | PCI-DSS v4.0 Req 3.2, GDPR Art. 32 |
 | [**STRIDE Threat Model**](./docs/compliance/stride_threat_model.md) | Endpoint and transport threat enumeration, attack surface mitigations, and fail-secure countermeasures. | Microsoft STRIDE Framework |
+| [**State of the Art & Research**](./docs/research/state_of_the_art.md) | Scientific foundations on compiler DSE neutralization, TEE vs. JSI boundary latency, and cellular hash-chaining. | IEEE / ACM / USENIX Literature |
 
 ---
 

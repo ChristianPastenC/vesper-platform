@@ -117,3 +117,57 @@ graph LR
 - **Android Runtime Vulnerability Profile**: Because Clover relies on Android (AOSP), the platform inherits the vulnerability profile of the Linux kernel and the Android IPC binder system. Exploits targeting local privilege escalation (LPE) in outdated AOSP kernels can permit unauthorized processes to snoop on IPC traffic.
 - **Absence of Active Memory Zeroization**: Clover's software stack relies on Java/Kotlin managed memory for handling decrypted metadata. Garbage collection non-determinism allows ephemeral session objects and metadata to linger in RAM for indeterminate intervals, violating PCI-DSS v4.0 Req 3.2.
 - **Extended Settlement Latency & Default Risk**: By permitting offline storage for up to 7 days, Clover exposes the acquiring pipeline to extreme risk of card cancellation, bank account closure, and fraudulent depletion before clearing.
+
+---
+
+## 3. Stripe Terminal: Server-Driven Architecture & The Offline Gap
+
+### 3.1. Stripe Terminal Architectural Philosophy
+
+Stripe Terminal was engineered with an absolute **cloud-authoritative, server-driven intent model**. Unlike traditional embedded POS systems that act as autonomous state machines, Stripe Terminal treats the physical terminal (e.g., BBPOS WisePad 3, Stripe Reader S700, Verifone P400) as a subordinate peripheral:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cashier as Cashier / POS App
+    participant CloudBackend as Merchant Cloud Backend
+    participant StripeAPI as Stripe Core API
+    participant Reader as Stripe Terminal Reader (Firmware)
+
+    Cashier->>CloudBackend: Initiate Sale ($120.00)
+    CloudBackend->>StripeAPI: POST /v1/payment_intents (amount=12000, capture_method=manual)
+    StripeAPI-->>CloudBackend: PaymentIntent (pi_3M..., status: requires_payment_method)
+    CloudBackend-->>Cashier: Return Client Secret
+    Cashier->>Reader: SDK collectPaymentMethod(client_secret)
+    Note over Reader: Reader waits for Card Present
+    Reader->>StripeAPI: Secure TLS WebSockets: Tokenize & Validate EMV
+    StripeAPI-->>Reader: Tokenization Succeeded
+    Reader-->>Cashier: PaymentMethod Attached
+    Cashier->>CloudBackend: Confirm Intent
+    CloudBackend->>StripeAPI: POST /v1/payment_intents/pi_3M.../confirm
+    StripeAPI-->>CloudBackend: PaymentIntent (status: succeeded)
+    CloudBackend-->>Cashier: Sale Complete
+```
+
+In this architecture, every single state transition--from card insertion to cryptogram verification and authorization--requires bi-directional real-time communication with the Stripe API over HTTPS/WebSockets.
+
+### 3.2. The Offline Mode Gap in Stripe Terminal
+
+#### 3.2.1. Structural Incompatibility with Disconnected Operation
+Stripe's core ledger operates on the assumption of **zero client-side trust**. Because the client device is assumed to be fundamentally compromised, Stripe prohibits the client from issuing definitive transaction authorizations.
+
+While Stripe has introduced restricted offline card present capabilities for specific hardware (such as smart readers running Stripe Terminal Android SDK), the architecture reveals significant structural gaps:
+1. **Strict Reader Dependency**: Offline collection is restricted exclusively to smart readers running custom Stripe OS (e.g., Stripe Reader S700). Standard Bluetooth/USB mobile readers (such as the WisePad 3 or Chipper 2X BT) cannot process transactions offline because they lack onboard cryptographic storage engines.
+2. **Ephemeral Tokenization Queues Without Ledger Verification**: Queued offline transactions in Stripe Terminal exist as unconfirmed `PaymentIntent` drafts stored within encrypted local SQLite files. They lack tamper-evident cryptographic chaining ($H_n$). If an operating system crash or storage corruption occurs prior to synchronization, the intent is lost without a mathematical trace.
+3. **Severe Network Partition Vulnerabilities**: If a network connection drops while a `PaymentIntent` is transitioning from `requires_confirmation` to `succeeded`, Stripe Terminal's state machine enters a split-brain state, requiring manual administrative reconciliation via the Stripe Dashboard.
+
+### 3.3. Contrasting Stripe Terminal with Vesper's Sovereign Edge Ledger
+
+| Dimension | Stripe Terminal | Vesper Platform (`ghost-ledger` + `vesper-ingestion`) |
+| :--- | :--- | :--- |
+| **Architectural Model** | Server-Authoritative Cloud Intent | Autonomous Edge-First Cryptographic Core |
+| **Offline Operating Window** | Highly Restricted (max 24h, smart readers only) | Continuous Operational Autonomous Mode ($RTO < 100\text{ms}$) |
+| **Persistence Mechanism** | Encrypted SQLite File on Reader Disk | **Zero-Disk Volatile Memory Ring-Buffer** (RAM only) |
+| **Cryptographic Immutability** | Isolated, unchained intent objects | Monotonically Chained HMAC-SHA256 Hash Tree ($H_n$) |
+| **Client-Side Identity** | API Key / Session Token | Hardware Enclave DPoP Asymmetric Key-Pair (RFC 9449) |
+| **Runtime Boundary** | Managed Java / Android SDK layer | Pure C++ Native Core via JSI Direct Memory Access |

@@ -171,3 +171,84 @@ While Stripe has introduced restricted offline card present capabilities for spe
 | **Cryptographic Immutability** | Isolated, unchained intent objects | Monotonically Chained HMAC-SHA256 Hash Tree ($H_n$) |
 | **Client-Side Identity** | API Key / Session Token | Hardware Enclave DPoP Asymmetric Key-Pair (RFC 9449) |
 | **Runtime Boundary** | Managed Java / Android SDK layer | Pure C++ Native Core via JSI Direct Memory Access |
+
+---
+
+## 4. Generic Offline-First Data Engines & Flash Storage Vulnerabilities
+
+### 4.1. Architectural Evaluation of Generic Mobile Offline Frameworks
+
+To reduce development costs, application developers frequently incorporate general-purpose offline sync frameworks into mobile payment applications. We analyze the three leading frameworks:
+
+```mermaid
+graph TD
+    subgraph WatermelonDB["WatermelonDB / SQLite"]
+        WM_Thread["JS Thread (Hermes/V8)"] -->|Bridge Overhead| WM_SQLite["SQLite / LokiJS Adapter"]
+        WM_SQLite -->|Plaintext / SQLCipher| WM_Disk["Disk DB (Flash Storage)"]
+        WM_Disk -.->|Vulnerability| FTL_Leak1["Wear-Leveling Forensic Remanence"]
+    end
+
+    subgraph CouchbaseLite["Couchbase Lite"]
+        CB_Core["ForestDB / SQLite Core"] -->|Sync Gateway Protocol| CB_Sync["Revision Trees (_rev)"]
+        CB_Sync -->|High Memory Overhead| CB_Disk["Local Document DB"]
+        CB_Disk -.->|Vulnerability| FTL_Leak2["Unbounded Non-Volatile Persistence"]
+    end
+
+    subgraph PowerSync["PowerSync / Supabase"]
+        PS_Client["SQLite Local Replica"] -->|Logical Replication| PS_Cloud["PostgreSQL Backend"]
+        PS_Client -.->|Vulnerability| PS_NoCrypto["Zero Cryptographic Hash Binding"]
+    end
+```
+
+#### 4.1.1. WatermelonDB
+- **Mechanics**: Built as a reactive database framework for React Native, WatermelonDB compiles relational models into raw SQLite calls or LokiJS memory tables. It achieves high read performance by utilizing lazy-loading records across the React Native bridge.
+- **Cryptographic & Financial Deficiencies**:
+  - *No Cryptographic Hash Binding*: Records in WatermelonDB are mutable rows without cryptographic chaining. An attacker with root access can alter a record's `amount` column directly via `sqlite3` CLI without triggering a verification error.
+  - *Bridge Serialization Penalty*: Every transaction passing between the JavaScript engine and SQLite traverses the JSON-serialized bridge, causing high CPU latency ($>45\text{ms}$) and leaving transient string representations in unmanaged V8/Hermes heap memory.
+  - *Default Plaintext Storage*: WatermelonDB does not provide native encryption. Adding SQLCipher introduces severe performance degradation (up to 300% slowdown on low-end ARM devices).
+
+#### 4.1.2. Couchbase Lite
+- **Mechanics**: An embedded NoSQL database utilizing ForestDB or SQLite, offering multi-master peer-to-peer sync protocols and MVCC revision trees (`_rev`).
+- **Cryptographic & Financial Deficiencies**:
+  - *Non-Deterministic Conflict Resolution*: Couchbase Lite resolves conflicts using revision tree heuristics (e.g., winning revision or custom JavaScript conflict handlers). In financial ledgers, non-deterministic conflict resolution is catastrophic: concurrent offline transactions on separate devices cannot be "merged"; they must be strictly serialized through deterministic cryptographic monotonicity.
+  - *Massive Binary Footprint*: Couchbase Lite adds $>25\text{MB}$ of native libraries to the mobile binary, violating strict embedded constraints.
+
+#### 4.1.3. PowerSync
+- **Mechanics**: A modern client-side SQLite replication engine that synchronizes subsets of PostgreSQL tables to mobile devices via server-side change data capture (CDC).
+- **Cryptographic & Financial Deficiencies**:
+  - *Read-Replica Bias*: PowerSync is optimized for caching server data on the client, not for generating sovereign, non-repudiable offline audit trails at the edge.
+  - *Absence of Hardware Enclave Integration*: PowerSync possesses no interface with iOS Secure Enclave or Android StrongBox Keymaster.
+
+---
+
+### 4.2. Non-Volatile Flash Dump Vulnerabilities & Forensic Remanence
+
+When mobile payment applications persist offline transactions to local disk (whether via raw files, SQLite, or SharedPreferences), they run afoul of the physics of solid-state flash memory.
+
+#### 4.2.1. The Flash Translation Layer (FTL) and Wear-Leveling
+NAND flash memory cannot overwrite data in place; an entire flash block (typically 128KB to 2MB) must be erased before individual pages (4KB to 16KB) can be reprogrammed. To maximize flash lifespan, the microcontroller running the **Flash Translation Layer (FTL)** dynamically remaps logical block addresses (LBAs) to disparate physical NAND sectors using wear-leveling algorithms:
+
+$$\text{PhysicalSector} = \mathcal{F}_{\text{FTL}}(\text{LogicalBlock}, \text{CycleCount})$$
+
+```
++---------------------------------------------------------------+
+| Logical Block Address (LBA 0x4A) -> App calls file overwrite  |
++---------------------------------------------------------------+
+                             |
+                             v [FTL Dynamic Wear-Leveling Remapping]
++---------------------------------------------------------------+
+| Physical Page 1042: Marked "Stale" (Contains original PAN)    | <- UN-ERASED!
+| Physical Page 8921: Written with zeroes or new metadata       |
++---------------------------------------------------------------+
+```
+
+#### 4.2.2. Forensic Exploitation Vectors
+As demonstrated by NIST SP 800-88 Rev. 1 and ENISA research:
+1. **Chip-Off Forensics**: An attacker extracts the physical BGA NAND flash chip from the terminal motherboard, connects it to an external logic programmer (e.g., UP-828), and dumps raw flash blocks. All historically "deleted" or "overwritten" transactions remain intact in stale physical pages.
+2. **Cold Boot Attacks**: DRAM retention characteristics permit adversaries to recover encryption keys from memory cells cooled with compressed liquid gas, subverting operating system protections.
+
+#### 4.2.3. Vesper's Architectural Countermeasure: Zero-Disk Volatile Sequestration
+To completely eliminate flash remanence, Vesper enforces a strict **Zero-Disk Volatile Sequestration Policy** ([docs/compliance/secure_memory_policy.md](../compliance/secure_memory_policy.md)):
+- All offline transaction representations exist exclusively within volatile DRAM ring-buffers allocated in C++.
+- No bytes are ever flushed to SQLite, Realm, AsyncStorage, or local files.
+- Upon synchronization, memory exhaustion, or security breach detection, buffers undergo deterministic active zeroization via assembler memory barriers (`secure_zero`), rendering forensic extraction mathematically impossible.

@@ -220,6 +220,7 @@ Comprehensive technical specifications, threat models, and operational resilienc
 | [**Secure Memory Policy**](./docs/compliance/secure_memory_policy.md) | Compiler Dead Store Elimination (DSE) barriers, deterministic TTL zeroization, and zero-disk policy. | PCI-DSS v4.0 Req 3.2, GDPR Art. 32 |
 | [**STRIDE Threat Model**](./docs/compliance/stride_threat_model.md) | Endpoint and transport threat enumeration, attack surface mitigations, and fail-secure countermeasures. | Microsoft STRIDE Framework |
 | [**State of the Art & Research**](./docs/research/state_of_the_art.md) | Scientific foundations on compiler DSE neutralization, TEE vs. JSI boundary latency, and cellular hash-chaining. | IEEE / ACM / USENIX Literature |
+| [**Industry Solutions Benchmark**](./docs/research/benchmarking_solutions.md) | Comparative architectural and security benchmark of Square, Clover, Stripe Terminal, mobile offline engines, and RASP systems. | PCI-DSS v4.0 Req 3, EMVCo, ISO/IEC 7816 |
 
 ---
 

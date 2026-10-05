@@ -252,3 +252,63 @@ To completely eliminate flash remanence, Vesper enforces a strict **Zero-Disk Vo
 - All offline transaction representations exist exclusively within volatile DRAM ring-buffers allocated in C++.
 - No bytes are ever flushed to SQLite, Realm, AsyncStorage, or local files.
 - Upon synchronization, memory exhaustion, or security breach detection, buffers undergo deterministic active zeroization via assembler memory barriers (`secure_zero`), rendering forensic extraction mathematically impossible.
+
+---
+
+## 5. Mobile RASP Systems vs Vesper's Cryptographic Resilience
+
+### 5.1. The Commercial RASP (Runtime Application Self-Protection) Landscape
+
+To protect mobile financial applications from runtime compromise, the industry has historically relied on commercial **RASP (Runtime Application Self-Protection)** suites (e.g., Promon SHIELD, AppSealing, Guardsquare DexGuard, Zimperium zDefend).
+
+#### 5.1.1. RASP Operational Mechanisms
+Commercial RASP tools inject heuristic security monitors into the compiled mobile binary:
+1. **Debugger Detection**: Monitoring `ptrace` status, `/proc/self/status` (`TracerPid`), and sysctl flags.
+2. **Root & Jailbreak Detection**: Scanning for su binaries, Magisk hide sockets, and modified system partitions.
+3. **Hook Detection**: Searching memory maps for Frida (`gadget.so`), Cycript, or Substrate shared libraries.
+4. **Code Obfuscation**: Control flow flattening, string encryption, and symbol renaming.
+
+#### 5.1.2. The Fundamental Flaw: The Cat-and-Mouse Heuristic Fallacy
+Despite commercial claims, RASP operates within the user space of an operating system controlled by the adversary. Consequently, RASP mechanisms are systematically circumvented by determined reverse engineers:
+
+```mermaid
+flowchart LR
+    subgraph TraditionalRASP["Commercial RASP Model (Heuristic Defense)"]
+        RASP_Check["RASP Hook: Is Frida Present?"] -->|Heuristic Check| OS_Call["syscall: ptrace / access()"]
+        OS_Call -->|Kernel Level Interception| Attacker["Kernel Attacker: eBPF / Custom ROM"]
+        Attacker -.->|Spoofed Return Value 0| RASP_Check
+        RASP_Check -->|Bypassed| PlaintextData["Plaintext Keys Compromised in App Heap"]
+    end
+
+    subgraph VesperZeroTrust["Vesper Model (Assume Breach / Cryptographic Barrier)"]
+        HookAttempt["Frida / Memory Probe Attached"] -->|Memory Read Attempt| V_Cores["Native C++ JSI Core"]
+        V_Cores -->|Instant Wipe| MemZero["Assembler Memory Barrier Zeroization"]
+        V_Cores -->|HMAC-SHA256 Break| BrokenChain["Hash Chain Broken: H_n Invalidation"]
+        BrokenChain -->|Backend Reject| GatewaySec["Zero Financial Settlement Permitted"]
+    end
+```
+
+1. **Kernel-Level Evasion**: Attackers utilizing kernel-level instrumentation (e.g., eBPF, KernelSU, Corellium virtualized hypervisors) intercept system calls before they reach user-space RASP hooks, returning spoofed "clean" signals.
+2. **Dynamic Binary Patching**: Tools like Ghidra and Frida effortlessly locate RASP exit conditionals (e.g., `if (isRooted()) exit(0);`) and patch the branch instruction (`NOP` or `BNE` to `BEQ`).
+
+---
+
+### 5.2. Vesper's Paradigm: "Assume Host Compromise, Guarantee Cryptographic Integrity"
+
+Rather than engaging in an unwinnable heuristic battle against host instrumentation, Vesper operates under the **Zero-Trust Host Execution Axiom**:
+> *"Assume the host operating system is already rooted, the kernel is hostile, and memory inspection tools are actively running."*
+
+#### 5.2.1. Mathematical Immutability via Native C++ JSI (`packages/ghost-ledger`)
+Vesper encapsulates all cryptographic state operations within a dedicated C++ engine compiled directly to machine code (`ghost-ledger`), bypassing the vulnerable JavaScript/Java virtual machines via direct JSI pointers:
+- **Append-Only HMAC Hash Chaining**: Every offline transaction $T_n$ is cryptographically bound to its ancestor $H_{n-1}$ using a hardware-derived key $K_{\text{device}}$:
+  $$H_n = \text{HMAC-SHA256}(K_{\text{device}}, H_{n-1} \parallel T_n \parallel \text{Seq}_n \parallel \text{Timestamp})$$
+- **Tamper Evidence**: If an attacker uses memory injection to modify the transaction amount in $T_n$, the mathematical equality $H_n = \mathcal{H}(H_{n-1}, T_n)$ breaks. When synchronized with the Vesper Ingestion API, the ingestion gateway recalculates the chain and permanently revokes the tenant's cryptographic credentials.
+
+#### 5.2.2. DPoP Proof-of-Possession Bindings (RFC 9449)
+Every transaction is signed using ephemeral private keys generated in the device's hardware security module (Secure Enclave / Android StrongBox). Even if an attacker extracts the buffered telemetry data from RAM, they cannot generate valid HTTP requests to upstream payment APIs without the hardware-bound private key.
+
+#### 5.2.3. Active Anti-Tamper Telemetry
+As verified by our automated CI pipeline (`.github/workflows/demo-mobile-ci.yml`), Vesper continuously executes dynamic penetration testing (DAST) using headless Frida injection. When a debugger or memory modification attempt is detected:
+1. The C++ engine fires an internal `IntegrityBreachError`.
+2. Volatile transaction buffers are instantly overwritten via non-optimizable memory barriers (`secure_zero`).
+3. An emergency forensic heartbeat is dispatched to the ingestion gateway ([docs/operational_resilience/bcp_drp_runbook.md](../operational_resilience/bcp_drp_runbook.md)), alerting SecOps and triggering DORA Art. 19 incident workflows.

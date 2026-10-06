@@ -136,15 +136,15 @@ sequenceDiagram
 
     Cashier->>CloudBackend: Initiate Sale ($120.00)
     CloudBackend->>StripeAPI: POST /v1/payment_intents (amount=12000, capture_method=manual)
-    StripeAPI-->>CloudBackend: PaymentIntent (pi_3M..., status: requires_payment_method)
-    CloudBackend-->>Cashier: Return Client Secret
-    Cashier->>Reader: SDK collectPaymentMethod(client_secret)
+    StripeAPI-->>CloudBackend: PaymentIntent (intent_id..., status: requires_payment_method)
+    CloudBackend-->>Cashier: Return Client Token
+    Cashier->>Reader: SDK collectPaymentMethod(client_token)
     Note over Reader: Reader waits for Card Present
     Reader->>StripeAPI: Secure TLS WebSockets: Tokenize & Validate EMV
     StripeAPI-->>Reader: Tokenization Succeeded
     Reader-->>Cashier: PaymentMethod Attached
     Cashier->>CloudBackend: Confirm Intent
-    CloudBackend->>StripeAPI: POST /v1/payment_intents/pi_3M.../confirm
+    CloudBackend->>StripeAPI: POST /v1/payment_intents/intent_id.../confirm
     StripeAPI-->>CloudBackend: PaymentIntent (status: succeeded)
     CloudBackend-->>Cashier: Sale Complete
 ```

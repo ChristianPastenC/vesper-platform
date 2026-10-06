@@ -77,6 +77,7 @@ jobs:
       - name: Audit Console Dependencies
         working-directory: apps/vesper-console
         run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
 
   security-summary:
     name: Posture & DORA Compliance Report

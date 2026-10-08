@@ -19,3 +19,24 @@ As an ICT third-party service provider (CTPP) serving the financial sector, Vesp
 - **T+4 Hours (Initial Notification):** Mandatory disclosure to primary Acquiring Partners and impacted Merchants regarding major ICT-related incidents.
 - **T+24 Hours (Intermediate Update):** Status report on remediation efforts, BCP activation, and estimated time to restoration (ETR).
 - **T+72 Hours (Final Post-Mortem):** Submission of the technical RCA (Root Cause Analysis) and cryptographic reconciliation audit.
+
+---
+
+## 2. Institutional RACI Matrix for Incident Communication
+
+The following RACI (Responsible, Accountable, Consulted, Informed) matrix designates the chain of command during an operational or security incident:
+
+| Role / Entity | Network Partition (Offline Mode) | Hardware Tampering (Frida/Root) | Acquirer Sync Failure | Ledger Hash Mismatch ($H_n$) |
+| :--- | :---: | :---: | :---: | :---: |
+| **L1 Support (NOC)** | Responsible | Informed | Responsible | Informed |
+| **L3 SecOps Core** | Informed | Responsible | Consulted | Responsible |
+| **Platform Architect** | Consulted | Accountable | Accountable | Accountable |
+| **Acquiring Bank** | Informed | Informed | Informed | Consulted |
+| **Impacted Merchant** | Informed | Informed | Informed | Informed |
+| **Regulator (e.g., CNBV/FCA)** | - | - | - | Informed (if > $50k) |
+
+**Definitions:**
+- **Responsible:** Executes the communication and runs the operational runbook.
+- **Accountable:** Owns the final decision (e.g., triggering a global kill-switch or revoking DPoP keys).
+- **Consulted:** Provides technical or legal guidance prior to public statements.
+- **Informed:** Receives standard template notifications and ETA updates.

@@ -73,3 +73,26 @@ All communication with acquiring banks containing sensitive diagnostic data MUST
 - **Primary:** Dedicated B2B Slack Connect / Microsoft Teams shared channels (End-to-End Encrypted).
 - **Secondary:** PGP-encrypted email to designated Acquirer Incident Response aliases.
 - **Urgent / Out-of-Band:** Direct mobile contact to Acquirer L3 Duty Managers via encrypted VoIP (Signal / WhatsApp Business).
+
+---
+
+## 4. Merchant Communication Templates
+
+To ensure consistent, rapid, and legally compliant messaging during outages, L1 NOC must use the following templates for Merchant-facing communications (via StatusPage, Email, and in-app push notifications).
+
+### Template A: Network Partition / Cloud Outage (Offline-First Activated)
+**Subject:** [ALERT] Vesper Platform Alert: Cloud Connectivity Degradation - Offline Mode Active
+**Body:**  
+> "Dear [Merchant Name],  
+> We are currently experiencing a connectivity degradation affecting our primary cloud ingestion endpoints.  
+> **Impact:** Your terminal has automatically switched to **Offline-First Mode**. You can continue processing transactions securely without interruption.  
+> **Action Required:** None. Do not restart your device. Your transactions are securely buffered in the hardware enclave.  
+> **Next Update:** We are actively investigating and will provide an update within [XX] minutes."
+
+### Template B: Terminal Compromise / Tampering Detected
+**Subject:** [CRITICAL] Hardware Tampering Detected on Terminal [Device ID]
+**Body:**  
+> "Dear [Merchant Name],  
+> Our real-time RASP (Runtime Application Self-Protection) telemetry has detected unauthorized access attempts on Terminal ID: **[Device ID]**.  
+> **Impact:** To protect cardholder data, the cryptographic keys on this device have been instantly revoked (Zero-Trust isolation). The terminal is currently locked.  
+> **Action Required:** Please remove this device from the sales floor immediately. Contact Vesper Support at [Number] to initiate a hardware replacement protocol and forensic review."

@@ -96,3 +96,17 @@ To ensure consistent, rapid, and legally compliant messaging during outages, L1 
 > Our real-time RASP (Runtime Application Self-Protection) telemetry has detected unauthorized access attempts on Terminal ID: **[Device ID]**.  
 > **Impact:** To protect cardholder data, the cryptographic keys on this device have been instantly revoked (Zero-Trust isolation). The terminal is currently locked.  
 > **Action Required:** Please remove this device from the sales floor immediately. Contact Vesper Support at [Number] to initiate a hardware replacement protocol and forensic review."
+
+---
+
+## 5. Post-Mortem & Cryptographic Reconciliation
+
+Following the resolution of a Sev-1 or Sev-2 incident, Vesper mandates the distribution of a **Technical Post-Mortem** within 72 hours. 
+
+### 5.1. Report Distribution Matrix
+- **Acquiring Banks:** Full Technical RCA (Root Cause Analysis) including cryptographic verification logs and $H_n$ hash-chain continuity proofs.
+- **Regulators:** Summary RCA focusing on DORA compliance, data sovereignty preservation, and consumer impact metrics.
+- **Merchants:** High-level summary focusing on service uptime, financial reconciliation assurances, and preventative measures deployed.
+
+### 5.2. Link to Recovery Runbooks
+For the technical execution of system recovery, DPoP key rotation, and SQLite ledger synchronization after a major outage, refer directly to the [BCP & DRP Runbook](./bcp_drp_runbook.md).

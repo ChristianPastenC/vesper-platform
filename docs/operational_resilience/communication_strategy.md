@@ -40,3 +40,36 @@ The following RACI (Responsible, Accountable, Consulted, Informed) matrix design
 - **Accountable:** Owns the final decision (e.g., triggering a global kill-switch or revoking DPoP keys).
 - **Consulted:** Provides technical or legal guidance prior to public statements.
 - **Informed:** Receives standard template notifications and ETA updates.
+
+---
+
+## 3. Acquirer & Payment Gateway Notification Protocol
+
+When Vesper Edge nodes fail to synchronize their cryptographic ledger (`ghost-ledger`) with the cloud backend within the strict RPO threshold defined in the [BIA](../business_context_bia.md), the Acquirer communication protocol is activated.
+
+### 3.1. Escalation Timeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant VesperNOC as Vesper NOC
+    participant VesperAPI as Vesper Ingestion API
+    participant Acquirer as Acquiring Gateway
+    participant CISO as Vesper CISO
+
+    Note over VesperNOC,VesperAPI: Incident: 15% of Edge Terminals fail to sync (T-0)
+    VesperAPI-->>VesperNOC: Alert: Telemetry Silence > 30m
+    VesperNOC->>Acquirer: Initial Notification (T+4h): Delay in Batch Settlement
+    Acquirer-->>VesperNOC: Ack: Awaiting Technical Assessment
+    VesperNOC->>CISO: Escalate: Suspected Cellular Blackout vs DDoS
+    CISO->>Acquirer: Status Update (T+12h): BCP Activated, Offline Mode Active
+    Note over VesperAPI,Acquirer: Connectivity Restored (T+24h)
+    VesperAPI->>Acquirer: Batch Transmission of Hash-Chained Payload
+    CISO->>Acquirer: Final Resolution (T+36h): Zero Data Loss Verified
+```
+
+### 3.2. Secure Communication Channels
+All communication with acquiring banks containing sensitive diagnostic data MUST occur over mutually authenticated, encrypted channels:
+- **Primary:** Dedicated B2B Slack Connect / Microsoft Teams shared channels (End-to-End Encrypted).
+- **Secondary:** PGP-encrypted email to designated Acquirer Incident Response aliases.
+- **Urgent / Out-of-Band:** Direct mobile contact to Acquirer L3 Duty Managers via encrypted VoIP (Signal / WhatsApp Business).

@@ -68,4 +68,13 @@ TEST(CryptoUtilsTest, ConstantTimeEqual) {
     EXPECT_FALSE(constantTimeEqual(a, c)); // Different sizes
 }
 
+TEST(CryptoUtilsTest, SecureZeroOverwritesMemory) {
+    std::vector<uint8_t> sensitive = {0xDE, 0xAD, 0xBE, 0xEF, 0x42, 0x13, 0x37};
+    secure_zero(sensitive.data(), sensitive.size());
+
+    for (size_t i = 0; i < sensitive.size(); ++i) {
+        EXPECT_EQ(sensitive[i], 0);
+    }
+}
+
 } // namespace sovereign::secure::crypto::test

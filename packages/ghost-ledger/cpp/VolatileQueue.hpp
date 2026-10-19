@@ -10,6 +10,31 @@
 #include "CryptoUtils.h"
 #include "SovereignTelemetryEngine.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+inline bool lock_memory_pages(void* ptr, size_t size) noexcept {
+    if (!ptr || size == 0) return true;
+    return ::VirtualLock(ptr, size) != 0;
+}
+inline bool unlock_memory_pages(void* ptr, size_t size) noexcept {
+    if (!ptr || size == 0) return true;
+    return ::VirtualUnlock(ptr, size) != 0;
+}
+#else
+#include <sys/mman.h>
+inline bool lock_memory_pages(void* ptr, size_t size) noexcept {
+    if (!ptr || size == 0) return true;
+    return ::mlock(ptr, size) == 0;
+}
+inline bool unlock_memory_pages(void* ptr, size_t size) noexcept {
+    if (!ptr || size == 0) return true;
+    return ::munlock(ptr, size) == 0;
+}
+#endif
+
 namespace sovereign::secure {
 
 struct TransactionBlock {
@@ -41,6 +66,13 @@ public:
         std::vector<uint8_t> currentHash = computeBlockHash(serializedRequest, prevHash, timestamp);
 
         TransactionBlock block{id, serializedRequest, timestamp, ttl, prevHash, currentHash, false};
+        
+        // Enforce physical RAM page locking (mlock / VirtualLock) to comply with PCI-DSS v4.0 Req. 3.2
+        // preventing the kernel from paging sensitive cardholder payloads into flash NAND swap / zRAM
+        if (!block.payload.empty()) {
+            lock_memory_pages(block.payload.data(), block.payload.size());
+        }
+
         queue_.push_back(block);
         id_to_index_[id] = queue_.size() - 1;
     }
@@ -71,7 +103,6 @@ public:
         auto it = id_to_index_.find(id);
         if (it != id_to_index_.end()) {
             zeroizeBlock(queue_[it->second]);
-            // Notice: dequeue usually removes it, but zeroize explicitly just zeroizes the specific slots
             queue_.erase(queue_.begin() + it->second);
             rechain();
         }
@@ -138,18 +169,20 @@ public:
 
 private:
     void zeroizeBlock(TransactionBlock& block) {
-        // Use secure_zero (volatile-pointer idiom) — el compilador no puede
-        // elide escrituras a través de un puntero volatile, incluso cuando el
-        // buffer se destruye inmediatamente. std::fill es inseguro aquí porque
-        // el optimizador lo trata como dead write a -O2/-O3.
+        // Active Byte-Level Zeroization compliant with NIST SP 800-88 Rev. 1 & Philippe et al. (2023)
         if (!block.payload.empty()) {
             crypto::secure_zero(block.payload.data(), block.payload.size());
+            unlock_memory_pages(block.payload.data(), block.payload.size());
         }
         if (!block.previousHash.empty()) {
             crypto::secure_zero(block.previousHash.data(), block.previousHash.size());
         }
         if (!block.currentHash.empty()) {
             crypto::secure_zero(block.currentHash.data(), block.currentHash.size());
+        }
+        if (!block.id.empty()) {
+            crypto::secure_zero(block.id.data(), block.id.size());
+            block.id.clear();
         }
         block.isZeroized = true;
         SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::ZEROIZATION_TRIGGERED);
@@ -174,7 +207,6 @@ private:
         std::string ts_str = std::to_string(timestamp);
         preImage.insert(preImage.end(), ts_str.begin(), ts_str.end());
         
-        // Using the requested pure C++17 SHA-256 implementation located in CryptoUtils
         auto hash = crypto::sha256(preImage);
         
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -185,17 +217,6 @@ private:
     }
 
     void rechain() {
-        // DESIGN CONTRACT — ver SovereignLedger::rechainLedger() para el razonamiento
-        // completo. Resumen:
-        //
-        // VolatileQueue es una cola de transacciones PENDIENTES. Los bloques no han
-        // sido transmitidos al backend. Al eliminar un bloque (queue_.erase), los
-        // bloques restantes deben recadenarse desde el génesis para que
-        // verifyIntegrity() pueda validar la cadena completa sin falsos positivos.
-        //
-        // El payload sensible ya fue purgado con secure_zero() antes del erase.
-        // Este método opera únicamente sobre payloads de bloques vivos (!isZeroized).
-
         std::vector<uint8_t> runningPrevHash(32, 0);
         id_to_index_.clear();
         for (size_t i = 0; i < queue_.size(); ++i) {

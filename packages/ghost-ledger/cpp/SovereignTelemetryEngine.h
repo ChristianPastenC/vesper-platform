@@ -11,7 +11,19 @@ namespace sovereign::secure {
 enum class TelemetryEventType : uint8_t {
     ZEROIZATION_TRIGGERED = 1,
     INTEGRITY_COMPROMISED = 2,
-    COMPUTE_HASH_LATENCY = 3
+    COMPUTE_HASH_LATENCY = 3,
+
+    // Structured Zeroization Reasons (DORA Art. 19 / NIST CSF PR.DS-01)
+    ZEROIZATION_REASON_ACK_RECEIVED = 10,
+    ZEROIZATION_REASON_TTL_EXPIRED = 11,
+    ZEROIZATION_REASON_TAMPER_DETECTED = 12,
+
+    // Hardware Root-of-Trust Status (Blessing et al., 2021)
+    HW_STRONGBOX_ENFORCED = 20,
+    HW_FALLBACK_BLOCKED = 21,
+
+    // Backend Ingestion & Idempotency Collisions (Wang et al., 2023)
+    IDEMPOTENCY_COLLISION_RESOLVED = 30
 };
 
 #pragma pack(push, 1)

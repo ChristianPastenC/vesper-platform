@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
-import { nativeCryptoProvider } from '../../core/crypto/NativeCryptoProvider';
+import { hardwareSecurityProvider } from '../../core/crypto/HardwareSecurityProvider';
+import { deviceIntegrityGuard } from '../../core/security/DeviceIntegrityGuard';
 import {
   networkResolver,
   startNetworkTransitionsListener,
@@ -19,9 +20,9 @@ if (!telemetryApiKey) {
   );
 }
 
-// 1. Initialize the real SovereignClientCore instance
+// 1. Initialize the real SovereignClientCore instance anchored to Hardware Security (StrongBox / Secure Enclave)
 export const secureClient = SovereignClientCore.getInstance({
-  cryptoProvider: nativeCryptoProvider,
+  cryptoProvider: hardwareSecurityProvider,
   networkResolver: networkResolver,
   networkAdapter: new FetchAdapter(),
   enableAutoDPoP: true,
@@ -60,12 +61,25 @@ export const useSovereignInitializer = () => {
     // Bootstrap DPoP keys asynchronously before the first protected render
     const initSovereignClient = async () => {
       try {
+        // Enforce active device integrity checks (Fail-Closed against Root/Frida)
+        const integrityStatus = await deviceIntegrityGuard.evaluateIntegrity();
+        if (integrityStatus.isDeviceCompromised) {
+          console.error(
+            '[useSovereignInitializer] CRITICAL: Device integrity compromised. Tampering detected:',
+            integrityStatus.violationReason,
+          );
+          // Fail-closed policy: immediately purge memory and block deferred offline execution
+          useAppStore.getState().setFrozen(false);
+          setIsBootstrapped(false);
+          return;
+        }
+
         await useAppStore.getState().initAuth();
 
         const jwk = await secureClient.bootstrap();
         setDpopPublicKey(jwk);
         console.log(
-          '[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys.',
+          '[useSovereignInitializer] Successfully bootstrapped Sovereign Client and DPoP keys with Hardware Enclave.',
         );
       } catch (error) {
         console.error(

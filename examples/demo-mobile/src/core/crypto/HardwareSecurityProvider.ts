@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { NativeCryptoProvider } from './NativeCryptoProvider';
+import { subtle, randomBytes } from 'react-native-quick-crypto';
 import type { IDPoPCryptoProvider } from '@vesper-core/ghost-ledger';
 
 /**
@@ -11,11 +11,11 @@ import type { IDPoPCryptoProvider } from '@vesper-core/ghost-ledger';
  * - NIST SP 800-90A Rev. 1 deterministic random bit generators
  * - Blessing et al. (2021) recommendations to eliminate software key theft
  */
-export class HardwareSecurityProvider extends NativeCryptoProvider implements IDPoPCryptoProvider {
+export class HardwareSecurityProvider implements IDPoPCryptoProvider {
+  public readonly subtle: SubtleCrypto = subtle as SubtleCrypto;
   private isEnclaveEnforced: boolean = false;
 
   constructor(requireHardware: boolean = true) {
-    super();
     this.isEnclaveEnforced = requireHardware;
   }
 
@@ -38,9 +38,17 @@ export class HardwareSecurityProvider extends NativeCryptoProvider implements ID
   /**
    * Generates cryptographically secure random bytes anchored to hardware entropy.
    */
-  public override getRandomBytes(byteLength: number): Uint8Array {
+  public getRandomBytes(byteLength: number): Uint8Array {
     this.assertHardwareRootOfTrust();
-    return super.getRandomBytes(byteLength);
+    return new Uint8Array(randomBytes(byteLength));
+  }
+
+  /**
+   * Computes the SHA-256 digest of the supplied data.
+   */
+  public async sha256(data: Uint8Array): Promise<Uint8Array> {
+    const hashBuffer = await this.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
+    return new Uint8Array(hashBuffer);
   }
 }
 

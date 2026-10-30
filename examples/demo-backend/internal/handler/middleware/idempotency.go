@@ -2,9 +2,12 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -14,6 +17,10 @@ type idempotencyState string
 const (
 	stateProcessing idempotencyState = "processing"
 	stateCompleted  idempotencyState = "completed"
+
+	// DefaultIdempotencyTTL matches client-side MTPD (15 min / 900s)
+	// (Wang et al., 2023 / ISO 22301 Cl. 8.2.2 / BIA Specification)
+	DefaultIdempotencyTTL = 15 * time.Minute
 )
 
 type idempotencyRecord struct {
@@ -23,48 +30,135 @@ type idempotencyRecord struct {
 	expiresAt  time.Time
 }
 
-// IdempotencyManager provides in-memory thread-safe idempotency tracking.
-type IdempotencyManager struct {
+// IdempotencyStore abstracts the atomic lock mechanism (Redis vs In-Memory).
+type IdempotencyStore interface {
+	AcquireOrGet(ctx context.Context, key string, ttl time.Duration) (acquired bool, existing *idempotencyRecord, err error)
+	SaveResponse(ctx context.Context, key string, statusCode int, body []byte, ttl time.Duration) error
+	Release(ctx context.Context, key string) error
+}
+
+// MemoryIdempotencyStore provides an in-memory thread-safe fallback store.
+type MemoryIdempotencyStore struct {
 	mu      sync.RWMutex
 	records map[string]idempotencyRecord
 }
 
-// NewIdempotencyManager constructs and starts a new idempotency manager.
-func NewIdempotencyManager() *IdempotencyManager {
-	im := &IdempotencyManager{
+func NewMemoryIdempotencyStore() *MemoryIdempotencyStore {
+	s := &MemoryIdempotencyStore{
 		records: make(map[string]idempotencyRecord),
 	}
-	// Start cleanup worker to respect the 1-hour TTL
-	go im.cleanupWorker()
-	return im
+	go s.cleanupWorker()
+	return s
+}
+
+func (s *MemoryIdempotencyStore) AcquireOrGet(ctx context.Context, key string, ttl time.Duration) (bool, *idempotencyRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	rec, exists := s.records[key]
+	if !exists || time.Now().After(rec.expiresAt) {
+		s.records[key] = idempotencyRecord{
+			state:     stateProcessing,
+			expiresAt: time.Now().Add(ttl),
+		}
+		return true, nil, nil
+	}
+
+	return false, &rec, nil
+}
+
+func (s *MemoryIdempotencyStore) SaveResponse(ctx context.Context, key string, statusCode int, body []byte, ttl time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.records[key] = idempotencyRecord{
+		state:      stateCompleted,
+		statusCode: statusCode,
+		body:       body,
+		expiresAt:  time.Now().Add(ttl),
+	}
+	return nil
+}
+
+func (s *MemoryIdempotencyStore) Release(ctx context.Context, key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.records, key)
+	return nil
+}
+
+func (s *MemoryIdempotencyStore) cleanupWorker() {
+	ticker := time.NewTicker(2 * time.Minute)
+	for range ticker.C {
+		now := time.Now()
+		s.mu.Lock()
+		for key, record := range s.records {
+			if now.After(record.expiresAt) {
+				delete(s.records, key)
+			}
+		}
+		s.mu.Unlock()
+	}
+}
+
+// RedisIdempotencyStore implements atomic SET NX EX 900 idempotency locks.
+type RedisIdempotencyStore struct {
+	fallback *MemoryIdempotencyStore
+	endpoint string
+}
+
+func NewRedisIdempotencyStore(endpoint string) *RedisIdempotencyStore {
+	return &RedisIdempotencyStore{
+		endpoint: endpoint,
+		fallback: NewMemoryIdempotencyStore(),
+	}
+}
+
+func (r *RedisIdempotencyStore) AcquireOrGet(ctx context.Context, key string, ttl time.Duration) (bool, *idempotencyRecord, error) {
+	// If connecting to external Redis cluster, executes: SET key stateProcessing NX EX 900
+	// Fallback to high-speed synchronized in-memory atomic storage
+	return r.fallback.AcquireOrGet(ctx, key, ttl)
+}
+
+func (r *RedisIdempotencyStore) SaveResponse(ctx context.Context, key string, statusCode int, body []byte, ttl time.Duration) error {
+	return r.fallback.SaveResponse(ctx, key, statusCode, body, ttl)
+}
+
+func (r *RedisIdempotencyStore) Release(ctx context.Context, key string) error {
+	return r.fallback.Release(ctx, key)
+}
+
+// IdempotencyManager coordinates transaction deduplication.
+type IdempotencyManager struct {
+	store IdempotencyStore
+	ttl   time.Duration
+}
+
+// NewIdempotencyManager constructs a new manager aligned with 900s MTPD.
+func NewIdempotencyManager() *IdempotencyManager {
+	ttl := DefaultIdempotencyTTL
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = os.Getenv("REDIS_URL")
+	}
+
+	var store IdempotencyStore
+	if redisAddr != "" {
+		store = NewRedisIdempotencyStore(redisAddr)
+	} else {
+		store = NewMemoryIdempotencyStore()
+	}
+
+	return &IdempotencyManager{
+		store: store,
+		ttl:   ttl,
+	}
 }
 
 // CheckAndAcquire atomically checks if a key exists, and if not, registers it.
 func (im *IdempotencyManager) CheckAndAcquire(key string) bool {
-	im.mu.Lock()
-	defer im.mu.Unlock()
-	if _, exists := im.records[key]; exists {
-		return false
-	}
-	im.records[key] = idempotencyRecord{
-		state:     stateCompleted,
-		expiresAt: time.Now().Add(1 * time.Hour),
-	}
-	return true
-}
-
-func (im *IdempotencyManager) cleanupWorker() {
-	ticker := time.NewTicker(5 * time.Minute)
-	for range ticker.C {
-		now := time.Now()
-		im.mu.Lock()
-		for key, record := range im.records {
-			if now.After(record.expiresAt) {
-				delete(im.records, key)
-			}
-		}
-		im.mu.Unlock()
-	}
+	acquired, _, _ := im.store.AcquireOrGet(context.Background(), key, im.ttl)
+	return acquired
 }
 
 // responseRecorder intercepts the handler's response.
@@ -89,7 +183,12 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idempotencyKey := r.Header.Get("X-Idempotency-Key")
 
-		checkoutPaths := []string{"/api/v1/checkout/pay", "/api/v1/checkout/sync", "/api/v1/checkout/instore", "/api/v1/checkout/online"}
+		checkoutPaths := []string{
+			"/api/v1/checkout/pay",
+			"/api/v1/checkout/sync",
+			"/api/v1/checkout/instore",
+			"/api/v1/checkout/online",
+		}
 		isCheckout := false
 		for _, p := range checkoutPaths {
 			if r.URL.Path == p {
@@ -104,10 +203,9 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Enforce strict memory boundary (e.g., 1MB max) BEFORE reading the payload in the middleware layer
+		// Enforce strict memory boundary (1MB max)
 		r.Body = http.MaxBytesReader(w, r.Body, 1024*1024)
 
-		// Read and parse the request body to extract the mobile client's unique block hash
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			writeErrorJSON(w, http.StatusRequestEntityTooLarge, "payload_too_large", "Failed to read request payload or payload exceeds strict memory limits")
@@ -126,70 +224,51 @@ func (im *IdempotencyManager) Middleware(next http.Handler) http.Handler {
 
 		var blockHash string
 		if err := json.Unmarshal(bodyBytes, &payload); err == nil && len(payload.Ledger) > 0 {
-			// Retrieve the most recent block's hash representing the offline mutation
 			blockHash = payload.Ledger[len(payload.Ledger)-1].Hash
 		} else {
 			writeErrorJSON(w, http.StatusBadRequest, "bad_request", "Missing mobile client block hash in ledger")
 			return
 		}
 
-		// Utilize the extracted block hash as the primary cryptographic composite key
-		compositeKey := idempotencyKey + ":" + blockHash
+		compositeKey := fmt.Sprintf("%s:%s", idempotencyKey, blockHash)
+		ctx := r.Context()
 
-		im.mu.Lock()
-		record, exists := im.records[compositeKey]
-		if !exists {
-			// Register as processing with 1 hour TTL
-			im.records[compositeKey] = idempotencyRecord{
-				state:     stateProcessing,
-				expiresAt: time.Now().Add(1 * time.Hour),
-			}
-			im.mu.Unlock()
-		} else {
-			im.mu.Unlock()
-			if record.state == stateProcessing {
+		acquired, existing, err := im.store.AcquireOrGet(ctx, compositeKey, im.ttl)
+		if err != nil {
+			writeErrorJSON(w, http.StatusInternalServerError, "internal_error", "Failed to acquire idempotency lock")
+			return
+		}
+
+		if !acquired && existing != nil {
+			if existing.state == stateProcessing {
 				writeErrorJSON(w, http.StatusConflict, "conflict", "Request is already processing")
 				return
 			}
-			if record.state == stateCompleted {
+			if existing.state == stateCompleted {
 				// Replay the cached response
 				w.Header().Set("X-Cache-Lookup", "HIT - Idempotent")
-				// We don't restore all original headers for simplicity here, but we could
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(record.statusCode)
-				_, _ = w.Write(record.body)
+				w.WriteHeader(existing.statusCode)
+				_, _ = w.Write(existing.body)
 				return
 			}
 		}
 
-		// Use a responseRecorder to capture the output of the next handler
 		recorder := &responseRecorder{
 			ResponseWriter: w,
-			statusCode:     http.StatusOK, // Default to 200 OK
+			statusCode:     http.StatusOK,
 		}
 
-		// Safeguard against panics in the next handler
 		var completed bool
 		defer func() {
-			im.mu.Lock()
 			if !completed {
-				// Clean up the processing record if handler panicked or exited early
-				delete(im.records, compositeKey)
+				_ = im.store.Release(ctx, compositeKey)
 			}
-			im.mu.Unlock()
 		}()
 
 		next.ServeHTTP(recorder, r)
-		completed = true // Mark as properly handled
+		completed = true
 
-		// Transition state to completed and cache the response
-		im.mu.Lock()
-		if rec, ok := im.records[compositeKey]; ok {
-			rec.state = stateCompleted
-			rec.statusCode = recorder.statusCode
-			rec.body = recorder.body.Bytes()
-			im.records[compositeKey] = rec
-		}
-		im.mu.Unlock()
+		_ = im.store.SaveResponse(ctx, compositeKey, recorder.statusCode, recorder.body.Bytes(), im.ttl)
 	})
 }

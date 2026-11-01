@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -31,24 +33,24 @@ type DPoPHeader struct {
 	Jwk JWK    `json:"jwk"`
 }
 
-// DPoPClaims represents the payload claims inside the DPoP proof JWT.
+// DPoPClaims represents the payload claims inside the DPoP proof JWT (RFC 9449).
 type DPoPClaims struct {
-	Jti string `json:"jti"`
-	Htm string `json:"htm"`
-	Htu string `json:"htu"`
-	Iat int64  `json:"iat"`
+	Jti   string `json:"jti"`
+	Htm   string `json:"htm"`
+	Htu   string `json:"htu"`
+	Iat   int64  `json:"iat"`
+	Ath   string `json:"ath,omitempty"`
+	Nonce string `json:"nonce,omitempty"`
 }
 
 // DPoPValidator handles validation rules and replay protection tracking.
 type DPoPValidator struct {
-	// usedJTIs tracks JTIs by mapping them to their expiry timestamp (Unix)
 	usedJTIs sync.Map
 }
 
 // NewDPoPValidator initializes a DPoPValidator.
 func NewDPoPValidator() *DPoPValidator {
 	v := &DPoPValidator{}
-	// Launch background cleanup worker for old JTIs
 	go v.startCleanupWorker(1 * time.Minute)
 	return v
 }
@@ -68,9 +70,18 @@ func (d *DPoPValidator) startCleanupWorker(interval time.Duration) {
 	}
 }
 
+func generateServerNonce() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 // Middleware returns the HTTP middleware handler for validating DPoP headers.
 func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Provide next server challenge nonce in response header (RFC 9449 Section 8)
+		w.Header().Set("DPoP-Nonce", generateServerNonce())
+
 		if os.Getenv("DEV_DPOP_BYPASS") == "true" {
 			next.ServeHTTP(w, r)
 			return
@@ -166,17 +177,13 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Simple URI matching. Extract scheme and host, or match path.
-		// Standard DPoP checks exact match or path. Let's compare path-level or exact string.
 		reqURI := r.URL.Path
-		// The claim might contain the full URL: e.g. "http://localhost:8080/api/v1/checkout/pay"
-		// If htu contains the full URL, we verify that it ends with the request path.
 		if !strings.HasSuffix(claims.Htu, reqURI) {
 			writeErrorJSON(w, http.StatusUnauthorized, "invalid_dpop_claims", fmt.Sprintf("DPoP HTTP URI mismatch (expected suffix %s, got %s)", reqURI, claims.Htu))
 			return
 		}
 
-		// 7. Validate iat (Issued At) timestamp: max drift allowed is 120 seconds
+		// 7. Validate iat timestamp (120 seconds max drift)
 		now := time.Now().Unix()
 		diff := now - claims.Iat
 		if diff < 0 {
@@ -187,13 +194,25 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// 8. Replay Protection: verify JTI uniqueness
+		// 8. Validate Access Token Hash (ath) if Authorization header is present
+		authHeader := r.Header.Get("Authorization")
+		if strings.HasPrefix(authHeader, "DPoP ") {
+			rawAccessToken := strings.TrimPrefix(authHeader, "DPoP ")
+			expectedAth := sha256.Sum256([]byte(rawAccessToken))
+			expectedAthEncoded := base64.RawURLEncoding.EncodeToString(expectedAth[:])
+
+			if claims.Ath != "" && claims.Ath != expectedAthEncoded {
+				writeErrorJSON(w, http.StatusUnauthorized, "invalid_dpop_claims", "DPoP access token hash (ath) mismatch")
+				return
+			}
+		}
+
+		// 9. Replay Protection: verify JTI uniqueness
 		if claims.Jti == "" {
 			writeErrorJSON(w, http.StatusBadRequest, "invalid_dpop_claims", "Missing JTI claim")
 			return
 		}
 
-		// Store JTI with expiration set to iat + 120 (when it becomes invalid due to age anyway)
 		jtiExpiry := claims.Iat + 120
 		_, loaded := d.usedJTIs.LoadOrStore(claims.Jti, jtiExpiry)
 		if loaded {
@@ -215,7 +234,6 @@ func (d *DPoPValidator) Middleware(next http.Handler) http.Handler {
 
 // CalculateJKT computes the JWK Thumbprint according to RFC 7638.
 func CalculateJKT(jwk JWK) (string, error) {
-	// RFC 7638 requires lexicographic order of the required members: crv, kty, x, y
 	type thumbprintJWK struct {
 		Crv string `json:"crv"`
 		Kty string `json:"kty"`

@@ -1,4 +1,4 @@
-# @vesper-core/ghost-ledger (v0.1.0-alpha.1)
+# @vesper-core/ghost-ledger
 
 [![npm version](https://img.shields.io/npm/v/@vesper-core/ghost-ledger.svg?style=flat-square)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg?style=flat-square)](https://www.typescriptlang.org/)
@@ -18,10 +18,10 @@ You can install the package using your preferred package manager:
 
 ```bash
 # Using yarn
-yarn add @vesper-core/ghost-ledger@0.1.0-alpha.1
+yarn add @vesper-core/ghost-ledger
 
 # Using npm
-npm install @vesper-core/ghost-ledger@0.1.0-alpha.1
+npm install @vesper-core/ghost-ledger
 ```
 
 ### Peer Dependencies & Requirements

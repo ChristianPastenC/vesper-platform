@@ -7,6 +7,7 @@
     "test:backend": "cd examples/demo-backend && go test ./... -cover",
     "test:console": "cd apps/vesper-console && npm test",
     "test:load": "k6 run scripts/load_tests/telemetry_stress_test.js",
+    "test:npm-stability": "node scripts/test_npm_package_stability.mjs",
     "lint:all": "npm run lint:go && npm run lint:console",
     "lint:go": "cd apps/vesper-ingestion && go vet ./... && cd ../../examples/demo-backend && go vet ./...",
     "lint:console": "cd apps/vesper-console && npx astro check"

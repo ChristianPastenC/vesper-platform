@@ -6,11 +6,13 @@ on:
     branches: [ "main" ]
     paths:
       - 'apps/vesper-console/**'
+      - 'packages/ghost-ledger/package.json'
       - '.github/workflows/vesper-console-ci.yml'
   pull_request:
     branches: [ "main" ]
     paths:
       - 'apps/vesper-console/**'
+      - 'packages/ghost-ledger/package.json'
       - '.github/workflows/vesper-console-ci.yml'
 
 concurrency:

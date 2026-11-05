@@ -11,3 +11,7 @@ services:
         generateValue: true
       - key: ECDSA_PRIVATE_KEY_PEM
         sync: false
+      - key: DEV_DPOP_BYPASS
+        value: "true"
+      - key: DEV_HASH_BYPASS
+        value: "true"

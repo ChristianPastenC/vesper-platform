@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"vesper-core/vesper-ingestion/internal/adapter/db"
@@ -37,17 +38,41 @@ func main() {
 	r.Use(chi_middleware.Logger)
 	r.Use(chi_middleware.Recoverer)
 
-	// Strict CORS for production, with fallback for local dev
+	// Strict CORS for production, with fallback for local dev and Netlify deployments
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			allowed := os.Getenv("ALLOWED_ORIGINS")
-			if allowed == "*" || allowed == "" {
-				return origin == "http://localhost:4000" || origin == "http://127.0.0.1:4000" || origin == "http://localhost:3000" || origin == "https://vesper-console.netlify.app"
+			if allowed == "*" {
+				return true
 			}
-			return origin == allowed
+			if allowed == "" {
+				return origin == "http://localhost:4000" ||
+					origin == "http://127.0.0.1:4000" ||
+					origin == "http://localhost:3000" ||
+					origin == "http://localhost:8082" ||
+					origin == "http://localhost:19006" ||
+					origin == "https://vesper-console.netlify.app" ||
+					(strings.HasPrefix(origin, "https://") && strings.HasSuffix(origin, ".netlify.app"))
+			}
+			for _, o := range strings.Split(allowed, ",") {
+				if strings.TrimSpace(o) == origin {
+					return true
+				}
+			}
+			return false
 		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Sovereign-API-Key", "Origin", "X-Sovereign-Session-Key", "X-Sovereign-IV"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-Sovereign-API-Key",
+			"X-Bundle-ID",
+			"Origin",
+			"X-Sovereign-Session-Key",
+			"X-Sovereign-IV",
+			"X-Sovereign-Start-Index",
+		},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,

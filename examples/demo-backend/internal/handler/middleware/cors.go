@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -15,11 +16,28 @@ type CORSConfig struct {
 	MaxAge           string
 }
 
-// DefaultCORSConfig returns a configuration suitable for local development.
+// DefaultCORSConfig returns a configuration suitable for local development and authorized Netlify frontends.
 func DefaultCORSConfig() CORSConfig {
+	origins := []string{
+		"http://localhost:3000",
+		"http://localhost:4000",
+		"http://localhost:8081",
+		"http://localhost:8082",
+		"http://localhost:19006",
+		"https://vesper-console.netlify.app",
+		"*",
+	}
+	if extra := os.Getenv("ALLOWED_ORIGINS"); extra != "" {
+		for _, o := range strings.Split(extra, ",") {
+			if trimmed := strings.TrimSpace(o); trimmed != "" {
+				origins = append(origins, trimmed)
+			}
+		}
+	}
+
 	return CORSConfig{
-		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:8081", "*"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowedOrigins: origins,
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{
 			"Content-Type",
 			"Authorization",
@@ -27,8 +45,10 @@ func DefaultCORSConfig() CORSConfig {
 			"X-Challenge-Token",
 			"X-Request-ID",
 			"X-Client-Version",
+			"X-Idempotency-Key",
+			"X-Sovereign-Hash",
 		},
-		ExposedHeaders:   []string{"X-Challenge-ID", "X-Challenge-Expires"},
+		ExposedHeaders:   []string{"X-Challenge-ID", "X-Challenge-Expires", "DPoP-Nonce"},
 		AllowCredentials: true,
 		MaxAge:           "600",
 	}
@@ -89,6 +109,11 @@ func isAllowedOrigin(allowed map[string]struct{}, origin string, allowCredential
 			return true
 		}
 	}
-	_, ok := allowed[origin]
-	return ok
+	if _, ok := allowed[origin]; ok {
+		return true
+	}
+	if strings.HasPrefix(origin, "https://") && strings.HasSuffix(origin, ".netlify.app") {
+		return true
+	}
+	return false
 }

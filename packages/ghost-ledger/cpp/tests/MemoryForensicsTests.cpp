@@ -44,7 +44,13 @@ namespace {
 constexpr uint8_t kSentinel = 0xAB;
 
 bool bufferStillContainsSentinel(const uint8_t* ptr, size_t size) {
-    for (size_t i = 0; i < size; ++i) {
+    // Skip the first 2 * sizeof(void*) bytes (16 bytes on 64-bit platforms)
+    // where glibc's tcache_entry writes its `next` pointer and random 64-bit
+    // `tcache_key` upon free(), avoiding ~6.1% random single-byte collisions
+    // with kSentinel (0xAB) in allocator metadata while inspecting the
+    // remaining 48 payload bytes.
+    const size_t startOffset = size > (2 * sizeof(void*)) ? (2 * sizeof(void*)) : 0;
+    for (size_t i = startOffset; i < size; ++i) {
         if (ptr[i] == kSentinel) return true;
     }
     return false;

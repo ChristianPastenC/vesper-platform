@@ -21,4 +21,25 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
+const webShims = {
+  'react-native-config': path.resolve(projectRoot, 'web-shims/react-native-config.js'),
+  'react-native-quick-crypto': path.resolve(projectRoot, 'web-shims/react-native-quick-crypto.js'),
+  'expo-secure-store': path.resolve(projectRoot, 'web-shims/expo-secure-store.js'),
+  'react-native-webview': path.resolve(projectRoot, 'web-shims/react-native-webview.js'),
+};
+
+const originalResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform === 'web' && webShims[moduleName]) {
+    return {
+      filePath: webShims[moduleName],
+      type: 'sourceFile',
+    };
+  }
+  if (originalResolveRequest) {
+    return originalResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;

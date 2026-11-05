@@ -13,6 +13,7 @@ import (
 )
 
 func TestHashValidator(t *testing.T) {
+	t.Setenv("DEV_HASH_BYPASS", "false")
 	// Helper function to create a valid hash
 	createHash := func(secret, body string) string {
 		mac := hmac.New(sha256.New, []byte(secret))

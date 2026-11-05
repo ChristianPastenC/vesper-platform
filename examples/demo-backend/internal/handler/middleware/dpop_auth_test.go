@@ -61,6 +61,7 @@ func generateTestDPoP(method, path string, driftSeconds int64) (string, error) {
 }
 
 func TestDPoPValidator(t *testing.T) {
+	t.Setenv("DEV_DPOP_BYPASS", "false")
 	validator := middleware.NewDPoPValidator()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

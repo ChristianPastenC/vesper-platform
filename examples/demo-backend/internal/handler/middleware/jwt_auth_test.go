@@ -40,6 +40,7 @@ func (m *mockTokenService) RevokeRefreshToken(ctx context.Context, token string)
 }
 
 func TestJWTAuth(t *testing.T) {
+	t.Setenv("DEV_DPOP_BYPASS", "false")
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := middleware.GetUserIDFromContext(r.Context())
 		if !ok || userID == "" {

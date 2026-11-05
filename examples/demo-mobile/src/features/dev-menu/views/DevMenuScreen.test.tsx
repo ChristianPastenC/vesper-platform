@@ -33,6 +33,10 @@ describe('DevMenuScreen', () => {
     isBusy: false,
     lastFlushResult: null,
     lastEnqueuedId: null,
+    customApiKey: '',
+    setCustomApiKey: jest.fn(),
+    customBundleId: '',
+    setCustomBundleId: jest.fn(),
     refreshStatus: jest.fn(),
     simulateOffline: jest.fn(),
     simulateOnline: jest.fn(),
@@ -102,7 +106,11 @@ describe('DevMenuScreen', () => {
   it('shows a failure flush result with the error marker', () => {
     (useDevMenu as jest.Mock).mockReturnValue({
       ...baseHookValue,
-      lastFlushResult: { success: false, eventCount: 0, message: 'No telemetry events buffered to flush.' },
+      lastFlushResult: {
+        success: false,
+        eventCount: 0,
+        message: 'No telemetry events buffered to flush.',
+      },
     });
 
     const { getByTestId } = render(<DevMenuScreen />);
@@ -114,7 +122,11 @@ describe('DevMenuScreen', () => {
   it('shows the last flush result message', () => {
     (useDevMenu as jest.Mock).mockReturnValue({
       ...baseHookValue,
-      lastFlushResult: { success: true, eventCount: 1, message: 'Sent 1 event(s) to the dashboard.' },
+      lastFlushResult: {
+        success: true,
+        eventCount: 1,
+        message: 'Sent 1 event(s) to the dashboard.',
+      },
     });
 
     const { getByTestId } = render(<DevMenuScreen />);
@@ -152,5 +164,20 @@ describe('DevMenuScreen', () => {
     const { getByTestId } = render(<DevMenuScreen />);
     fireEvent.press(getByTestId('dev-menu-dequeue-btn'));
     expect(baseHookValue.dequeueTestPayload).toHaveBeenCalledTimes(1);
+  });
+
+  it('expands custom telemetry key and bundle ID inputs only when toggled', () => {
+    const { getByTestId, queryByTestId } = render(<DevMenuScreen />);
+
+    expect(queryByTestId('dev-menu-api-key-input')).toBeNull();
+    expect(queryByTestId('dev-menu-bundle-id-input')).toBeNull();
+
+    fireEvent.press(getByTestId('dev-menu-toggle-telemetry-config-btn'));
+
+    fireEvent.changeText(getByTestId('dev-menu-api-key-input'), 'sk_live_new');
+    fireEvent.changeText(getByTestId('dev-menu-bundle-id-input'), 'mx.edu.sovereign.core');
+
+    expect(baseHookValue.setCustomApiKey).toHaveBeenCalledWith('sk_live_new');
+    expect(baseHookValue.setCustomBundleId).toHaveBeenCalledWith('mx.edu.sovereign.core');
   });
 });

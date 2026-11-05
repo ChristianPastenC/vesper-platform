@@ -8,7 +8,12 @@ import {
 import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
 import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
 import { validateHandshake } from '../../../core/network/handshakeValidator';
-import { getApiUrl, getTelemetryApiKey, getTelemetryBundleId, getTelemetryEndpoint } from '../../../core/config';
+import {
+  getApiUrl,
+  getTelemetryApiKey,
+  getTelemetryBundleId,
+  getTelemetryEndpoint,
+} from '../../../core/config';
 import { useAppStore } from '../../../store/useAppStore';
 
 export interface DevMenuStatus {
@@ -41,6 +46,8 @@ export const useDevMenu = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [lastFlushResult, setLastFlushResult] = useState<FlushResult | null>(null);
   const [lastEnqueuedId, setLastEnqueuedId] = useState<string | null>(null);
+  const [customApiKey, setCustomApiKey] = useState<string>('');
+  const [customBundleId, setCustomBundleId] = useState<string>('');
 
   const refreshStatus = useCallback(() => {
     const queue = SovereignMemoryQueue.getInstance();
@@ -92,7 +99,8 @@ export const useDevMenu = () => {
       return result;
     }
 
-    const apiKey = getTelemetryApiKey();
+    const apiKey = customApiKey.trim() || getTelemetryApiKey();
+    const bundleId = customBundleId.trim() || getTelemetryBundleId();
     if (!apiKey) {
       result = {
         success: false,
@@ -108,7 +116,7 @@ export const useDevMenu = () => {
         method: 'POST',
         headers: {
           'X-Sovereign-API-Key': apiKey,
-          'X-Bundle-ID': getTelemetryBundleId(),
+          'X-Bundle-ID': bundleId,
           'Content-Type': 'application/octet-stream',
         },
         body: snapshot.buffer as unknown as BodyInit,
@@ -116,7 +124,11 @@ export const useDevMenu = () => {
 
       result = response.ok
         ? { success: true, eventCount, message: `Sent ${eventCount} event(s) to the dashboard.` }
-        : { success: false, eventCount, message: `Ingestion API responded with ${response.status}.` };
+        : {
+            success: false,
+            eventCount,
+            message: `Ingestion API responded with ${response.status}.`,
+          };
     } catch (error) {
       result = {
         success: false,
@@ -127,7 +139,7 @@ export const useDevMenu = () => {
 
     setLastFlushResult(result);
     return result;
-  }, []);
+  }, [customApiKey, customBundleId]);
 
   // These two are split (rather than the combined enqueue+dequeue that
   // simulateE2EEvent does) specifically so the Frida DAST pipeline can scan
@@ -203,6 +215,10 @@ export const useDevMenu = () => {
     isBusy,
     lastFlushResult,
     lastEnqueuedId,
+    customApiKey,
+    setCustomApiKey,
+    customBundleId,
+    setCustomBundleId,
     refreshStatus,
     simulateOffline,
     simulateOnline,

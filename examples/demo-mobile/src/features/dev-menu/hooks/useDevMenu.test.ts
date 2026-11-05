@@ -161,6 +161,40 @@ describe('useDevMenu', () => {
     });
   });
 
+  it('uses customApiKey and customBundleId overrides when provided', async () => {
+    mockQueue.getTelemetrySnapshot.mockReturnValue(new Uint8Array(17));
+    (getTelemetryApiKey as jest.Mock).mockReturnValue(undefined);
+
+    const { result } = renderHook(() => useDevMenu());
+
+    act(() => {
+      result.current.setCustomApiKey('  sk_custom_live_key  ');
+      result.current.setCustomBundleId('  mx.edu.sovereign.custom  ');
+    });
+
+    let flushResult;
+    await act(async () => {
+      flushResult = await result.current.flushTelemetryNow();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://127.0.0.1:8081/api/v1/support/telemetry',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'X-Sovereign-API-Key': 'sk_custom_live_key',
+          'X-Bundle-ID': 'mx.edu.sovereign.custom',
+          'Content-Type': 'application/octet-stream',
+        },
+      }),
+    );
+    expect(flushResult).toEqual({
+      success: true,
+      eventCount: 1,
+      message: 'Sent 1 event(s) to the dashboard.',
+    });
+  });
+
   it('reports failure when the ingestion API responds with a non-OK status', async () => {
     mockQueue.getTelemetrySnapshot.mockReturnValue(new Uint8Array(17));
     (getTelemetryApiKey as jest.Mock).mockReturnValue('sk_test');

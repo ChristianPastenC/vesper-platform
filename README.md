@@ -3,7 +3,7 @@
 [![Console Deployment](https://img.shields.io/badge/Console-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://vesper-console.netlify.app/)
 [![Ingestion API Deployment](https://img.shields.io/badge/Ingestion_API-Render-46E3B7?style=for-the-badge&logo=render)](https://vesper-ingestion.onrender.com/)
 [![Demo Backend Deployment](https://img.shields.io/badge/Demo_Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
-[![Ghost Ledger](https://img.shields.io/badge/@vesper/ghost--ledger-blue?style=for-the-badge&logo=npm)](./packages/ghost-ledger)
+[![Ghost Ledger](https://img.shields.io/npm/v/@vesper-core/ghost-ledger?label=%40vesper-core%2Fghost-ledger&style=for-the-badge&logo=npm)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
 
 This repository contains the **V.E.S.P.E.R. (Volatile Enclave for Secure Payload Encryption & Routing)** Developer Platform. It is a comprehensive B2B SaaS system and Zero-Trust cryptographic ecosystem providing core telemetry ingestion APIs, a management portal, a native C++ security SDK, and complete sample reference applications (mobile and backend) demonstrating how to implement a Zero-Trust architecture.
 

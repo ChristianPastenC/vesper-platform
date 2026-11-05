@@ -10,13 +10,20 @@ export interface LedgerBlockInternal {
   isZeroized: boolean;
 }
 
-// Memory queue fallback implementation when running outside React Native (Node.js/Jest/SSR)
+interface TelemetryRecord {
+  type: 1 | 2 | 3;
+  timestamp: number;
+  value: number;
+}
+
+// Memory queue fallback implementation when running outside React Native (Node.js/Jest/SSR/Web)
 export class SovereignSecureClientFallback {
   private queue: LedgerBlockInternal[] = [];
   private idToIndex = new Map<string, number>();
   private isLocked = false;
   private isIntegrityCompromised = false;
   private isOnline = true;
+  private telemetryEvents: TelemetryRecord[] = [];
 
   public executeTransaction(id: string, serializedRequest: ArrayBuffer, ttl: number): boolean {
     if (this.isLocked || this.isIntegrityCompromised) {
@@ -74,6 +81,7 @@ export class SovereignSecureClientFallback {
       if (!this.constantTimeEqual(block.previousHash, expectedPrevHash)) {
         this.isLocked = true;
         this.isIntegrityCompromised = true;
+        this.recordTelemetryEvent(2, 1.0);
         return false;
       }
       if (!block.isZeroized) {
@@ -85,6 +93,7 @@ export class SovereignSecureClientFallback {
         if (!this.constantTimeEqual(block.currentHash, recomputed)) {
           this.isLocked = true;
           this.isIntegrityCompromised = true;
+          this.recordTelemetryEvent(2, 1.0);
           return false;
         }
       }
@@ -125,9 +134,30 @@ export class SovereignSecureClientFallback {
   }
 
   public getTelemetrySnapshot(): ArrayBuffer {
-    // This JS-only fallback has no native telemetry engine to drain, so it
-    // always reports an empty snapshot (matches queue.ts's payload.length > 0 check).
-    return new ArrayBuffer(0);
+    if (this.telemetryEvents.length === 0) {
+      return new ArrayBuffer(0);
+    }
+    const events = this.telemetryEvents.splice(0, this.telemetryEvents.length);
+    const structSize = 17;
+    const buffer = new ArrayBuffer(events.length * structSize);
+    const view = new DataView(buffer);
+
+    for (let i = 0; i < events.length; i++) {
+      const ev = events[i]!;
+      const offset = i * structSize;
+      view.setUint8(offset, ev.type);
+      view.setBigUint64(offset + 1, BigInt(ev.timestamp), true);
+      view.setFloat64(offset + 9, ev.value, true);
+    }
+    return buffer;
+  }
+
+  private recordTelemetryEvent(type: 1 | 2 | 3, value: number): void {
+    this.telemetryEvents.push({
+      type,
+      timestamp: Date.now(),
+      value,
+    });
   }
 
   public base64UrlEncode(data: ArrayBuffer): string {
@@ -146,6 +176,7 @@ export class SovereignSecureClientFallback {
     block.previousHash.fill(0);
     block.currentHash.fill(0);
     block.isZeroized = true;
+    this.recordTelemetryEvent(1, 1.0);
   }
 
   private computeBlockHash(
@@ -153,6 +184,7 @@ export class SovereignSecureClientFallback {
     previousHash: Uint8Array,
     timestamp: number,
   ): Uint8Array {
+    const startMs = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const tsBytes = new TextEncoder().encode(timestamp.toString());
     const preImage = new Uint8Array(
       serializedRequest.length + previousHash.length + tsBytes.length,
@@ -160,7 +192,13 @@ export class SovereignSecureClientFallback {
     preImage.set(serializedRequest, 0);
     preImage.set(previousHash, serializedRequest.length);
     preImage.set(tsBytes, serializedRequest.length + previousHash.length);
-    return sha256Sync(preImage);
+    const digest = sha256Sync(preImage);
+    const elapsedMs = Math.max(
+      0.01,
+      (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startMs,
+    );
+    this.recordTelemetryEvent(3, elapsedMs);
+    return digest;
   }
 
   private constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -194,4 +232,3 @@ export class SovereignSecureClientFallback {
     }
   }
 }
-

@@ -75,4 +75,24 @@ describe('SovereignSecureClientFallback', () => {
     // "hello" in base64 is "aGVsbG8=" -> base64url is "aGVsbG8"
     expect(encoded).toBe('aGVsbG8');
   });
+
+  it('should emit 17-byte binary telemetry events on enqueue/zeroize and drain snapshot', () => {
+    expect(fallback.getTelemetrySnapshot().byteLength).toBe(0);
+
+    fallback.toggleNetworkSim(false);
+    fallback.executeTransaction('txn-telemetry', new Uint8Array([1, 2, 3]).buffer, 1000);
+    fallback.dequeueTransaction('txn-telemetry');
+
+    const snapshot = fallback.getTelemetrySnapshot();
+    expect(snapshot.byteLength).toBeGreaterThanOrEqual(34);
+    expect(snapshot.byteLength % 17).toBe(0);
+
+    const view = new DataView(snapshot);
+    // Event 0: COMPUTE_HASH_LATENCY (3), Event 1: ZEROIZATION_TRIGGERED (1)
+    expect(view.getUint8(0)).toBe(3);
+    expect(view.getUint8(17)).toBe(1);
+
+    // Subsequent call should be drained
+    expect(fallback.getTelemetrySnapshot().byteLength).toBe(0);
+  });
 });

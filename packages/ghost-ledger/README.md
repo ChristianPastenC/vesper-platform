@@ -2,63 +2,57 @@
 
 [![npm version](https://img.shields.io/npm/v/@vesper-core/ghost-ledger.svg?style=flat-square)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/npm/l/@vesper-core/ghost-ledger.svg?style=flat-square)](https://github.com/vesper-core/ghost-ledger/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@vesper-core/ghost-ledger.svg?style=flat-square)](https://github.com/ChristianPastenC/vesper-platform/blob/main/LICENSE)
 
 `@vesper-core/ghost-ledger` is a cryptographic middleware for **React Native** designed to solve a critical problem: **protecting your HTTP request payloads in volatile memory (RAM) when the network fails**.
 
-When your mobile app loses connection or faces server errors (like 503 or 504), pending requests with sensitive payloads can be left exposed in the JavaScript heap. This library prevents payload theft by automatically catching these failed requests, encrypting them, and securely locking them down in a native C++ memory ledger until the network is restored.
+When your mobile app loses connection or faces server errors (like 503 or 504), pending requests with sensitive payloads can be left exposed in the JavaScript heap. This library prevents payload theft by automatically catching these failed requests, encrypting them, and securely locking them down in a native C++20 memory ledger until the network is restored.
 
-Built exclusively for React Native using high-performance **Nitro Modules**, it offers robust, offline-capable security and optional end-to-end telemetry observability without dealing with the underlying cryptographic complexity.
+Built for React Native using high-performance **Nitro Modules (JSI)** with a built-in pure JavaScript fallback engine for Node.js, Jest, and Web testing environments.
 
 ---
 
 ## Installation
 
-You can install the package using your preferred package manager:
+Install the package along with its required React Native runtime dependencies:
 
 ```bash
 # Using yarn
-yarn add @vesper-core/ghost-ledger
+yarn add @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo
 
 # Using npm
-npm install @vesper-core/ghost-ledger
+npm install @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo
 ```
 
 ### Peer Dependencies & Requirements
 
-This library uses [Nitro Modules](https://nitro.margelo.com/) for its core C++ execution. It is **exclusively for React Native** and will not run in standard web environments. Ensure the peer dependency is installed:
-
-```bash
-yarn add react-native-nitro-modules
-```
-
-To maintain strict multi-platform compatibility across iOS and Android without bloating the core, we require a native cryptographic provider. We highly recommend `react-native-quick-crypto`:
-
-```bash
-yarn add react-native-quick-crypto
-```
+| Package | Role | Notes |
+| :--- | :--- | :--- |
+| `react-native-nitro-modules` | Native C++20 JSI bridge (`>= 0.35.10`) | Required for physical RAM ledger execution on iOS & Android. |
+| `react-native-quick-crypto` | Native CSPRNG & SHA-256 provider | Injected into `cryptoProvider` for hardware-accelerated hashing. |
+| `@react-native-community/netinfo` | Connectivity state resolver | Used by `networkResolver` to detect offline transitions and trigger queue replay. |
 
 ---
 
 ## Getting Started
 
-Integrating `@vesper-core/ghost-ledger` is straightforward. The usage is split into two simple steps.
+Integrating `@vesper-core/ghost-ledger` is split into two simple steps.
 
 ### Step 1: Initialize the `SovereignClientCore`
 
 Set up the client at the root of your React Native application.
 
 > [!IMPORTANT]
-> **Dependency Injection:** The library requires you to provide a `nativeCryptoProvider`. By injecting `react-native-quick-crypto`, `@vesper-core/ghost-ledger` avoids being tightly coupled to specific React Native architectures while maximizing hashing performance.
+> **Dependency Injection:** The library requires you to provide a `cryptoProvider` (`ISovereignCryptoProvider`). By injecting `react-native-quick-crypto`, `@vesper-core/ghost-ledger` stays decoupled from specific React Native architectures while maximizing hashing performance.
 
 ```typescript
 import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import QuickCrypto from 'react-native-quick-crypto';
 import NetInfo from '@react-native-community/netinfo';
 
-const client = SovereignClientCore.getInstance({
+export const client = SovereignClientCore.getInstance({
   cryptoProvider: {
-    getRandomBytes: (n) => QuickCrypto.randomBytes(n),
+    getRandomBytes: (n) => new Uint8Array(QuickCrypto.randomBytes(n)),
     sha256: async (d) => new Uint8Array(QuickCrypto.createHash('sha256').update(d).digest())
   },
   networkResolver: async () => {
@@ -70,7 +64,7 @@ const client = SovereignClientCore.getInstance({
   telemetry: {
     apiKey: 'your-vesper-api-key',
     bundleId: 'com.your.app',
-    endpoint: 'https://api.vesper.local/v1/support/telemetry'
+    endpoint: 'https://vesper-ingestion.onrender.com/api/v1/support/telemetry'
   }
 });
 ```
@@ -95,16 +89,31 @@ const response = await client.executeRequest('tx_123', {
 
 ---
 
+## Telemetry & Observability (Current Storage Limitations)
+
+> [!WARNING]
+> **Incomplete Telemetry Persistence (Database Limitation):** While the client-side binary telemetry emitter (`getTelemetrySnapshot()`) is fully functional in both the native C++20 engine and the Node.js/JS fallback engine, **end-to-end telemetry persistence is currently incomplete at the backend database layer**.
+
+### Architectural Record for Node.js & Cloud Consumers
+1. **Ephemeral Database Storage in Reference Cloud (`telemetry.db`):**
+   - The reference ingestion backend (`vesper-ingestion`) currently operates over an embedded SQLite instance stored on an ephemeral container filesystem without an external persistent Time-Series Database (TSDB) or PostgreSQL cluster.
+   - Consequently, historical telemetry streams and dynamic API keys bound via **TOFU (*Trust On First Use*)** (`X-Bundle-ID`) are volatile across container cold-starts and redeployments.
+2. **Node.js & Fallback Telemetry Behavior:**
+   - When running in Node.js, Jest, or Web environments (`mock: true` or `globalThis.__SOVEREIGN_MOCK__ = true`), the `FallbackQueue` records 17-byte Little-Endian binary telemetry frames (`COMPUTE_HASH_LATENCY`, `ZEROIZATION_TRIGGERED`, `INTEGRITY_COMPROMISED`) in process memory.
+   - Without a persistent database backing the ingestion endpoint, telemetry events drained from the ring buffer are only retained for the active runtime session of the ingestion node. Full persistent database storage is scheduled for future platform releases.
+
+---
+
 ## Testing Environments (Mock Mode)
 
 > [!TIP]
-> **Gotcha:** For Jest test setups or Node.js scripting where compile-time native code linking (Nitro Modules) is not possible, you **must** use Mock Mode.
+> **Gotcha:** For Jest test setups or Node.js scripting where compile-time native code linking (Nitro Modules) is not available, enable Mock Mode.
 
-`@vesper-core/ghost-ledger` provides a built-in pure JavaScript fallback engine to prevent Metro or Jest resolution errors during unit testing.
+`@vesper-core/ghost-ledger` provides a built-in pure JavaScript fallback engine (`FallbackQueue`) to prevent Metro or Jest resolution errors during unit testing and Node.js verification.
 
 ### Enabling Mock Mode
 
-#### 1. Via Global Flag (Recommended for Jest)
+#### 1. Via Global Flag (Recommended for Jest / Node.js)
 Define `globalThis.__SOVEREIGN_MOCK__ = true` globally in your test setup file (`jest.setup.js`):
 
 ```typescript
@@ -126,30 +135,28 @@ const client = SovereignClientCore.getInstance({
 
 ## Advanced: Core Security Features
 
-For those interested in the underlying mechanics, the security architecture of the library is built upon 5 fundamental implementation pillars:
+The security architecture of the library is built upon 5 fundamental implementation pillars:
 
-1. **Volatile RAM Ledger (C++ Engine Core):** 
-   During connectivity failures or transient server responses (such as HTTP 503/504), outgoing requests are serialized to binary format (`Uint8Array`) and enqueued in a native C++ static ledger (`SovereignSecureCore`) in physical RAM (`std::vector<uint8_t>`). Each block is cryptographically linked to its predecessor using chained SHA-256 hashes.
+1. **Volatile RAM Ledger (C++20 Engine Core):** 
+   During connectivity failures or transient server responses (such as HTTP 503/504), outgoing requests are serialized to binary format (`Uint8Array`) and enqueued in a native C++20 static ledger (`SovereignSecureCore`) locked in physical RAM via `mlock` / `VirtualLock` to prevent NAND flash swap paging. Each block is cryptographically linked to its predecessor using chained SHA-256 hashes.
 
 2. **Deterministic Zeroization (Active Memory Erasure):** 
-   To prevent credentials or sensitive payloads from lingering in the JavaScript heap, the library enforces active zeroization. The C++ core explicitly calls `std::fill` on all payload vectors, previous hashes, and current hashes immediately after successful dispatch or upon TTL (Time-To-Live) expiration.
+   To prevent credentials or sensitive payloads from lingering in memory, the C++20 core enforces active zeroization using C11 `memset_s`, `SecureZeroMemory`, or `explicit_bzero` reinforced with compiler Dead Store Elimination (DSE) barriers immediately after dispatch or upon MTPD TTL (900s default) expiration.
 
 3. **Integrity Watchdog (Tamper-Detection Engine):** 
-   A background watchdog validates the cryptographic chain of the ledger. If it detects any dynamic memory manipulation (such as injection, memory corruption, or bit-flipping), it instantly freezes queue execution (`isLocked = true`, `isIntegrityCompromised = true`), stopping active TTL timeouts to preserve evidence.
+   A background watchdog validates the cryptographic chain of the ledger. If it detects any dynamic memory manipulation (such as Frida injection, memory corruption, or bit-flipping), it instantly freezes queue execution (`isLocked = true`, `isIntegrityCompromised = true`), stopping active TTL timeouts to preserve forensic state.
 
 4. **Dynamic DPoP Proofs (Ephemeral Proof-of-Possession):** 
-   The library handles the generation and signing of ephemeral OAuth 2.0 Demonstration of Proof-of-Possession (DPoP) proofs (RFC 9449). Ephemeral keys are managed inside TS via platform WebCrypto (`SubtleCrypto`), keeping the C++ core lightweight.
+   The library handles the generation and signing of ephemeral OAuth 2.0 Demonstration of Proof-of-Possession (DPoP) proofs (RFC 9449).
 
 5. **Transport Agnostic Core (Command Pattern Isolation):** 
-   The core is decoupled from the network transport layer, utilizing the Command pattern (`() => Promise<T>`) exposed via the `ISovereignNetworkAdapter` interface. This allows developers to plug in clean adapters for various networking stacks—such as Fetch, Axios, and GraphQL.
+   The core is decoupled from the network transport layer via the `ISovereignNetworkAdapter` interface, providing built-in adapters for Fetch, Axios, and GraphQL.
 
 ---
 
-
-
 ## Operational In-Memory Flow
 
-The sequence diagram below outlines the runtime lifecycle of a request, demonstrating error trapping, memory sequestration, and native C++ core delegation:
+The sequence diagram below outlines the runtime lifecycle of a request, demonstrating error trapping, memory sequestration, and native C++20 core delegation:
 
 ```text
   [ Application ]
@@ -172,7 +179,7 @@ The sequence diagram below outlines the runtime lifecycle of a request, demonstr
         │                         │ enqueue()
         ▼                         ▼
    [ HTTP 2xx ]            ┌───────────────┐
-        │                  │ Native C++    │
+        │                  │ Native C++20  │
         ▼                  │ Engine (JSI)  │
  [ Zeroize RAM ]           └──────┬────────┘
                                   │

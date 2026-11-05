@@ -1,0 +1,10 @@
+[build]
+  base = "examples/demo-mobile"
+  command = "cd ../../packages/ghost-ledger && yarn install && yarn build && cd ../../examples/demo-mobile && yarn install && yarn add --dev \"react-native-web@~0.20.0\" && npx expo export --platform web --dev"
+  publish = "dist"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../../packages/ghost-ledger"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

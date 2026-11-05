@@ -18,6 +18,10 @@ export const DevMenuScreen: React.FC = () => {
     isBusy,
     lastFlushResult,
     lastEnqueuedId,
+    customApiKey,
+    setCustomApiKey,
+    customBundleId,
+    setCustomBundleId,
     refreshStatus,
     simulateOffline,
     simulateOnline,
@@ -28,6 +32,7 @@ export const DevMenuScreen: React.FC = () => {
     dequeueTestPayload,
   } = useDevMenu();
   const [customLabel, setCustomLabel] = useState('');
+  const [isTelemetryConfigExpanded, setIsTelemetryConfigExpanded] = useState(false);
 
   return (
     <ScrollView style={styles.container} testID="dev-menu-scroll">
@@ -194,7 +199,9 @@ export const DevMenuScreen: React.FC = () => {
             testID="dev-menu-flush-telemetry-btn"
           >
             <Ionicons name="send-outline" size={18} color={theme.colors.text} />
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Flush Buffered Telemetry</Text>
+            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
+              Flush Buffered Telemetry
+            </Text>
           </TouchableOpacity>
 
           {lastFlushResult && (
@@ -202,6 +209,48 @@ export const DevMenuScreen: React.FC = () => {
               {lastFlushResult.success ? '✓ ' : '✗ '}
               {lastFlushResult.message}
             </Text>
+          )}
+
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondary]}
+            onPress={() => setIsTelemetryConfigExpanded((prev) => !prev)}
+            testID="dev-menu-toggle-telemetry-config-btn"
+          >
+            <Ionicons name="key-outline" size={18} color={theme.colors.text} />
+            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
+              {isTelemetryConfigExpanded
+                ? 'Hide Custom Key / Bundle ID'
+                : 'Configure Custom Key / Bundle ID'}
+            </Text>
+          </TouchableOpacity>
+
+          {isTelemetryConfigExpanded && (
+            <>
+              <Text style={styles.statusLabel}>
+                Optional runtime override for testing newly generated Dashboard API keys and TOFU
+                Bundle ID binding without rebuilding the app.
+              </Text>
+              <TextInput
+                style={styles.input}
+                testID="dev-menu-api-key-input"
+                placeholder="Custom X-Sovereign-API-Key (sk_...)"
+                placeholderTextColor={theme.colors.text + '80'}
+                value={customApiKey}
+                onChangeText={setCustomApiKey}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TextInput
+                style={styles.input}
+                testID="dev-menu-bundle-id-input"
+                placeholder="Custom X-Bundle-ID (e.g. mx.edu.sovereign.core)"
+                placeholderTextColor={theme.colors.text + '80'}
+                value={customBundleId}
+                onChangeText={setCustomBundleId}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </>
           )}
         </View>
       </View>

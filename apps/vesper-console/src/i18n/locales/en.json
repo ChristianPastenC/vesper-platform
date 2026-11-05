@@ -49,19 +49,21 @@
     },
     "integration": {
       "title": "Quick Integration (React Native)",
-      "desc1": "Protect sensitive data when network fails. @vesper-core/ghost-ledger requires ",
-      "desc_bold": "Nitro Modules",
-      "desc2": " for high-performance C++ execution.",
+      "desc1": "Protect sensitive data when network fails. @vesper-core/ghost-ledger v0.0.1 requires ",
+      "desc_bold": "Nitro Modules, QuickCrypto & NetInfo",
+      "desc2": " for high-performance C++20 execution.",
       "step1": "Install Dependencies",
       "terminal": "Terminal",
       "step2": "Initialize the Client",
       "code": "App.tsx / Context",
-      "testing_title": "Testing Environments (Jest)",
+      "testing_title": "Testing Environments (Jest / Node.js)",
       "testing_desc1": "Remember to enable ",
       "testing_code1": "mock: true",
       "testing_desc2": " or ",
       "testing_code2": "globalThis.__SOVEREIGN_MOCK__ = true",
-      "testing_desc3": " in your tests, since native C++ modules cannot be executed in standard Node.js."
+      "testing_desc3": " in your tests, since native C++ modules cannot be executed in standard Node.js.",
+      "telemetry_limit_title": "Telemetry Persistence Notice (Database)",
+      "telemetry_limit_desc": "While the 17-byte binary telemetry emitter works in C++ and Node.js fallback, backend persistence is currently incomplete due to using an ephemeral SQLite instance (telemetry.db). TOFU key bindings and metrics reset on container cold starts."
     }
   },
   "console": {
@@ -122,9 +124,9 @@
     },
     "features": {
       "title": "Secure Native Integration",
-      "desc": "Unlike other NPM libraries that keep cryptographic material exposed in the JS garbage collector memory, Sovereign SDK operates a native C++ engine that destroys the material using <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>SecureZeroMemory</code> immediately after signing the transaction.",
+      "desc": "Unlike other NPM libraries that keep cryptographic material exposed in the JS garbage collector memory, Sovereign SDK operates a native C++20 engine that destroys the material using <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>memset_s / SecureZeroMemory</code> immediately after signing the transaction.",
       "f1_title": "Hermes & V8 Bypass",
-      "f1_desc": "We use JSI to execute crypto-operations at the C++ level, avoiding the JS bridge.",
+      "f1_desc": "We use JSI to execute crypto-operations at the C++20 level, avoiding the JS bridge.",
       "f2_title": "Total Ephemerality",
       "f2_desc": "No key ever touches Disk. Generated in RAM, used, and wiped in milliseconds.",
       "f3_title": "DPoP RFC 9449",
@@ -137,8 +139,8 @@
     "architecture": {
       "title": "Core Security Architecture",
       "subtitle": "Based on 6 fundamental pillars to protect transaction integrity under a volatile and hostile memory environment.",
-      "p1_desc": "Requests are serialized to binary and queued in a static C++ ledger in physical memory. Each block is cryptographically linked with SHA-256.",
-      "p2_desc": "Active erasure using <code>std::fill</code> and <code>SecureZeroMemory</code> immediately after dispatch or TTL expiration to prevent leaks to the JS Heap.",
+      "p1_desc": "Requests are serialized to binary and queued in a static C++20 ledger locked in physical RAM via mlock. Each block is cryptographically linked with SHA-256.",
+      "p2_desc": "Active erasure using <code>memset_s</code>, <code>SecureZeroMemory</code>, and DSE compiler barriers immediately after dispatch or TTL expiration to prevent leaks to the JS Heap.",
       "p3_desc": "Background engine that detects dynamic manipulation (injection or memory corruption). Freezes execution and preserves evidence.",
       "p4_desc": "Ephemeral generation and signing of Proofs of Possession (DPoP - RFC 9449) using react-native-quick-crypto to avoid overloading the C++ core.",
       "p5_desc": "Decoupled from the network via the Command pattern. Native adapters for Fetch, Axios or GraphQL included.",

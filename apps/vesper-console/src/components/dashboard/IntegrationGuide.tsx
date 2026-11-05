@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../../i18n/config';
-import { RiTerminalBoxLine, RiFileCopyLine, RiCheckLine, RiCodeBoxLine, RiInformationLine } from '@remixicon/react';
+import { RiTerminalBoxLine, RiFileCopyLine, RiCheckLine, RiCodeBoxLine, RiInformationLine, RiDatabase2Line } from '@remixicon/react';
 
 export const IntegrationGuide: React.FC = () => {
   const { t } = useTranslation();
   const [copiedStep1, setCopiedStep1] = useState(false);
   const [copiedStep2, setCopiedStep2] = useState(false);
 
-  const step1Code = `yarn add @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto`;
+  const step1Code = `# Using Yarn
+yarn add @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo
+
+# Using NPM
+npm install @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo`;
   
   const step2Code = `import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import QuickCrypto from 'react-native-quick-crypto';
@@ -16,7 +20,7 @@ import NetInfo from '@react-native-community/netinfo';
 
 export const ghostClient = SovereignClientCore.getInstance({
   cryptoProvider: {
-    getRandomBytes: (n) => QuickCrypto.randomBytes(n),
+    getRandomBytes: (n) => new Uint8Array(QuickCrypto.randomBytes(n)),
     sha256: async (d) => new Uint8Array(QuickCrypto.createHash('sha256').update(d).digest())
   },
   networkResolver: async () => {
@@ -45,7 +49,7 @@ export const ghostClient = SovereignClientCore.getInstance({
       <span className="text-purple-400">import</span> NetInfo <span className="text-purple-400">from</span> <span className="text-emerald-300">'@react-native-community/netinfo'</span>;{'\n\n'}
       <span className="text-purple-400">export const</span> ghostClient = SovereignClientCore.<span className="text-blue-300">getInstance</span>({'{'}{'\n'}
       {'  '}<span className="text-slate-400">cryptoProvider</span>: {'{'}{'\n'}
-      {'    '}<span className="text-blue-300">getRandomBytes</span>: (n) <span className="text-blue-400">{'=>'}</span> QuickCrypto.<span className="text-blue-300">randomBytes</span>(n),{'\n'}
+      {'    '}<span className="text-blue-300">getRandomBytes</span>: (n) <span className="text-blue-400">{'=>'}</span> <span className="text-purple-400">new</span> <span className="text-orange-300">Uint8Array</span>(QuickCrypto.<span className="text-blue-300">randomBytes</span>(n)),{'\n'}
       {'    '}<span className="text-blue-300">sha256</span>: <span className="text-purple-400">async</span> (d) <span className="text-blue-400">{'=>'}</span> <span className="text-purple-400">new</span> <span className="text-orange-300">Uint8Array</span>(QuickCrypto.<span className="text-blue-300">createHash</span>(<span className="text-emerald-300">'sha256'</span>).<span className="text-blue-300">update</span>(d).<span className="text-blue-300">digest</span>()){'\n'}
       {'  }'},{'\n'}
       {'  '}<span className="text-blue-300">networkResolver</span>: <span className="text-purple-400">async</span> () <span className="text-blue-400">{'=>'}</span> {'{'}{'\n'}
@@ -103,7 +107,10 @@ export const ghostClient = SovereignClientCore.getInstance({
               </div>
               <div className="p-4 overflow-x-auto custom-scrollbar flex-1">
                 <code className="text-[11px] font-mono block whitespace-pre">
-                    <span className="text-emerald-400">yarn add</span> <span className="text-slate-300">@vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto</span>
+                  <span className="text-slate-500"># Using Yarn</span>{'\n'}
+                  <span className="text-emerald-400">yarn add</span> <span className="text-slate-300">@vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo</span>{'\n\n'}
+                  <span className="text-slate-500"># Using NPM</span>{'\n'}
+                  <span className="text-emerald-400">npm install</span> <span className="text-slate-300">@vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo</span>
                 </code>
               </div>
             </div>
@@ -136,18 +143,30 @@ export const ghostClient = SovereignClientCore.getInstance({
           </div>
         </div>
 
-        {/* Info callout */}
-        <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-start gap-3">
-          <RiInformationLine className="text-blue-400 shrink-0 mt-0.5" size={18} />
-          <div>
-            <h4 className="text-sm font-semibold text-blue-300">{t('dashboard.integration.testing_title')}</h4>
-            <p className="text-xs text-blue-400/80 mt-1">
-              {t('dashboard.integration.testing_desc1')}
-              <code className="bg-blue-900/40 px-1 rounded text-blue-300">{t('dashboard.integration.testing_code1')}</code>
-              {t('dashboard.integration.testing_desc2')}
-              <code className="bg-blue-900/40 px-1 rounded text-blue-300">{t('dashboard.integration.testing_code2')}</code>
-              {t('dashboard.integration.testing_desc3')}
-            </p>
+        {/* Info callouts */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-start gap-3">
+            <RiInformationLine className="text-blue-400 shrink-0 mt-0.5" size={18} />
+            <div>
+              <h4 className="text-sm font-semibold text-blue-300">{t('dashboard.integration.testing_title')}</h4>
+              <p className="text-xs text-blue-400/80 mt-1">
+                {t('dashboard.integration.testing_desc1')}
+                <code className="bg-blue-900/40 px-1 rounded text-blue-300">{t('dashboard.integration.testing_code1')}</code>
+                {t('dashboard.integration.testing_desc2')}
+                <code className="bg-blue-900/40 px-1 rounded text-blue-300">{t('dashboard.integration.testing_code2')}</code>
+                {t('dashboard.integration.testing_desc3')}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
+            <RiDatabase2Line className="text-amber-400 shrink-0 mt-0.5" size={18} />
+            <div>
+              <h4 className="text-sm font-semibold text-amber-300">{t('dashboard.integration.telemetry_limit_title')}</h4>
+              <p className="text-xs text-amber-300/80 mt-1">
+                {t('dashboard.integration.telemetry_limit_desc')}
+              </p>
+            </div>
           </div>
         </div>
       </div>

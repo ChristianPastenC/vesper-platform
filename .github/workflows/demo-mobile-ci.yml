@@ -58,6 +58,8 @@ jobs:
     name: Build Android (APK)
     needs: lint-and-test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: examples/demo-mobile
@@ -166,6 +168,55 @@ jobs:
         with:
           name: app-unprotected-apk
           path: examples/demo-mobile/app-unprotected.apk
+
+      - name: Build Live Demo APK (Connected to Render)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        working-directory: examples/demo-mobile
+        env:
+          LIVE_API_URL: ${{ secrets.LIVE_API_URL }}
+          LIVE_TELEMETRY_ENDPOINT: ${{ secrets.LIVE_TELEMETRY_ENDPOINT }}
+          LIVE_TELEMETRY_API_KEY: ${{ secrets.LIVE_TELEMETRY_API_KEY }}
+          LIVE_TELEMETRY_BUNDLE_ID: ${{ secrets.LIVE_TELEMETRY_BUNDLE_ID }}
+        run: |
+          echo "API_URL=${LIVE_API_URL:-https://demo-backend-4puz.onrender.com}" > .env
+          echo "TELEMETRY_ENDPOINT=${LIVE_TELEMETRY_ENDPOINT:-https://vesper-ingestion.onrender.com/api/v1/support/telemetry}" >> .env
+          echo "TELEMETRY_API_KEY=${LIVE_TELEMETRY_API_KEY:-sk_test_demo123}" >> .env
+          echo "TELEMETRY_BUNDLE_ID=${LIVE_TELEMETRY_BUNDLE_ID:-com.demo.app}" >> .env
+          cd android
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../vesper-demo-live.apk
+
+      - name: Overwrite Live Demo APK in GitHub Release (latest-demo)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        working-directory: examples/demo-mobile
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view latest-demo >/dev/null 2>&1; then
+            gh release upload latest-demo vesper-demo-live.apk --clobber
+          else
+            gh release create latest-demo vesper-demo-live.apk \
+              --title "Vesper Demo Mobile (Live Real-Time APK)" \
+              --notes "Rolling real-time Android APK connected to live Render backends (demo-backend & vesper-ingestion)." \
+              --prerelease
+          fi
+
+      - name: Overwrite Live Demo APK in Appetize.io (Single Slot Free Tier)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        working-directory: examples/demo-mobile
+        env:
+          APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN }}
+          APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY }}
+        run: |
+          if [ -n "$APPETIZE_API_TOKEN" ] && [ -n "$APPETIZE_PUBLIC_KEY" ]; then
+            BASIC_AUTH=$(printf '%s:' "$APPETIZE_API_TOKEN" | base64 | tr -d '\n')
+            curl --fail -sS -X POST "https://api.appetize.io/v2/apps/${APPETIZE_PUBLIC_KEY}" \
+              -H "Authorization: Basic ${BASIC_AUTH}" \
+              -F "file=@vesper-demo-live.apk" \
+              -F "platform=android"
+          else
+            echo "Skipping Appetize.io upload: APPETIZE_API_TOKEN or APPETIZE_PUBLIC_KEY secret is not configured."
+          fi
 
   security-dast-android:
     name: Anti-Tampering (Frida) Cross-Test

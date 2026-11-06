@@ -49,7 +49,7 @@
     },
     "integration": {
       "title": "Integración Rápida (React Native)",
-      "desc1": "Protege los datos sensibles de tu app cuando falla la red. @vesper-core/ghost-ledger v0.0.1 requiere ",
+      "desc1": "Protege los datos sensibles de tu app cuando falla la red. @vesper-core/ghost-ledger (v0.1.0) requiere ",
       "desc_bold": "Nitro Modules, QuickCrypto y NetInfo",
       "desc2": " para ejecutar C++20 de alto rendimiento.",
       "step1": "Instalar Dependencias",

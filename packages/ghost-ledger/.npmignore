@@ -3,8 +3,9 @@ android/build
 android/.cxx
 android/.gradle
 
-# Ignore tests and local builds of C++
+# Ignore tests and local builds of C++ and TS
 cpp/tests/
+dist/__tests__/
 build/
 CMakeCache.txt
 CMakeFiles/

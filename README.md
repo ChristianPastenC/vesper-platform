@@ -23,6 +23,26 @@ You can explore the deployed platform and API implementations via the following 
 
 ---
 
+## Executive Summary: The Mobile Resilience Dilemma
+
+In mobile payment acquiring (mPOS) and financial applications across Latin America, operational deployments encounter severe cellular and radio-frequency degradation (last-mile logistics, transit tunnels, saturated venues). Engineering teams face a false architectural dichotomy:
+
+1. **The Fail-Closed Paradigm:** Abortively terminating in-flight operations upon any transport socket failure. Empirical diagnostic data ($N = 24$) demonstrates an unacceptable **18.4% to 23.8% transaction abandonment rate**, inflicting millions in lost gross merchandise value and direct merchant churn.
+2. **The Secondary Flash Fallback (Store-and-Forward):** Caching unsubmitted transaction objects and cardholder payloads onto non-volatile flash storage (`AsyncStorage`, SQLite, Realm). Due to the hardware physics of NAND Flash Translation Layers (FTL)—characterized by out-of-place writes and wear-leveling algorithms—executing file deletion (`unlink` or SQL `DELETE`) leaves plaintext Primary Account Numbers (PAN) and Sensitive Authentication Data (SAD) un-erased on physical silicon blocks. This constitutes an immediate violation of **PCI-DSS v4.0 Requirement 3.2** and **CNBV Circular Única de Bancos**.
+
+**V.E.S.P.E.R.** resolves this dilemma through a **Zero-Disk Volatile Memory Architecture**, sequestering in-flight payloads inside native C++ physical RAM boundaries with active compiler-safe zeroization, guaranteeing business continuity without non-volatile forensic remanence.
+
+## Formal Business Impact Analysis (BIA) Metrics
+
+| Metric | Target Value | Verification Boundary | Operational Justification |
+| :--- | :---: | :--- | :--- |
+| **MTPD** (Max Tolerable Period of Disruption) | **15 min** (900 s) | Client Queue TTL & Ingestion Pipeline | Calibrated against cellular outage telemetry ($P_{99} \le 13\text{ min}$). Exceeding 900 s triggers active zeroization to prevent indefinite memory retention. |
+| **RPO** (Recovery Point Objective) | **0 s** | C++ Volatile RAM Enclave (`ghost-ledger`) | In-flight payload captured atomically into volatile RAM before socket collapse; zero data loss during network drop. |
+| **RTO** (Recovery Time Objective) | **< 100 ms** | React Native JSI Native Boundary | Nitro Modules zero-copy direct memory binding intercepts socket errors and enqueues payload instantaneously. |
+| **Cryptographic Latency** | **< 15 ms** | Native ECDSA P-256 (DPoP) & HMAC-SHA256 | Native C++ cryptographic signing meets strict real-time checkout constraints without degrading UI frame rates. |
+
+---
+
 ## Why V.E.S.P.E.R.? (The Zero-Trust Philosophy)
 
 Modern mobile applications are inherently vulnerable. Attackers can reverse-engineer standard APIs, extract static JWT Bearer tokens to perform replay attacks, or use dynamic instrumentation tools (like Frida) to manipulate memory and bypass security checks at runtime. 
@@ -88,6 +108,66 @@ graph TD
     SDK -.->|Generates DPoP Signature| DemoAPI
 ```
 
+### State Segregation Architecture
+
+```mermaid
+flowchart TD
+    subgraph EdgeDevice ["Edge Client (Mobile mPOS Environment)"]
+        UI["React Native UI / State Machine"]
+        subgraph NativeEnclave ["Native Volatile C++ Enclave (Zero-Disk)"]
+            JSI["JSI Nitro Bridge"]
+            VRAM["Volatile RAM Buffer (mlock Locked)"]
+            Crypto["ECDSA P-256 Signer & HMAC Hasher"]
+            Watchdog["Integrity & Anti-Hook Watchdog"]
+            Zeroizer["Active Zeroization (memset_s + ASM Barrier)"]
+        end
+    end
+
+    subgraph UntrustedNetwork ["Transport Layer (Degraded RF / Cellular Carrier)"]
+        DPoPReq["HTTPS + DPoP Proof (RFC 9449) + X-Vesper-Hash"]
+    end
+
+    subgraph CloudInfra ["Core Ingestion & Settlement Infrastructure"]
+        subgraph IngestionService ["Vesper Ingestion (Go Chi Engine)"]
+            IngestAPI["Ingestion / Settlement API"]
+            IdemMiddleware["Idempotency Filter (idempotency.go)"]
+        end
+        subgraph StorageTier ["Idempotent Storage & Observability"]
+            RedisDB[("Redis Cluster\n(SET NX EX 900 Atomic Lock)")]
+            TelemetryDB[("SQLite Telemetry / OTel Collector")]
+        end
+    end
+
+    UI -->|1. Submit Payload| JSI
+    JSI -->|2. Direct Memory Transfer| VRAM
+    VRAM -->|3. Compute DPoP Proof| Crypto
+    Crypto -->|4. Dispatch with Dynamic Key| DPoPReq
+    
+    DPoPReq -->|5. Ingest| IngestAPI
+    IngestAPI -->|6. Check Idempotency Key| IdemMiddleware
+    IdemMiddleware -->|7. Atomic Mutex Verification| RedisDB
+    
+    IngestAPI -->|8. HTTP 200 Settled| DPoPReq
+    DPoPReq -->|9. Sync Confirmation| JSI
+    JSI -->|10. Trigger Immediate Destruction| Zeroizer
+    Zeroizer -->|11. Binary 0x00 Active Wipe| VRAM
+
+    Watchdog -.->|Tamper Detected / Frida Hook| Zeroizer
+    Watchdog -.->|Emit 17-Byte XOR Telemetry| TelemetryDB
+```
+
+---
+
+## Regulatory Compliance Crosswalk
+
+| Regulatory Framework | Mandatory Clause / Article | Platform Implementation | Monorepo Verification Component |
+| :--- | :--- | :--- | :--- |
+| **PCI-DSS v4.0** | **Req. 3.2 & 3.4:** Prohibition of SAD storage and protection of PAN data post-authorization. | Zero-Disk policy; absolute prohibition of SQLite/AsyncStorage storage; RAM locking via `mlock(2)`. | `packages/ghost-ledger/cpp/VolatileQueue.hpp`<br>`docs/compliance/secure_memory_policy.md` |
+| **DORA (EU 2022/2554)** | **Arts. 6 al 12:** ICT Risk Management, Business Continuity, and Backup/Restore. | Transient RAM queueing bridging network drops ($RTO < 100\text{ ms}$, $MTPD = 900\text{ s}$) with deterministic TTL zeroization. | `docs/compliance/dora_operational_resilience.md`<br>`docs/business_context_bia.md` |
+| **DORA (EU 2022/2554)** | **Art. 26:** Threat-Led Penetration Testing (TLPT). | Automated headless Android emulator with Frida dynamic hook injection in CI/CD pipeline. | `.github/workflows/demo-mobile-ci.yml`<br>`examples/demo-mobile/scripts/frida_dast_test.py` |
+| **CNBV (CUB)** | **Art. 163 bis & Anexo 52:** Integridad, confidencialidad y no repudio en terminales móviles de pago. | Firma asimétrica DPoP por petición (RFC 9449), hash HMAC-SHA256 y deduplicación atómica contra doble cobro. | `examples/demo-backend/internal/handler/middleware/dpop_auth.go`<br>`examples/demo-backend/internal/adapter/db/redis_idempotency.go` |
+| **ISO 22301:2019** | **Cl. 8.2.2 & Cl. 8.4:** Análisis de Impacto en el Negocio (BIA) y Procedimientos de Continuidad. | Definición cuantitativa de criticidad por niveles (Tiers 1, 2, 3), RPO = 0s, RTO < 100ms y runbook formal BCP/DRP. | `docs/business_context_bia.md`<br>`docs/operational_resilience/bcp_drp_runbook.md` |
+
 ---
 
 ## Getting Started
@@ -144,6 +224,52 @@ To clear the SQLite database in `vesper-ingestion` and start fresh:
 cd apps/vesper-ingestion
 go run ./cmd/cli clean-db
 ```
+
+### Consolidated Environment Variables (`.env`)
+
+| Variable | Target Service | Required | Default | Purpose |
+| :--- | :--- | :---: | :--- | :--- |
+| `PORT` | `vesper-ingestion` / `demo-backend` | No | `8081` / `8080` | HTTP listening port. |
+| `DB_PATH` | `vesper-ingestion` | No | `./telemetry.db` | Path to embedded SQLite telemetry database. |
+| `JWT_SECRET` | `vesper-ingestion` | Yes | - | High-entropy secret key for B2B portal authentication JWTs. |
+| `PAYLOAD_SECRET_KEY` | `demo-backend` | Yes | - | 32-byte secret for validating incoming `X-Vesper-Hash` payloads. |
+| `REDIS_URL` | `demo-backend` | No | `localhost:6379` | Distributed Redis instance for cluster-wide idempotency mutexes. |
+| `DEV_DPOP_BYPASS` | `demo-backend` | No | `false` | Set to `true` strictly in local debugging to bypass DPoP signature verification. |
+| `PUBLIC_API_URL` | `vesper-console` | No | `http://127.0.0.1:8081` | Ingestion backend endpoint for Astro/React frontend components. |
+
+### Native C++ Core Cross-Compilation (`ghost-ledger`)
+
+#### Desktop Testing (Linux / macOS / Windows)
+```bash
+cd packages/ghost-ledger
+# Configure and build native C++ tests
+cmake -S . -B build -DBUILD_TESTING=ON
+cmake --build build --config Release
+# Run cryptographic test suite with memory zeroization assertions
+cd build && ctest -V
+```
+
+#### Android Cross-Compilation (NDK)
+The Android binary is compiled via Gradle through the React Native Nitro Modules toolchain:
+```bash
+cd examples/demo-mobile/android
+# Cross-compiles for armeabi-v7a, arm64-v8a, x86, x86_64
+./gradlew assembleRelease \
+  -Dorg.gradle.jvmargs="-Xmx4096m" \
+  -DANDROID_NDK_VERSION="26.1.10909125"
+```
+
+#### iOS Native Enclave Compilation (Xcode)
+```bash
+cd examples/demo-mobile/ios
+pod install
+xcodebuild -workspace VesperCore.xcworkspace \
+  -scheme demo-mobile \
+  -configuration Release \
+  -destination 'generic/platform=iOS' \
+  CODE_SIGNING_ALLOWED=NO
+```
+
 
 ---
 
@@ -216,6 +342,9 @@ Comprehensive technical specifications, threat models, and operational resilienc
 
 | Document | Primary Focus | Regulatory / Industry Standard |
 | :--- | :--- | :--- |
+| [**Architecture Decision Records (ADRs)**](./docs/adr/ADR-001-zero-disk-architecture.md) | Canonical decision log: Zero-Disk architecture ([ADR-001](./docs/adr/ADR-001-zero-disk-architecture.md)), Active Zeroization ([ADR-002](./docs/adr/ADR-002-active-zeroization-compiler-barriers.md)), and Fail-Safe model ([ADR-003](./docs/adr/ADR-003-fail-safe-state-model.md)). | PCI-DSS, DSE Neutralization, LMK |
+| [**Unified Regulatory Compliance Matrix**](./docs/compliance/unified_regulatory_compliance_matrix.md) | Crosswalk mapping platform controls to PCI-DSS v4.0, DORA (EU 2022/2554), CNBV (CUB), and ISO 22301:2019. | PCI-DSS v4.0, DORA, CNBV, ISO 22301 |
+| [**Threat Modeling Specification**](./docs/security/threat_model.md) | Perimeter specifications, 3 Trust Boundaries (JSI, Network, Bus), STRIDE mitigations, and Out-of-Scope boundaries. | STRIDE, Threat Modeling |
 | [**Business Impact Analysis (BIA)**](./docs/business_context_bia.md) | Quantitative recovery metrics ($RTO < 100\text{ms}$, $RPO = 0\text{s}$, MTPD), tiering hierarchy, and BCP execution sequence. | ISO 22301:2019 Cl. 8.2.2, DORA Art. 11 |
 | [**DORA Operational Resilience**](./docs/compliance/dora_operational_resilience.md) | ICT risk management, zero-disk volatile memory policy, and Threat-Led Penetration Testing (TLPT) automation via Frida. | Regulation (EU) 2022/2554 |
 | [**NIST CSF 2.0 Gap Analysis**](./docs/compliance/gap_analysis_nist_csf.md) | Assessment across Govern, Identify, Protect, Detect, Respond, Recover; prioritized engineering roadmap to Tier 4. | NIST CSF 2.0 |
@@ -235,4 +364,4 @@ Comprehensive technical specifications, threat models, and operational resilienc
 
 ## License
 
-This project is proprietary software. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the terms of the [MIT License](./LICENSE). Open source and free for institutional and academic evaluation.

@@ -2,6 +2,7 @@
 
 [![Console Dashboard](https://img.shields.io/badge/Console-Dashboard-00C7B7?style=flat-square&logo=netlify)](https://vesper-console.netlify.app/)
 [![npm version](https://img.shields.io/npm/v/@vesper-core/ghost-ledger.svg?style=flat-square)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
+[![CI](https://github.com/ChristianPastenC/vesper-platform/actions/workflows/ghost-ledger-ci.yml/badge.svg)](https://github.com/ChristianPastenC/vesper-platform/actions/workflows/ghost-ledger-ci.yml)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/npm/l/@vesper-core/ghost-ledger.svg?style=flat-square)](https://github.com/ChristianPastenC/vesper-platform/blob/main/LICENSE)
 

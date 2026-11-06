@@ -1,5 +1,7 @@
 # Demo Mobile App (`demo-mobile`)
 
+[![CI](https://github.com/ChristianPastenC/vesper-platform/actions/workflows/demo-mobile-ci.yml/badge.svg)](https://github.com/ChristianPastenC/vesper-platform/actions/workflows/demo-mobile-ci.yml)
+
 > [!WARNING]  
 > **THIS IS A SAMPLE APPLICATION.**  
 > This mobile app is **not** a production-ready application. It is solely an example and reference implementation demonstrating how to properly integrate and consume the `@vesper-core/ghost-ledger` C++ library within a React Native environment.

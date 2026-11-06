@@ -209,11 +209,30 @@ jobs:
           APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY }}
         run: |
           if [ -n "$APPETIZE_API_TOKEN" ] && [ -n "$APPETIZE_PUBLIC_KEY" ]; then
-            BASIC_AUTH=$(printf '%s:' "$APPETIZE_API_TOKEN" | base64 | tr -d '\n')
-            curl --fail -sS -X POST "https://api.appetize.io/v1/apps/${APPETIZE_PUBLIC_KEY}" \
-              -H "Authorization: Basic ${BASIC_AUTH}" \
+            echo "Updating Appetize app ${APPETIZE_PUBLIC_KEY} with live demo APK..."
+            RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "https://api.appetize.io/v1/apps/${APPETIZE_PUBLIC_KEY}" \
+              -H "X-API-KEY: ${APPETIZE_API_TOKEN}" \
               -F "file=@vesper-demo-live.apk" \
-              -F "platform=android"
+              -F "platform=android")
+            HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d':' -f2)
+            BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
+            echo "Appetize response: $BODY"
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo "Direct file upload returned HTTP $HTTP_STATUS. Attempting update via GitHub Release URL..."
+              RELEASE_URL="https://github.com/${{ github.repository }}/releases/download/latest-demo/vesper-demo-live.apk"
+              RESPONSE_URL=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "https://api.appetize.io/v1/apps/${APPETIZE_PUBLIC_KEY}" \
+                -H "X-API-KEY: ${APPETIZE_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "{\"url\": \"${RELEASE_URL}\", \"platform\": \"android\"}")
+              HTTP_STATUS_URL=$(echo "$RESPONSE_URL" | grep "HTTP_STATUS:" | cut -d':' -f2)
+              BODY_URL=$(echo "$RESPONSE_URL" | sed '/HTTP_STATUS:/d')
+              echo "Appetize URL response: $BODY_URL"
+              if [ "$HTTP_STATUS_URL" != "200" ]; then
+                echo "Error: Appetize update failed (File upload HTTP: $HTTP_STATUS, URL update HTTP: $HTTP_STATUS_URL)"
+                exit 1
+              fi
+            fi
+            echo "Successfully updated Appetize app ${APPETIZE_PUBLIC_KEY}."
           else
             echo "Skipping Appetize.io upload: APPETIZE_API_TOKEN or APPETIZE_PUBLIC_KEY secret is not configured."
           fi

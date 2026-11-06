@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../../i18n/config';
-import { RiTerminalBoxLine, RiFileCopyLine, RiCheckLine, RiCodeBoxLine, RiInformationLine, RiDatabase2Line } from '@remixicon/react';
+import { RiTerminalBoxLine, RiFileCopyLine, RiCheckLine, RiCodeBoxLine, RiInformationLine, RiShieldCheckLine } from '@remixicon/react';
 
 export const IntegrationGuide: React.FC = () => {
   const { t } = useTranslation();
@@ -159,12 +159,12 @@ export const ghostClient = GhostClientCore.getInstance({
             </div>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
-            <RiDatabase2Line className="text-amber-400 shrink-0 mt-0.5" size={18} />
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3">
+            <RiShieldCheckLine className="text-emerald-400 shrink-0 mt-0.5" size={18} />
             <div>
-              <h4 className="text-sm font-semibold text-amber-300">{t('dashboard.integration.telemetry_limit_title')}</h4>
-              <p className="text-xs text-amber-300/80 mt-1">
-                {t('dashboard.integration.telemetry_limit_desc')}
+              <h4 className="text-sm font-semibold text-emerald-300">{t('dashboard.integration.resilience_title')}</h4>
+              <p className="text-xs text-emerald-300/80 mt-1">
+                {t('dashboard.integration.resilience_desc')}
               </p>
             </div>
           </div>

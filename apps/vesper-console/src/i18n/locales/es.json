@@ -62,8 +62,8 @@
       "testing_desc2": " o usar ",
       "testing_code2": "globalThis.__GHOST_MOCK__ = true",
       "testing_desc3": " en tus tests, ya que los módulos nativos de C++ no se ejecutan en Node.js estándar.",
-      "telemetry_limit_title": "Aviso de Persistencia en Telemetría (BD)",
-      "telemetry_limit_desc": "Aunque el emisor binario de 17 bytes opera en C++ y en el fallback de Node.js, la persistencia en backend es parcial debido al uso de SQLite efímero (telemetry.db). Las vinculaciones TOFU y métricas se reinician tras cold-starts."
+      "resilience_title": "Ledger en RAM Volátil Zero-Trust",
+      "resilience_desc": "Ante pérdidas de red o respuestas 503/504, los payloads sensibles se secuestran en RAM volátil C++ nativa (bloqueada con mlock). Quedan encadenados criptográficamente y se borran con zeroization al reenviarse o expirar el TTL."
     }
   },
   "console": {

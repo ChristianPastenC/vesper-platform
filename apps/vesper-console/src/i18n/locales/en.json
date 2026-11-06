@@ -62,8 +62,8 @@
       "testing_desc2": " or ",
       "testing_code2": "globalThis.__GHOST_MOCK__ = true",
       "testing_desc3": " in your tests, since native C++ modules cannot be executed in standard Node.js.",
-      "telemetry_limit_title": "Telemetry Persistence Notice (Database)",
-      "telemetry_limit_desc": "While the 17-byte binary telemetry emitter works in C++ and Node.js fallback, backend persistence is currently incomplete due to using an ephemeral SQLite instance (telemetry.db). TOFU key bindings and metrics reset on container cold starts."
+      "resilience_title": "Zero-Trust Volatile RAM Ledger",
+      "resilience_desc": "When network fails or the server returns 503/504, sensitive payloads are sequestered in native C++ Volatile RAM (locked via mlock). They are cryptographically chained and automatically zeroized upon replay or TTL expiration."
     }
   },
   "console": {

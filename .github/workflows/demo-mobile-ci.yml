@@ -183,7 +183,7 @@ jobs:
           echo "TELEMETRY_API_KEY=${LIVE_TELEMETRY_API_KEY:-sk_test_demo123}" >> .env
           echo "TELEMETRY_BUNDLE_ID=${LIVE_TELEMETRY_BUNDLE_ID:-com.demo.app}" >> .env
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a,x86_64 --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../vesper-demo-live.apk
 
       - name: Overwrite Live Demo APK in GitHub Release (latest-demo)
@@ -210,7 +210,7 @@ jobs:
         run: |
           if [ -n "$APPETIZE_API_TOKEN" ] && [ -n "$APPETIZE_PUBLIC_KEY" ]; then
             BASIC_AUTH=$(printf '%s:' "$APPETIZE_API_TOKEN" | base64 | tr -d '\n')
-            curl --fail -sS -X POST "https://api.appetize.io/v2/apps/${APPETIZE_PUBLIC_KEY}" \
+            curl --fail -sS -X POST "https://api.appetize.io/v1/apps/${APPETIZE_PUBLIC_KEY}" \
               -H "Authorization: Basic ${BASIC_AUTH}" \
               -F "file=@vesper-demo-live.apk" \
               -F "platform=android"

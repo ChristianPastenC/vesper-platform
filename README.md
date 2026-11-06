@@ -3,7 +3,7 @@
 [![Console Deployment](https://img.shields.io/badge/Console-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://vesper-console.netlify.app/)
 [![Ingestion API Deployment](https://img.shields.io/badge/Ingestion_API-Render-46E3B7?style=for-the-badge&logo=render)](https://vesper-ingestion.onrender.com/)
 [![Demo Backend Deployment](https://img.shields.io/badge/Demo_Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://demo-backend-4puz.onrender.com/)
-[![Demo Mobile Live Emulator](https://img.shields.io/badge/Mobile_Demo-Appetize.io-000000?style=for-the-badge&logo=android)](https://appetize.io/app/b_onjpabveb32zfj6xlwbittabge)
+[![Demo Mobile Live Emulator](https://img.shields.io/badge/Mobile_Demo-Appetize.io-000000?style=for-the-badge&logo=android)](https://appetize.io/app/b_biz53pnqbjdlfoqjchpttuiuh4)
 [![Demo Mobile APK](https://img.shields.io/badge/Android_APK-latest--demo-3DDC84?style=for-the-badge&logo=android)](https://github.com/ChristianPastenC/vesper-platform/releases/tag/latest-demo)
 [![Ghost Ledger](https://img.shields.io/npm/v/@vesper-core/ghost-ledger?label=%40vesper-core%2Fghost-ledger&style=for-the-badge&logo=npm)](https://www.npmjs.com/package/@vesper-core/ghost-ledger)
 
@@ -18,7 +18,7 @@ You can explore the deployed platform and API implementations via the following 
 | **Vesper Console (Frontend)** | [vesper-console.netlify.app](https://vesper-console.netlify.app/) | Netlify |
 | **Vesper Ingestion (API)** | [vesper-ingestion.onrender.com](https://vesper-ingestion.onrender.com/) | Render |
 | **Demo Backend (E-commerce)**| [demo-backend-4puz.onrender.com](https://demo-backend-4puz.onrender.com/) | Render |
-| **Demo Mobile (Browser Emulator)** | [appetize.io/app/b_onjpabveb32zfj6xlwbittabge](https://appetize.io/app/b_onjpabveb32zfj6xlwbittabge) | Appetize.io (Android) |
+| **Demo Mobile (Browser Emulator)** | [appetize.io/app/b_biz53pnqbjdlfoqjchpttuiuh4](https://appetize.io/app/b_biz53pnqbjdlfoqjchpttuiuh4) | Appetize.io (Android) |
 | **Demo Mobile (Rolling APK)** | [GitHub Release (`latest-demo`)](https://github.com/ChristianPastenC/vesper-platform/releases/tag/latest-demo) | GitHub Releases |
 
 ---

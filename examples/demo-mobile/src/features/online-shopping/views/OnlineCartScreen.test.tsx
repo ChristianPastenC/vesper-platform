@@ -51,7 +51,7 @@ describe('OnlineCartScreen View', () => {
     (useOnlineCart as jest.Mock).mockReturnValue({
       cartItems: [],
       total: 0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       clearCart: jest.fn(),
       t: (key: string) => key,
     });
@@ -65,7 +65,7 @@ describe('OnlineCartScreen View', () => {
     (useOnlineCart as jest.Mock).mockReturnValue({
       cartItems: [{ id: '1', name: 'Item A', price: 10.0, quantity: 2 }],
       total: 20.0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       clearCart: mockClear,
       isAuthenticated: true,
       t: (key: string) => key,
@@ -74,7 +74,7 @@ describe('OnlineCartScreen View', () => {
     const { getByText, getAllByText } = render(<OnlineCartScreen />);
     expect(getByText('Item A')).toBeTruthy();
     expect(getAllByText('$20.00').length).toBeGreaterThanOrEqual(1);
-    expect(getByText('123 Sovereign Way')).toBeTruthy();
+    expect(getByText('123 Vesper Way')).toBeTruthy();
 
     fireEvent.press(getByText('online_checkout.checkoutButton'));
     expect(mockNavigate).toHaveBeenCalledWith('OnlineCheckoutModal');
@@ -87,7 +87,7 @@ describe('OnlineCartScreen View', () => {
     (useOnlineCart as jest.Mock).mockReturnValue({
       cartItems: [{ id: '1', name: 'Item A', price: 10.0, quantity: 2 }],
       total: 20.0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       clearCart: jest.fn(),
       isAuthenticated: false,
       t: (key: string) => key,

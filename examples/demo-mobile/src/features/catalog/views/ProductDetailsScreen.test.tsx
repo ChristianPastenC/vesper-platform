@@ -67,7 +67,7 @@ describe('ProductDetailsScreen View', () => {
       handleAddToInStore: mockHandleAddToInStore,
       handleGoBack: jest.fn(),
       specifications: [
-        { labelKey: 'catalog.brand', value: 'Sovereign Core' },
+        { labelKey: 'catalog.brand', value: 'Vesper Core' },
         { labelKey: 'catalog.weight', value: '320g' },
         { labelKey: 'catalog.dimensions', value: '18 x 12 x 4 cm' },
         { labelKey: 'catalog.availability', value: 'catalog.inStock', isTranslationValue: true },
@@ -87,7 +87,7 @@ describe('ProductDetailsScreen View', () => {
     expect(getByText('$99.99')).toBeTruthy();
     expect(getByText('catalog.ean: 4006381333931')).toBeTruthy();
     expect(getByText('catalog.brand')).toBeTruthy();
-    expect(getByText('Sovereign Core')).toBeTruthy();
+    expect(getByText('Vesper Core')).toBeTruthy();
     expect(getByText('320g')).toBeTruthy();
   });
 

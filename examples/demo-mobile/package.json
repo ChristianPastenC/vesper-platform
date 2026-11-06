@@ -13,7 +13,7 @@
     "ios": "react-native run-ios --port 8082",
     "ios:pod": "cd ios && pod install",
     "ios:clean": "cd ios && rm -rf Pods Podfile.lock build && pod install",
-    "ios:xcode": "open ios/SovereignCore.xcworkspace",
+    "ios:xcode": "open ios/VesperCore.xcworkspace",
     "clean:all": "yarn start:clear && yarn android:clean",
     "test": "jest",
     "test:coverage": "jest --coverage",

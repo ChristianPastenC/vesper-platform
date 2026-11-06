@@ -109,12 +109,12 @@ export const serializeAdapterRequest = (request: {
   return buffer;
 };
 
-import type { SovereignAdapterRequest } from './contracts/index.js';
+import type { GhostAdapterRequest } from './contracts/index.js';
 
 export const deserializeAdapterRequest = (
   buffer: Uint8Array,
 ): Pick<
-  SovereignAdapterRequest,
+  GhostAdapterRequest,
   'method' | 'url' | 'encodedHeaders' | 'body' | 'timeoutMs'
 > | null => {
   if (buffer.length === 0) return null;

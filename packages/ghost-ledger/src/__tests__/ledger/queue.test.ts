@@ -1,13 +1,13 @@
-import { SovereignMemoryQueue, configureQueueEngine } from '../../ledger/queue.js';
-import { ISovereignCryptoProvider } from '../../contracts/index.js';
+import { GhostMemoryQueue, configureQueueEngine } from '../../ledger/queue.js';
+import { IGhostCryptoProvider } from '../../contracts/index.js';
 
-describe('SovereignMemoryQueue', () => {
-  let queue: SovereignMemoryQueue;
-  let mockCryptoProvider: jest.Mocked<ISovereignCryptoProvider>;
+describe('GhostMemoryQueue', () => {
+  let queue: GhostMemoryQueue;
+  let mockCryptoProvider: jest.Mocked<IGhostCryptoProvider>;
 
   it('should configure mock engine', () => {
     configureQueueEngine({ mock: true });
-    const instance = SovereignMemoryQueue.getInstance();
+    const instance = GhostMemoryQueue.getInstance();
     expect(instance).toBeDefined();
   });
 
@@ -16,14 +16,14 @@ describe('SovereignMemoryQueue', () => {
   });
 
   beforeEach(() => {
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = undefined;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = undefined;
 
     mockCryptoProvider = {
       hash: jest.fn().mockResolvedValue(new Uint8Array(32).fill(1)),
       randomBytes: jest.fn().mockReturnValue(new Uint8Array(16)),
     } as never;
 
-    queue = SovereignMemoryQueue.getInstance();
+    queue = GhostMemoryQueue.getInstance();
     queue.toggleNetworkSim(false);
   });
 
@@ -97,15 +97,15 @@ describe('SovereignMemoryQueue', () => {
     expect(queue.getExecutionOrder()).toEqual(['txn-a', 'txn-c']);
   });
 
-  it('should fallback to mock native client if __SOVEREIGN_MOCK__ is set', () => {
-    (globalThis as { __SOVEREIGN_MOCK__?: boolean }).__SOVEREIGN_MOCK__ = true;
-    const oldInstance = (SovereignMemoryQueue as unknown as { instance: unknown }).instance;
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = undefined; // force recreation
+  it('should fallback to mock native client if __GHOST_MOCK__ is set', () => {
+    (globalThis as { __GHOST_MOCK__?: boolean }).__GHOST_MOCK__ = true;
+    const oldInstance = (GhostMemoryQueue as unknown as { instance: unknown }).instance;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = undefined; // force recreation
 
-    const q = SovereignMemoryQueue.getInstance();
+    const q = GhostMemoryQueue.getInstance();
     expect(q).toBeDefined();
 
-    delete (globalThis as { __SOVEREIGN_MOCK__?: boolean }).__SOVEREIGN_MOCK__;
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = oldInstance;
+    delete (globalThis as { __GHOST_MOCK__?: boolean }).__GHOST_MOCK__;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = oldInstance;
   });
 });

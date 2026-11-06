@@ -5,7 +5,7 @@
 #include <cstring>
 #include <string>
 #include <sys/stat.h>
-#include "SovereignSecureClientOnLoad.hpp"
+#include "GhostSecureClientOnLoad.hpp"
 
 namespace {
 // Fallback for when the ActivityThread reflection below can't resolve a
@@ -33,7 +33,7 @@ void exportTmpDirFromProcSelf() {
 }
 
 // Unlike iOS, Android app processes don't have TMPDIR set in their
-// environment. SovereignTelemetryEngine's default mmap path falls back to
+// environment. GhostTelemetryEngine's default mmap path falls back to
 // getenv("TMPDIR"), so we resolve the app's real cache dir here (via the
 // public Context.getCacheDir() API, reflected through ActivityThread) and
 // export it as TMPDIR before any native code can construct that singleton.
@@ -71,9 +71,9 @@ void exportTmpDirFromAndroidContext(JNIEnv* env) {
 }
 
 // This is the real JNI entry point the JVM calls automatically when
-// System.loadLibrary("SovereignSecureClient") loads this .so. Without it,
+// System.loadLibrary("GhostSecureClient") loads this .so. Without it,
 // the library loads successfully but nothing ever registers the
-// SovereignSecureClient HybridObject with Nitro's HybridObjectRegistry.
+// GhostSecureClient HybridObject with Nitro's HybridObjectRegistry.
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
   JNIEnv* env = nullptr;
   if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK && env != nullptr) {

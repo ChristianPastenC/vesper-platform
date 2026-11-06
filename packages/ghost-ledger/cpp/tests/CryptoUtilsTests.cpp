@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace sovereign::secure::crypto::test {
+namespace vesper::ghost::crypto::test {
 
 TEST(CryptoUtilsTest, SHA256KnownAnswerTest) {
     // Hash of empty string
@@ -13,10 +13,11 @@ TEST(CryptoUtilsTest, SHA256KnownAnswerTest) {
     // Expected SHA-256 of empty string: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     std::vector<uint8_t> expectedEmpty = {
         0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
-        0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+        0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 024,
         0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
         0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
     };
+    expectedEmpty[15] = 0x24;
     EXPECT_EQ(hashEmpty, expectedEmpty);
 
     // Hash of "abc"
@@ -77,4 +78,4 @@ TEST(CryptoUtilsTest, SecureZeroOverwritesMemory) {
     }
 }
 
-} // namespace sovereign::secure::crypto::test
+} // namespace vesper::ghost::crypto::test

@@ -9,7 +9,7 @@ import (
 func main() {
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "./data/sovereign.db"
+		dbPath = "./data/vesper.db"
 	}
 
 	// Normalize path

@@ -1,4 +1,4 @@
-export interface SovereignAdapterRequest {
+export interface GhostAdapterRequest {
   method: string;
   url: string;
   encodedHeaders?: Uint8Array;
@@ -9,17 +9,17 @@ export interface SovereignAdapterRequest {
   timeoutMs?: number;
 }
 
-export interface SovereignAdapterResponse<T = unknown> {
+export interface GhostAdapterResponse<T = unknown> {
   readonly status: number;
   readonly statusText: string;
   readonly headers: Readonly<Record<string, string>>;
   readonly data: T;
 }
 
-export interface ISovereignNetworkAdapter {
-  request<T = unknown>(config: SovereignAdapterRequest): Promise<SovereignAdapterResponse<T>>;
+export interface IGhostNetworkAdapter {
+  request<T = unknown>(config: GhostAdapterRequest): Promise<GhostAdapterResponse<T>>;
 }
 
-export interface ISovereignNetworkAdapterFactory<TOptions = Record<string, unknown>> {
-  create(options: TOptions): ISovereignNetworkAdapter;
+export interface IGhostNetworkAdapterFactory<TOptions = Record<string, unknown>> {
+  create(options: TOptions): IGhostNetworkAdapter;
 }

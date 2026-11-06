@@ -1,5 +1,5 @@
 import { graphqlWithTrapping } from '../../adapters/graphql/functional.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 import { GraphQLRequestError } from '../../adapters/graphql/error.js';
 
 describe('GraphQL Functional Adapter', () => {
@@ -41,7 +41,7 @@ describe('GraphQL Functional Adapter', () => {
       statusText: 'Internal Server Error'
     });
 
-    await expect(graphqlWithTrapping('url', { query: 'query' }, { fetchImpl: mockFetch })).rejects.toThrow(SovereignHttpError);
+    await expect(graphqlWithTrapping('url', { query: 'query' }, { fetchImpl: mockFetch })).rejects.toThrow(GhostHttpError);
   });
 
   it('should handle graphql errors array', async () => {

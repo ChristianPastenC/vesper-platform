@@ -13,7 +13,7 @@ import { IntegrationGuide } from '../components/dashboard/IntegrationGuide';
     class="min-h-screen bg-slate-950 font-sans text-slate-300 selection:bg-emerald-500/30 overflow-x-hidden"
   >
     <script>
-      if (typeof window !== 'undefined' && !sessionStorage.getItem('sovereign_session_token')) {
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('vesper_session_token')) {
         window.location.href = '/login';
       }
     </script>

@@ -74,7 +74,7 @@ sequenceDiagram
     App->>Core: Network Status Restored (Online Event)
     Core->>Core: Recalculate Block Hash Chain
     Note over Core: DPoP Proof Generated (RFC 9449)
-    Core->>Gateway: POST /api/v1/orders (with X-Sovereign-Hash & DPoP)
+    Core->>Gateway: POST /api/v1/orders (with X-Vesper-Hash & DPoP)
     Gateway->>Verifier: Forward Request
     Verifier->>Verifier: dpop_auth.go (Validate ECDSA P-256 Signature)
     Verifier->>Verifier: hash_validator.go (Verify HMAC-SHA256 Body)
@@ -112,7 +112,7 @@ An attacker attaches dynamic instrumentation tools (Frida, Cycript, Xposed) to t
    ```
    POST /api/v1/support/telemetry
    Content-Type: application/octet-stream
-   X-Sovereign-API-Key: <tenant_key>
+   X-Vesper-API-Key: <tenant_key>
    [17-byte binary payload]
    ```
 4. **Process Termination:** The SDK throws an `IntegrityBreachError` and forcefully terminates the runtime process, leaving an empty heap.
@@ -143,7 +143,7 @@ graph TD
 3. **Emergency Key Revocation (Cryptographic Kill-Switch):**  
    If multiple tampering events originate from a compromised client pool or stolen tenant key:
    - Navigate to **Vesper Console > API Keys**.
-   - Locate the compromised `X-Sovereign-API-Key`.
+   - Locate the compromised `X-Vesper-API-Key`.
    - Click **Revoke** (or issue a `DELETE /api/v1/b2b/keys` call).
    - Once revoked, the Ingestion Gateway immediately rejects all traffic tied to that key, isolating the compromised deployment.
 

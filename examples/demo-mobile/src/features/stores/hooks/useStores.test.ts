@@ -9,7 +9,7 @@ const mockStoresResponse = {
       geometry: { type: 'Point', coordinates: [-122.4324, 37.78825] },
       properties: {
         id: '1',
-        name: 'Sovereign Downtown',
+        name: 'Vesper Downtown',
         distance: '1.2 km',
         hours: '09:00 - 21:00',
         address: '123 Main St, Downtown',
@@ -38,7 +38,7 @@ describe('useStores', () => {
     });
 
     expect(result.current.stores).toHaveLength(1);
-    expect(result.current.stores[0].name).toBe('Sovereign Downtown');
+    expect(result.current.stores[0].name).toBe('Vesper Downtown');
     expect(result.current.stores[0].coordinate.latitude).toBe(37.78825);
   });
 

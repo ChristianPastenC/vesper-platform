@@ -175,9 +175,9 @@ describe('DevMenuScreen', () => {
     fireEvent.press(getByTestId('dev-menu-toggle-telemetry-config-btn'));
 
     fireEvent.changeText(getByTestId('dev-menu-api-key-input'), 'sk_live_new');
-    fireEvent.changeText(getByTestId('dev-menu-bundle-id-input'), 'mx.edu.sovereign.core');
+    fireEvent.changeText(getByTestId('dev-menu-bundle-id-input'), 'mx.edu.vesper.core');
 
     expect(baseHookValue.setCustomApiKey).toHaveBeenCalledWith('sk_live_new');
-    expect(baseHookValue.setCustomBundleId).toHaveBeenCalledWith('mx.edu.sovereign.core');
+    expect(baseHookValue.setCustomBundleId).toHaveBeenCalledWith('mx.edu.vesper.core');
   });
 });

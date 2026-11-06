@@ -105,7 +105,7 @@ Following the resolution of a Sev-1 or Sev-2 incident, Vesper mandates the distr
 
 ### 5.1. Report Distribution Matrix
 - **Acquiring Banks:** Full Technical RCA (Root Cause Analysis) including cryptographic verification logs and $H_n$ hash-chain continuity proofs.
-- **Regulators:** Summary RCA focusing on DORA compliance, data sovereignty preservation, and consumer impact metrics.
+- **Regulators:** Summary RCA focusing on DORA compliance, tenant data governance preservation, and consumer impact metrics.
 - **Merchants:** High-level summary focusing on service uptime, financial reconciliation assurances, and preventative measures deployed.
 
 ### 5.2. Link to Recovery Runbooks

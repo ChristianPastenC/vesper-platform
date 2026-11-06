@@ -43,7 +43,7 @@ export const useProductDetails = () => {
   };
 
   const specifications: SpecificationItem[] = [
-    { labelKey: 'catalog.brand', value: 'Sovereign Core' },
+    { labelKey: 'catalog.brand', value: 'Vesper Core' },
     { labelKey: 'catalog.weight', value: '320g' },
     { labelKey: 'catalog.dimensions', value: '18 x 12 x 4 cm' },
     { labelKey: 'catalog.availability', value: 'catalog.inStock', isTranslationValue: true },

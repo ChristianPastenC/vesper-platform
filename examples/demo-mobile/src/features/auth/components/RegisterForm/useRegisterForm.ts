@@ -1,5 +1,5 @@
-import { useSovereignRegister } from '../../hooks/useSovereignRegister';
+import { useVesperRegister } from '../../hooks/useVesperRegister';
 
 export const useRegisterForm = () => {
-  return useSovereignRegister();
+  return useVesperRegister();
 };

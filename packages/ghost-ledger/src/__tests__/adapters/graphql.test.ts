@@ -1,6 +1,6 @@
 import { GraphQLAdapter } from '../../adapters/graphql/adapter.js';
 import { GraphQLRequestError } from '../../adapters/graphql/error.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 
 describe('GraphQLAdapter', () => {
   let mockFetch: jest.Mock;
@@ -40,7 +40,7 @@ describe('GraphQLAdapter', () => {
 
     const adapter = new GraphQLAdapter({ url: 'https://api.test.com/graphql', fetchImpl: mockFetch });
 
-    await expect(adapter.request({ method: 'POST', url: '' })).rejects.toThrow(SovereignHttpError);
+    await expect(adapter.request({ method: 'POST', url: '' })).rejects.toThrow(GhostHttpError);
   });
 
   it('should handle GraphQL errors', async () => {

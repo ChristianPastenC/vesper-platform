@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.9.0)
 
-project(SovereignSecureClient)
+project(GhostSecureClient)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(
-  SovereignSecureClient
+  GhostSecureClient
   SHARED
-  ../cpp/SovereignSecureClient.cpp
-  ../cpp/SovereignSecureCore.cpp
-  ../cpp/SovereignLedger.cpp
+  ../cpp/GhostSecureClient.cpp
+  ../cpp/GhostSecureCore.cpp
+  ../cpp/GhostLedger.cpp
   ../cpp/CryptoUtils.cpp
-  ../cpp/SovereignTelemetryEngine.cpp
+  ../cpp/GhostTelemetryEngine.cpp
   ../cpp/MmapTelemetryStorage.cpp
   # Real JNI_OnLoad entry point — registers the HybridObject when the JVM
   # loads this library. See src/main/cpp/cpp-adapter.cpp for why this is
@@ -21,12 +21,12 @@ add_library(
 )
 
 target_include_directories(
-  SovereignSecureClient
+  GhostSecureClient
   PUBLIC
   ../cpp
   src/main/cpp
 )
 
 # Adds the nitrogen-generated spec sources/headers, and links fbjni, JSI and
-# react-native-nitro-modules onto the SovereignSecureClient target declared above.
-include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/SovereignSecureClient+autolinking.cmake)
+# react-native-nitro-modules onto the GhostSecureClient target declared above.
+include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/GhostSecureClient+autolinking.cmake)

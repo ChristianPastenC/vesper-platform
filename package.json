@@ -1,5 +1,5 @@
 {
-  "name": "sovereign-core-platform",
+  "name": "vesper-platform",
   "version": "1.0.0",
   "scripts": {
     "test:all": "npm run test:go && npm run test:backend && npm run test:console",

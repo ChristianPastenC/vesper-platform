@@ -4,9 +4,9 @@
 #include <vector>
 #include <cstdint>
 #include <stdexcept>
-#include "SovereignTelemetryEngine.h" // For TelemetryEvent definition
+#include "GhostTelemetryEngine.h" // For TelemetryEvent definition
 
-namespace sovereign::secure {
+namespace vesper::ghost {
 
 class MmapTelemetryStorage {
 public:
@@ -56,4 +56,4 @@ private:
     bool is_initialized_;
 };
 
-} // namespace sovereign::secure
+} // namespace vesper::ghost

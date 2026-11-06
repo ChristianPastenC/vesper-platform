@@ -4,7 +4,7 @@ import {
   isFreezableHttpStatus,
   shouldFreezeSession,
 } from '../../core/error-matrix.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 
 describe('Error Matrix', () => {
   const mockTrapping = {
@@ -15,7 +15,7 @@ describe('Error Matrix', () => {
 
   it('should extract http status', () => {
     expect(extractHttpStatus(null)).toBeNull();
-    expect(extractHttpStatus(new SovereignHttpError(400, 'err'))).toBe(400);
+    expect(extractHttpStatus(new GhostHttpError(400, 'err'))).toBe(400);
     expect(extractHttpStatus({ isAxiosError: true, response: { status: 404 } })).toBe(404);
     expect(extractHttpStatus({ status: 500 })).toBe(500);
     expect(extractHttpStatus({ networkError: { statusCode: 502 } })).toBe(502);

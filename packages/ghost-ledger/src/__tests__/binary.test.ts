@@ -11,7 +11,7 @@ import {
 
 describe('Binary Utils', () => {
   it('should encode and decode text correctly', () => {
-    const text = 'SovereignSecureClient Test String 123!@#';
+    const text = 'GhostSecureClient Test String 123!@#';
     const encoded = encodeTextBody(text);
 
     expect(encoded).toBeInstanceOf(Uint8Array);

@@ -29,9 +29,9 @@ export default function () {
   const params = {
     headers: {
       'Content-Type': 'application/octet-stream',
-      'X-Sovereign-API-Key': 'mock-api-key', // Usually needed
+      'X-Vesper-API-Key': 'mock-api-key', // Usually needed
       'X-Bundle-ID': 'com.vesper.app',
-      'X-Sovereign-Start-Index': '0'
+      'X-Vesper-Start-Index': '0'
     },
   };
 

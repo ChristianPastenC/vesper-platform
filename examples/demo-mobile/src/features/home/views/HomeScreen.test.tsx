@@ -5,14 +5,14 @@ import { useHome } from '../hooks/useHome';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useAppStore } from '../../../store/useAppStore';
 import { useNavigation } from '@react-navigation/native';
-import { useSovereignCatalog } from '../../catalog/hooks/useSovereignCatalog';
+import { useVesperCatalog } from '../../catalog/hooks/useVesperCatalog';
 
 jest.mock('../hooks/useHome', () => ({
   useHome: jest.fn(),
 }));
 
-jest.mock('../../catalog/hooks/useSovereignCatalog', () => ({
-  useSovereignCatalog: jest.fn(),
+jest.mock('../../catalog/hooks/useVesperCatalog', () => ({
+  useVesperCatalog: jest.fn(),
 }));
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -48,7 +48,7 @@ describe('HomeScreen Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useAppStore as unknown as jest.Mock).mockReturnValue([]);
-    (useSovereignCatalog as jest.Mock).mockReturnValue({
+    (useVesperCatalog as jest.Mock).mockReturnValue({
       products: [{ id: '1', name: 'Mock Real Product', price: 100, barcode: '123' }],
       loading: false,
       error: null,

@@ -45,7 +45,7 @@ describe('OnlineCheckoutModal View', () => {
     const mockCheckout = jest.fn((cb) => cb('ON-123456'));
     (useOnlineCart as jest.Mock).mockReturnValue({
       total: 50.0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       isProcessing: false,
       handleCheckout: mockCheckout,
       t: (key: string) => key,
@@ -53,7 +53,7 @@ describe('OnlineCheckoutModal View', () => {
 
     const { getByText } = render(<OnlineCheckoutModal />);
     expect(getByText('$50.00')).toBeTruthy();
-    expect(getByText('123 Sovereign Way')).toBeTruthy();
+    expect(getByText('123 Vesper Way')).toBeTruthy();
 
     fireEvent.press(getByText('online_checkout.checkoutButton'));
     expect(mockCheckout).toHaveBeenCalled();
@@ -66,7 +66,7 @@ describe('OnlineCheckoutModal View', () => {
   it('renders loading state when processing', () => {
     (useOnlineCart as jest.Mock).mockReturnValue({
       total: 50.0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       isProcessing: true,
       handleCheckout: jest.fn(),
       t: (key: string) => key,
@@ -79,7 +79,7 @@ describe('OnlineCheckoutModal View', () => {
   it('navigates back when close button is pressed', () => {
     (useOnlineCart as jest.Mock).mockReturnValue({
       total: 50.0,
-      address: '123 Sovereign Way',
+      address: '123 Vesper Way',
       isProcessing: false,
       handleCheckout: jest.fn(),
       t: (key: string) => key,

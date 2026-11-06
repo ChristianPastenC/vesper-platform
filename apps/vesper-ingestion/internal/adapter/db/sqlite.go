@@ -74,11 +74,11 @@ func (r *SQLiteRepository) migrate() error {
 
 func (r *SQLiteRepository) seedDemoTenant() {
 	var count int
-	r.db.QueryRow("SELECT COUNT(*) FROM tenants WHERE email = 'demo@sovereign.local'").Scan(&count)
+	r.db.QueryRow("SELECT COUNT(*) FROM tenants WHERE email = 'demo@vesper.local'").Scan(&count)
 	if count == 0 {
 		hash, _ := bcrypt.GenerateFromPassword([]byte("demo123"), bcrypt.DefaultCost)
 		r.db.Exec(`INSERT INTO tenants (id, name, email, password) VALUES (?, ?, ?, ?)`,
-			"tenant_demo_001", "Demo Corp", "demo@sovereign.local", string(hash))
+			"tenant_demo_001", "Demo Corp", "demo@vesper.local", string(hash))
 		r.db.Exec(`INSERT INTO api_keys (key, tenant_id, name, bundle_id) VALUES (?, ?, ?, ?)`,
 			"sk_test_demo123", "tenant_demo_001", "Default Key", "com.demo.app")
 	}

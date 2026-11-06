@@ -1,6 +1,6 @@
 import { useHome } from '../hooks/useHome';
 import { useAppStore } from '../../../store/useAppStore';
-import { useSovereignCatalog } from '../../catalog/hooks/useSovereignCatalog';
+import { useVesperCatalog } from '../../catalog/hooks/useVesperCatalog';
 
 import { Product } from '../../catalog/domain/product.entity';
 
@@ -25,7 +25,7 @@ export const useHomeScreen = () => {
   const cartItemsCount = onlineCart.reduce((acc, item) => acc + item.quantity, 0);
 
   // Fetch real catalog data with a limit of 5 for trending
-  const { products: TRENDING_PRODUCTS } = useSovereignCatalog(undefined, 5);
+  const { products: TRENDING_PRODUCTS } = useVesperCatalog(undefined, 5);
 
   const handleAddToOnline = (product: Product) => {
     addToOnlineCart({

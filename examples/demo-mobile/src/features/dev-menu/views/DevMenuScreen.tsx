@@ -38,7 +38,7 @@ export const DevMenuScreen: React.FC = () => {
     <ScrollView style={styles.container} testID="dev-menu-scroll">
       <View style={styles.banner}>
         <Text style={styles.bannerText}>
-          Developer-only tools. Actions here directly drive the native Sovereign ledger and can
+          Developer-only tools. Actions here directly drive the native Ghost ledger and can
           send real telemetry to the local dashboard.
         </Text>
       </View>
@@ -129,7 +129,7 @@ export const DevMenuScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>DAST Testing (Ledger Enqueue/Zeroize)</Text>
         <View style={styles.card}>
           <Text style={styles.statusLabel}>
-            Enqueues a transaction carrying the label below into the real Sovereign ledger, and
+            Enqueues a transaction carrying the label below into the real Ghost ledger, and
             dequeues (zeroizes) it separately -- so a memory scan taken between the two steps can
             observe the payload before and after zeroization.
           </Text>
@@ -233,7 +233,7 @@ export const DevMenuScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 testID="dev-menu-api-key-input"
-                placeholder="Custom X-Sovereign-API-Key (sk_...)"
+                placeholder="Custom X-Vesper-API-Key (sk_...)"
                 placeholderTextColor={theme.colors.text + '80'}
                 value={customApiKey}
                 onChangeText={setCustomApiKey}
@@ -243,7 +243,7 @@ export const DevMenuScreen: React.FC = () => {
               <TextInput
                 style={styles.input}
                 testID="dev-menu-bundle-id-input"
-                placeholder="Custom X-Bundle-ID (e.g. mx.edu.sovereign.core)"
+                placeholder="Custom X-Bundle-ID (e.g. mx.edu.vesper.core)"
                 placeholderTextColor={theme.colors.text + '80'}
                 value={customBundleId}
                 onChangeText={setCustomBundleId}

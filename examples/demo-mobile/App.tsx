@@ -17,8 +17,8 @@ import { useTheme } from './src/core/theme/useTheme';
 LogBox.ignoreLogs([
   '[NetworkResolver]',
   '[HandshakeValidator]',
-  '[useSovereignInitializer]',
-  '[SovereignCheckout]',
+  '[useGhostInitializer]',
+  '[GhostCheckout]',
   '[PaymentClearing]',
 ]);
 

@@ -2,18 +2,18 @@
  * @vesper-core/ghost-ledger — cryptographic provider interfaces
  *
  * Platform-agnostic interfaces for cryptographic primitives consumed by
- * SovereignMemoryQueue and SovereignClientCore.
+ * GhostMemoryQueue and GhostClientCore.
  */
 
 /**
- * ISovereignCryptoProvider
+ * IGhostCryptoProvider
  *
  * Platform-agnostic interface for the cryptographic primitives consumed by
- * SovereignMemoryQueue and SovereignClientCore.
+ * GhostMemoryQueue and GhostClientCore.
  *
  * @example Browser
  * ```ts
- * const cryptoProvider: ISovereignCryptoProvider = {
+ * const cryptoProvider: IGhostCryptoProvider = {
  *   getRandomBytes: (n) => window.crypto.getRandomValues(new Uint8Array(n)),
  *   sha256: async (data) => {
  *     const buf = await window.crypto.subtle.digest('SHA-256', data);
@@ -22,7 +22,7 @@
  * };
  * ```
  */
-export interface ISovereignCryptoProvider {
+export interface IGhostCryptoProvider {
   /**
    * Returns a freshly allocated Uint8Array of `byteLength` cryptographically
    * random bytes. MUST use a platform CSPRNG.
@@ -39,7 +39,7 @@ export interface ISovereignCryptoProvider {
 /**
  * IDPoPCryptoProvider
  *
- * Extension of ISovereignCryptoProvider that adds SubtleCrypto access for
+ * Extension of IGhostCryptoProvider that adds SubtleCrypto access for
  * the asymmetric operations required by the DPoP subsystem.
  *
  * @example Browser
@@ -53,7 +53,7 @@ export interface ISovereignCryptoProvider {
  * };
  * ```
  */
-export interface IDPoPCryptoProvider extends ISovereignCryptoProvider {
+export interface IDPoPCryptoProvider extends IGhostCryptoProvider {
   /**
    * A SubtleCrypto-conformant interface used exclusively for:
    *  - generateKey()

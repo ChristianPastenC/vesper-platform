@@ -13,7 +13,7 @@ export const TelemetryPanel: React.FC = () => {
   const [recentLogs, setRecentLogs] = useState<LogDetails[]>([]);
 
   useEffect(() => {
-    const t = sessionStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('vesper_session_token');
     if (!t) {
       setToken('demo_token');
     } else {

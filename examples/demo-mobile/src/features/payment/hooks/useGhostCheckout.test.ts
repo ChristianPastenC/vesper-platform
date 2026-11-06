@@ -1,0 +1,81 @@
+import { renderHook, act } from '@testing-library/react-native';
+import { useGhostCheckout } from './useGhostCheckout';
+import { useGhostClient } from '../../../providers/ghost/GhostClientContext';
+import { buildTransactionLedger } from '../ledger/buildTransactionLedger';
+import { getAccessToken } from '../../../core/auth/tokenStore';
+import * as Crypto from 'react-native-quick-crypto';
+
+jest.mock('../../../providers/ghost/GhostClientContext', () => ({
+  useGhostClient: jest.fn(),
+}));
+
+jest.mock('../ledger/buildTransactionLedger', () => ({
+  buildTransactionLedger: jest.fn(),
+}));
+
+jest.mock('../../../core/auth/tokenStore', () => ({
+  getAccessToken: jest.fn(),
+}));
+
+jest.mock('react-native-quick-crypto', () => ({
+  randomUUID: jest.fn(),
+}));
+
+jest.mock('@vesper-core/ghost-ledger', () => ({
+  encodeJsonBody: jest.fn((body) => JSON.stringify(body)),
+}));
+
+jest.mock('../../../core/config', () => ({
+  getApiUrl: jest.fn(() => 'http://10.0.2.2:8080'),
+}));
+
+describe('useGhostCheckout', () => {
+  const mockExecuteRequest = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useGhostClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
+    (getAccessToken as jest.Mock).mockResolvedValue('mock-token');
+    (Crypto.randomUUID as jest.Mock).mockReturnValue('mock-uuid');
+    (buildTransactionLedger as jest.Mock).mockResolvedValue([{ index: 0, payload: 'mock' }]);
+  });
+
+  it('executes checkout successfully', async () => {
+    mockExecuteRequest.mockResolvedValue({
+      success: true,
+      transactionId: 'txn-123',
+      timestamp: 12345,
+    });
+
+    const { result } = renderHook(() => useGhostCheckout());
+
+    let res;
+    await act(async () => {
+      res = await result.current.executeCheckout([{ id: '1' }]);
+    });
+
+    expect(result.current.isProcessing).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(res).toEqual({ success: true, transactionId: 'txn-123', timestamp: 12345 });
+    expect(mockExecuteRequest).toHaveBeenCalledWith(
+      'checkout-mock-uuid',
+      expect.objectContaining({
+        method: 'POST',
+        url: 'http://10.0.2.2:8080/api/v1/checkout/pay',
+        headers: expect.objectContaining({
+          Authorization: 'DPoP mock-token',
+        }),
+      }),
+    );
+  });
+
+  it('handles checkout error', async () => {
+    mockExecuteRequest.mockRejectedValue(new Error('Checkout failed error'));
+
+    const { result } = renderHook(() => useGhostCheckout());
+
+    await expect(result.current.executeCheckout([{ id: '1' }])).rejects.toThrow(
+      'Checkout failed error',
+    );
+  });
+});

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { RegisterForm } from './RegisterForm';
-import { useSovereignRegister } from '../../hooks/useSovereignRegister';
+import { useVesperRegister } from '../../hooks/useVesperRegister';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -9,8 +9,8 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-jest.mock('../../hooks/useSovereignRegister', () => ({
-  useSovereignRegister: jest.fn(),
+jest.mock('../../hooks/useVesperRegister', () => ({
+  useVesperRegister: jest.fn(),
 }));
 
 jest.mock('../../../../core/theme/useTheme', () => ({
@@ -26,7 +26,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 
 describe('RegisterForm', () => {
   it('renders inputs and button correctly', () => {
-    (useSovereignRegister as jest.Mock).mockReturnValue({
+    (useVesperRegister as jest.Mock).mockReturnValue({
       username: '',
       setUsername: jest.fn(),
       email: '',
@@ -57,7 +57,7 @@ describe('RegisterForm', () => {
   });
 
   it('renders error banner when error is present', () => {
-    (useSovereignRegister as jest.Mock).mockReturnValue({
+    (useVesperRegister as jest.Mock).mockReturnValue({
       username: '',
       setUsername: jest.fn(),
       email: '',
@@ -83,7 +83,7 @@ describe('RegisterForm', () => {
 
   it('calls handleRegister on button press', () => {
     const mockHandleRegister = jest.fn();
-    (useSovereignRegister as jest.Mock).mockReturnValue({
+    (useVesperRegister as jest.Mock).mockReturnValue({
       username: '',
       setUsername: jest.fn(),
       email: '',

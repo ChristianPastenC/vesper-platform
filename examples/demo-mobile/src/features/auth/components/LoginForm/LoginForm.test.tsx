@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { LoginForm } from './LoginForm';
-import { useSovereignLogin } from '../../hooks/useSovereignLogin';
+import { useVesperLogin } from '../../hooks/useVesperLogin';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -9,8 +9,8 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
-jest.mock('../../hooks/useSovereignLogin', () => ({
-  useSovereignLogin: jest.fn(),
+jest.mock('../../hooks/useVesperLogin', () => ({
+  useVesperLogin: jest.fn(),
 }));
 
 jest.mock('../../../../core/theme/useTheme', () => ({
@@ -26,7 +26,7 @@ jest.mock('../../../../core/theme/useTheme', () => ({
 
 describe('LoginForm', () => {
   it('renders inputs and button correctly', () => {
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: jest.fn(),
       email: '',
@@ -46,7 +46,7 @@ describe('LoginForm', () => {
   });
 
   it('renders error banner when error is present', () => {
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: jest.fn(),
       email: '',
@@ -65,7 +65,7 @@ describe('LoginForm', () => {
 
   it('calls handleLogin on button press', () => {
     const mockHandleLogin = jest.fn();
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: jest.fn(),
       email: '',

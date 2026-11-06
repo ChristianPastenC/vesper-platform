@@ -101,7 +101,7 @@ func main() {
 
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "./data/sovereign.db"
+		dbPath = "./data/vesper.db"
 	}
 	db, err := store.OpenDB(dbPath)
 	if err != nil {

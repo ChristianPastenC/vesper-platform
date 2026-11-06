@@ -1,4 +1,4 @@
-// Package handlers implements the HTTP handler functions for the SovereignCore backend API.
+// Package handlers implements the HTTP handler functions for the VesperCore backend API.
 package handlers
 
 import (

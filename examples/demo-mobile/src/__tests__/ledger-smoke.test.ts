@@ -1,28 +1,28 @@
 import {
-  SovereignClientCore,
-  SovereignMemoryQueue,
+  GhostClientCore,
+  GhostMemoryQueue,
   serializeAdapterRequest,
-  ISovereignCryptoProvider,
+  IGhostCryptoProvider,
 } from '@vesper-core/ghost-ledger';
 
-describe('Sovereign Ledger Smoke Test (Mock Mode)', () => {
-  let memoryQueue: SovereignMemoryQueue;
-  let mockCryptoProvider: ISovereignCryptoProvider;
+describe('Ghost Ledger Smoke Test (Mock Mode)', () => {
+  let memoryQueue: GhostMemoryQueue;
+  let mockCryptoProvider: IGhostCryptoProvider;
 
   beforeAll(() => {
     // Minimal configuration for the Provider
-    mockCryptoProvider = {} as ISovereignCryptoProvider;
+    mockCryptoProvider = {} as IGhostCryptoProvider;
 
     // Initialize the core client in mock mode, this triggers
     // the forced fallback configuration in JS: `configureQueueEngine({ mock: true })`
-    SovereignClientCore.getInstance({
+    GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: async () => true,
       mock: true,
       networkAdapter: undefined,
     });
 
-    memoryQueue = SovereignMemoryQueue.getInstance();
+    memoryQueue = GhostMemoryQueue.getInstance();
   });
 
   beforeEach(() => {
@@ -37,10 +37,10 @@ describe('Sovereign Ledger Smoke Test (Mock Mode)', () => {
   it('validates the complete ledger lifecycle: enqueue, verifyLedgerIntegrity, and dequeue', async () => {
     const id = 'test-tx-smoke-123';
 
-    // 1) Enqueue a serialized SovereignAdapterRequest
+    // 1) Enqueue a serialized GhostAdapterRequest
     const request = {
       method: 'POST',
-      url: 'https://api.sovereign.local/v1/secure-data',
+      url: 'https://api.vesper.local/v1/secure-data',
       body: new Uint8Array([1, 2, 3, 4, 5]),
     };
 

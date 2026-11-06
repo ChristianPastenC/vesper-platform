@@ -46,7 +46,7 @@ func DefaultCORSConfig() CORSConfig {
 			"X-Request-ID",
 			"X-Client-Version",
 			"X-Idempotency-Key",
-			"X-Sovereign-Hash",
+			"X-Vesper-Hash",
 		},
 		ExposedHeaders:   []string{"X-Challenge-ID", "X-Challenge-Expires", "DPoP-Nonce"},
 		AllowCredentials: true,

@@ -2140,7 +2140,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - SovereignSecureClient (0.1.0):
+  - GhostSecureClient (0.1.0):
     - hermes-engine
     - NitroModules
     - RCTRequired
@@ -2259,7 +2259,7 @@ DEPENDENCIES:
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
-  - SovereignSecureClient (from `../../../packages/ghost-ledger`)
+  - GhostSecureClient (from `../../../packages/ghost-ledger`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2443,7 +2443,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screens"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
-  SovereignSecureClient:
+  GhostSecureClient:
     :path: "../../../packages/ghost-ledger"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
@@ -2537,7 +2537,7 @@ SPEC CHECKSUMS:
   RNReanimated: 41f496c18437fd0aa841234917af84e98fd5b9a2
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   RNWorklets: 76fce72926e28e304afb44f0da23b2d24f2c1fa0
-  SovereignSecureClient: b846db641082d5142e84c12352d23fd7d2800582
+  GhostSecureClient: b846db641082d5142e84c12352d23fd7d2800582
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 

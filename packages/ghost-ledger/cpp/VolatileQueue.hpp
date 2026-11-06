@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include "CryptoUtils.h"
-#include "SovereignTelemetryEngine.h"
+#include "GhostTelemetryEngine.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -35,7 +35,7 @@ inline bool unlock_memory_pages(void* ptr, size_t size) noexcept {
 }
 #endif
 
-namespace sovereign::secure {
+namespace vesper::ghost {
 
 struct TransactionBlock {
     std::string id;
@@ -116,7 +116,7 @@ public:
             if (!crypto::constantTimeEqual(block.previousHash, expectedPrevHash)) {
                 is_locked_ = true;
                 is_integrity_compromised_ = true;
-                SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
+                GhostTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
                 return false;
             }
             if (!block.isZeroized) {
@@ -124,7 +124,7 @@ public:
                 if (!crypto::constantTimeEqual(block.currentHash, recomputed)) {
                     is_locked_ = true;
                     is_integrity_compromised_ = true;
-                    SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
+                    GhostTelemetryEngine::getInstance().recordEvent(TelemetryEventType::INTEGRITY_COMPROMISED);
                     return false;
                 }
             }
@@ -185,7 +185,7 @@ private:
             block.id.clear();
         }
         block.isZeroized = true;
-        SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::ZEROIZATION_TRIGGERED);
+        GhostTelemetryEngine::getInstance().recordEvent(TelemetryEventType::ZEROIZATION_TRIGGERED);
     }
 
     std::vector<uint8_t> resolvePreviousHash() {
@@ -211,7 +211,7 @@ private:
         
         auto end_time = std::chrono::high_resolution_clock::now();
         double latency_ms = std::chrono::duration<double, std::milli>(end_time - start_time).count();
-        SovereignTelemetryEngine::getInstance().recordEvent(TelemetryEventType::COMPUTE_HASH_LATENCY, latency_ms);
+        GhostTelemetryEngine::getInstance().recordEvent(TelemetryEventType::COMPUTE_HASH_LATENCY, latency_ms);
         
         return hash;
     }
@@ -240,4 +240,4 @@ private:
     bool is_integrity_compromised_;
 };
 
-} // namespace sovereign::secure
+} // namespace vesper::ghost

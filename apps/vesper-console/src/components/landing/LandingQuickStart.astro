@@ -1,12 +1,12 @@
 ---
 import { Code } from 'astro:components';
 
-const quickStartCode = `import { SovereignClientCore, FetchAdapter, encodeJsonBody } from '@vesper-core/ghost-ledger';
+const quickStartCode = `import { GhostClientCore, FetchAdapter, encodeJsonBody } from '@vesper-core/ghost-ledger';
 import QuickCrypto from 'react-native-quick-crypto';
 import NetInfo from '@react-native-community/netinfo';
 
 // 1. Initialize Core connecting to Nitro Modules
-const client = SovereignClientCore.getInstance({
+const client = GhostClientCore.getInstance({
   cryptoProvider: {
     getRandomBytes: (n) => QuickCrypto.randomBytes(n),
     sha256: async (d) => new Uint8Array(QuickCrypto.createHash('sha256').update(d).digest())

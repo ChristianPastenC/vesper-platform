@@ -88,9 +88,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'mx.edu.sovereign.core'
+    namespace 'mx.edu.vesper.core'
     defaultConfig {
-        applicationId 'mx.edu.sovereign.core'
+        applicationId 'mx.edu.vesper.core'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

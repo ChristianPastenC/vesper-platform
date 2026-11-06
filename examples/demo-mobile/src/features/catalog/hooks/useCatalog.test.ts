@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react-native';
 import { useCatalog } from './useCatalog';
-import { useSovereignCatalog } from './useSovereignCatalog';
+import { useVesperCatalog } from './useVesperCatalog';
 
-jest.mock('./useSovereignCatalog', () => ({
-  useSovereignCatalog: jest.fn(),
+jest.mock('./useVesperCatalog', () => ({
+  useVesperCatalog: jest.fn(),
 }));
 
 describe('useCatalog', () => {
@@ -11,19 +11,19 @@ describe('useCatalog', () => {
     jest.clearAllMocks();
   });
 
-  it('delegates to useSovereignCatalog unconditionally', () => {
-    const mockSovereignData = {
+  it('delegates to useVesperCatalog unconditionally', () => {
+    const mockVesperData = {
       products: [{ id: '1', name: 'Real Product', price: 100 }],
       loading: false,
       error: null,
       isEmpty: false,
       refetch: jest.fn(),
     };
-    (useSovereignCatalog as jest.Mock).mockReturnValue(mockSovereignData);
+    (useVesperCatalog as jest.Mock).mockReturnValue(mockVesperData);
 
     const { result } = renderHook(() => useCatalog('electronics', 15));
 
-    expect(useSovereignCatalog).toHaveBeenCalledWith('electronics', 15);
-    expect(result.current.products).toEqual(mockSovereignData.products);
+    expect(useVesperCatalog).toHaveBeenCalledWith('electronics', 15);
+    expect(result.current.products).toEqual(mockVesperData.products);
   });
 });

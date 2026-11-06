@@ -1,19 +1,19 @@
 import {
   IntegrityBreachError,
   type NetworkStatusResolver,
-  type SovereignClientCoreConfig,
-  type SovereignRequestConfig,
+  type GhostClientCoreConfig,
+  type GhostRequestConfig,
   type QueuedRequestRecord,
   type PendingDPoPContext,
   type SessionLifecycleObservers,
   type DPoPAlgorithm,
 } from '../types.js';
 import type {
-  ISovereignCryptoProvider,
-  ISovereignNetworkAdapter,
-  SovereignAdapterRequest,
+  IGhostCryptoProvider,
+  IGhostNetworkAdapter,
+  GhostAdapterRequest,
 } from '../contracts/index.js';
-import { SovereignMemoryQueue, configureQueueEngine } from '../ledger/index.js';
+import { GhostMemoryQueue, configureQueueEngine } from '../ledger/index.js';
 import { resolveTrappingConfig, type ResolvedTrappingConfig } from './config.js';
 import { shouldFreezeSession } from './error-matrix.js';
 import {
@@ -27,30 +27,30 @@ import type { IDPoPCryptoProvider } from '../contracts/index.js';
 import { resolveDPoPContext, zeroRequestBuffers } from './utils.js';
 
 /**
- * SovereignClientCore
+ * GhostClientCore
  * Coordinates the offline-sequestration execution path, managing request replay,
  * volatile RAM queuing, and dynamic DPoP token generation.
  */
-export class SovereignClientCore {
-  private static instance: SovereignClientCore;
-  private readonly memoryQueue: SovereignMemoryQueue;
-  private readonly cryptoProvider: ISovereignCryptoProvider;
+export class GhostClientCore {
+  private static instance: GhostClientCore;
+  private readonly memoryQueue: GhostMemoryQueue;
+  private readonly cryptoProvider: IGhostCryptoProvider;
   private readonly isOnline: NetworkStatusResolver;
   private readonly defaultTTL: number;
   private readonly trapping: ResolvedTrappingConfig;
-  private readonly networkAdapter: ISovereignNetworkAdapter | undefined;
+  private readonly networkAdapter: IGhostNetworkAdapter | undefined;
   private isProcessingQueue = false;
   private readonly pendingRequests = new Map<string, QueuedRequestRecord<unknown>>();
   private readonly observers: SessionLifecycleObservers | undefined;
   private _isFrozen = false;
-  private readonly dpopConfig?: SovereignClientCoreConfig['dpop'];
+  private readonly dpopConfig?: GhostClientCoreConfig['dpop'];
   private readonly enableAutoDPoP: boolean;
   private readonly dpopAlgorithm: DPoPAlgorithm | undefined;
   private dpopSigner?: DPoPSigner;
   private dpopBootstrapPromise?: Promise<JsonWebKey | null>;
   private telemetryTimer?: unknown;
 
-  private constructor(config: SovereignClientCoreConfig) {
+  private constructor(config: GhostClientCoreConfig) {
     configureQueueEngine({ mock: config.mock });
     this.cryptoProvider = config.cryptoProvider;
     this.isOnline = config.networkResolver;
@@ -58,7 +58,7 @@ export class SovereignClientCore {
     // Empirically calibrated against cellular radio field data where 94.6% of outages last < 7 min
     // and P99 is 13 min (ISO 22301 Cl. 8.2.2 / DORA Art. 11 / BIA Specification)
     this.defaultTTL = config.defaultTTL ?? 900_000;
-    this.memoryQueue = SovereignMemoryQueue.getInstance();
+    this.memoryQueue = GhostMemoryQueue.getInstance();
     this.trapping = resolveTrappingConfig(config.errorTrapping);
     this.networkAdapter = config.networkAdapter;
     this.observers = config.observers;
@@ -68,14 +68,14 @@ export class SovereignClientCore {
 
     // Start background active RAM watchdog to detect bit-flipping/tampering
     this.memoryQueue.startWatchdog(this.cryptoProvider, () => {
-      console.error('[SovereignCore] CRITICAL: Memory tampering detected.');
+      console.error('[GhostLedger] CRITICAL: Memory tampering detected.');
       this.memoryQueue.suspendAndFreezeLedger();
       this.observers?.onIntegrityBreach?.();
     });
 
     if (this.dpopConfig || this.enableAutoDPoP) {
       this.dpopBootstrapPromise = this.bootstrapAutoDPoP().catch((err) => {
-        console.error('[SovereignCore] Failed to auto-bootstrap DPoP keys:', err);
+        console.error('[GhostLedger] Failed to auto-bootstrap DPoP keys:', err);
         return null;
       });
     }
@@ -85,7 +85,7 @@ export class SovereignClientCore {
     }
   }
 
-  private startTelemetrySync(telemetryConfig: NonNullable<SovereignClientCoreConfig['telemetry']>) {
+  private startTelemetrySync(telemetryConfig: NonNullable<GhostClientCoreConfig['telemetry']>) {
     const endpoint = telemetryConfig.endpoint ?? 'http://127.0.0.1:8081/api/v1/support/telemetry';
     const intervalMs = telemetryConfig.syncIntervalMs ?? 15000;
     const apiKey = telemetryConfig.apiKey;
@@ -99,7 +99,7 @@ export class SovereignClientCore {
           await fetch(endpoint, {
             method: 'POST',
             headers: {
-              'X-Sovereign-API-Key': apiKey,
+              'X-Vesper-API-Key': apiKey,
               'X-Bundle-ID': bundleId,
               'Content-Type': 'application/octet-stream'
             },
@@ -107,7 +107,7 @@ export class SovereignClientCore {
           });
         }
       } catch (err) {
-        console.warn('[SovereignCore] Telemetry sync failed', err);
+        console.warn('[GhostLedger] Telemetry sync failed', err);
       } finally {
         this.telemetryTimer = setTimeout(sync, intervalMs);
       }
@@ -116,10 +116,10 @@ export class SovereignClientCore {
     this.telemetryTimer = setTimeout(sync, intervalMs);
   }
 
-  public static getInstance(config: SovereignClientCoreConfig): SovereignClientCore {
-    if (!SovereignClientCore.instance)
-      SovereignClientCore.instance = new SovereignClientCore(config);
-    return SovereignClientCore.instance;
+  public static getInstance(config: GhostClientCoreConfig): GhostClientCore {
+    if (!GhostClientCore.instance)
+      GhostClientCore.instance = new GhostClientCore(config);
+    return GhostClientCore.instance;
   }
 
   public async bootstrap(): Promise<JsonWebKey | null> {
@@ -157,14 +157,14 @@ export class SovereignClientCore {
    */
   public async executeRequest<T>(
     requestId: string,
-    request: SovereignAdapterRequest,
+    request: GhostAdapterRequest,
     dpop?: PendingDPoPContext,
-    config?: SovereignRequestConfig,
+    config?: GhostRequestConfig,
   ): Promise<T> {
     if (this.isIntegrityCompromised)
-      throw new IntegrityBreachError('[SovereignCore] Execution blocked. Memory is frozen.');
+      throw new IntegrityBreachError('[GhostLedger] Execution blocked. Memory is frozen.');
     if (!this.networkAdapter)
-      throw new Error('[SovereignCore] executeRequest() requires a networkAdapter.');
+      throw new Error('[GhostLedger] executeRequest() requires a networkAdapter.');
     if (this.dpopBootstrapPromise) await this.dpopBootstrapPromise;
 
     const online = await this.isOnline();
@@ -248,7 +248,7 @@ export class SovereignClientCore {
   public async processSynchronizedQueue(handshakeValidator: () => Promise<boolean>): Promise<void> {
     if (this.isIntegrityCompromised)
       throw new IntegrityBreachError(
-        '[SovereignCore] Ledger integrity compromised. Execution blocked.',
+        '[GhostLedger] Ledger integrity compromised. Execution blocked.',
       );
     if (this.dpopBootstrapPromise) await this.dpopBootstrapPromise;
     if (this.isProcessingQueue) return;
@@ -258,7 +258,7 @@ export class SovereignClientCore {
       // Challenge the network interface before replaying sensitive client data
       if (!(await handshakeValidator())) {
         this.purgeAll();
-        throw new Error('[SovereignCore] Handshake failed. Hostile network. RAM purged.');
+        throw new Error('[GhostLedger] Handshake failed. Hostile network. RAM purged.');
       }
 
       // Check for RAM integrity tampering before reading blocks
@@ -269,7 +269,7 @@ export class SovereignClientCore {
         this.memoryQueue.suspendAndFreezeLedger();
         this.observers?.onIntegrityBreach?.();
         throw new IntegrityBreachError(
-          '[SovereignCore] Ledger integrity compromised. Execution blocked.',
+          '[GhostLedger] Ledger integrity compromised. Execution blocked.',
         );
       }
 
@@ -285,7 +285,7 @@ export class SovereignClientCore {
             const deserialized = deserializeAdapterRequest(block.serializedRequest);
             if (!deserialized) {
               pending.reject(
-                new Error(`[SovereignCore] Transaction [${id}] buffer was zeroized before replay.`),
+                new Error(`[GhostLedger] Transaction [${id}] buffer was zeroized before replay.`),
               );
               this.pendingRequests.delete(id);
               await this.memoryQueue.dequeue(this.cryptoProvider, id);
@@ -374,9 +374,9 @@ export class SovereignClientCore {
 
   private enqueueStructuredRequest<T>(
     id: string,
-    request: SovereignAdapterRequest,
+    request: GhostAdapterRequest,
     dpop?: PendingDPoPContext,
-    config?: SovereignRequestConfig,
+    config?: GhostRequestConfig,
     freezeReason?: unknown,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -392,7 +392,7 @@ export class SovereignClientCore {
       const onExpiry = (expiredId: string): void => {
         const pending = this.pendingRequests.get(expiredId);
         if (pending) {
-          pending.reject(new Error(`[SovereignCore] Transaction [${expiredId}] expired in RAM.`));
+          pending.reject(new Error(`[GhostLedger] Transaction [${expiredId}] expired in RAM.`));
           this.pendingRequests.delete(expiredId);
         }
       };
@@ -414,7 +414,7 @@ export class SovereignClientCore {
     this.memoryQueue.clearAll();
     this.memoryQueue.isIntegrityCompromised = false;
     const purgeError = new Error(
-      '[SovereignCore] Session purged. All pending transactions rejected.',
+      '[GhostLedger] Session purged. All pending transactions rejected.',
     );
     for (const [, record] of this.pendingRequests) record.reject(purgeError);
     this.pendingRequests.clear();

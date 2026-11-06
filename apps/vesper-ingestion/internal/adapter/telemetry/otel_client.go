@@ -38,7 +38,7 @@ func NewOtelClient(logger *slog.Logger) (*OtelClient, error) {
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("sovereign-telemetry-api"),
+			semconv.ServiceNameKey.String("vesper-telemetry-api"),
 		),
 	)
 	if err != nil {
@@ -51,7 +51,7 @@ func NewOtelClient(logger *slog.Logger) (*OtelClient, error) {
 	)
 	otel.SetMeterProvider(meterProvider)
 
-	meter := meterProvider.Meter("sovereign.secure.client")
+	meter := meterProvider.Meter("vesper.ghost.client")
 
 	integrityCounter, _ := meter.Int64Counter(
 		"telemetry_integrity_compromised_total",

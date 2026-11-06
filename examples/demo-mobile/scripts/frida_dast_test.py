@@ -213,7 +213,7 @@ This automated report compares the security posture of the application against a
   - The protected C++ Nitro Modules layer executes transactions in `{latency_str}` on average.
 
 ### 📡 Telemetry Ingestion Check
-Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by this CI job) and successfully complete a full network round trip -- binary payload framing, `X-Sovereign-API-Key`/`X-Bundle-ID` headers, and the ingestion API's own validation -- rather than asserting success locally. This is a connectivity/config check, not an attack vector, so it does not factor into the Overall Status above.
+Confirms the app can reach a *real* backend (`apps/vesper-ingestion`, started by this CI job) and successfully complete a full network round trip -- binary payload framing, `X-Vesper-API-Key`/`X-Bundle-ID` headers, and the ingestion API's own validation -- rather than asserting success locally. This is a connectivity/config check, not an attack vector, so it does not factor into the Overall Status above.
 - **Unprotected:** {unprotected_metrics.telemetry_message if unprotected_metrics.completed else "⚠️ N/A - run did not complete"}
 - **Protected:** {protected_metrics.telemetry_message if protected_metrics.completed else "⚠️ N/A - run did not complete"}
 
@@ -1116,7 +1116,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
         # Drive a REAL transaction through the app's own Developer Menu
         # (dev-only, __DEV__-gated -- see src/features/dev-menu) instead of
         # blind taps: it forces offline mode (so executeTransaction actually
-        # enqueues instead of no-op'ing -- see SovereignSecureClient.cpp) and
+        # enqueues instead of no-op'ing -- see GhostSecureClient.cpp) and
         # enqueues the sentinel payload into the real native ledger. That
         # enqueue call is also what fires the JSI hook installed above for
         # the protected keyword set, giving a real per-transaction latency
@@ -1212,7 +1212,7 @@ def run_test_suite(package_name: str, is_protected: bool, platform: str = "andro
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Frida DAST against Vesper Ghost Ledger")
-    parser.add_argument("--package", type=str, default="mx.edu.sovereign.core", help="Target package name (Protected)")
+    parser.add_argument("--package", type=str, default="mx.edu.vesper.core", help="Target package name (Protected)")
     parser.add_argument("--baseline-package", type=str, default=None, help="Target package name (Unprotected baseline)")
     parser.add_argument("--protected-apk", type=str, default=None, help="Path to the protected APK/APP to install before testing")
     parser.add_argument("--baseline-apk", type=str, default=None, help="Path to the unprotected baseline APK/APP to install before testing")

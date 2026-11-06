@@ -12,7 +12,7 @@
     "subtitle": "Monitoree la salud e integridad criptográfica de su flota de SDKs instalados en tiempo real.",
     "api_keys": {
       "title": "API Keys",
-      "subtitle": "Genere llaves para inyectar en la configuración de SovereignClientCore en el dispositivo del cliente.",
+      "subtitle": "Genere llaves para inyectar en la configuración de GhostClientCore en el dispositivo del cliente.",
       "no_keys": "No hay llaves generadas.",
       "revoke": "Revocar",
       "pending": "Pendiente de vinculación",
@@ -60,7 +60,7 @@
       "testing_desc1": "Recuerda habilitar el ",
       "testing_code1": "mock: true",
       "testing_desc2": " o usar ",
-      "testing_code2": "globalThis.__SOVEREIGN_MOCK__ = true",
+      "testing_code2": "globalThis.__GHOST_MOCK__ = true",
       "testing_desc3": " en tus tests, ya que los módulos nativos de C++ no se ejecutan en Node.js estándar.",
       "telemetry_limit_title": "Aviso de Persistencia en Telemetría (BD)",
       "telemetry_limit_desc": "Aunque el emisor binario de 17 bytes opera en C++ y en el fallback de Node.js, la persistencia en backend es parcial debido al uso de SQLite efímero (telemetry.db). Las vinculaciones TOFU y métricas se reinician tras cold-starts."
@@ -96,7 +96,7 @@
     },
     "register": {
       "title": "Registro de Organización",
-      "subtitle": "Cree un tenant empresarial para emitir APIs keys y gestionar la flota Sovereign.",
+      "subtitle": "Cree un tenant empresarial para emitir APIs keys y gestionar la flota Vesper.",
       "error": "Error al registrar la organización.",
       "name": "Nombre de Organización",
       "name_ph": "Ej. Acme Corp",
@@ -124,7 +124,7 @@
     },
     "features": {
       "title": "Integración Nativa Segura",
-      "desc": "A diferencia de otras librerías NPM que mantienen material criptográfico expuesto en la memoria del recolector de basura de JS, Sovereign SDK opera un motor C++20 nativo que destruye el material mediante <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>memset_s / SecureZeroMemory</code> inmediatamente después de firmar la transacción.",
+      "desc": "A diferencia de otras librerías NPM que mantienen material criptográfico expuesto en la memoria del recolector de basura de JS, Ghost Ledger SDK opera un motor C++20 nativo que destruye el material mediante <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>memset_s / SecureZeroMemory</code> inmediatamente después de firmar la transacción.",
       "f1_title": "Hermes & V8 Bypass",
       "f1_desc": "Utilizamos JSI para ejecutar cripto-operaciones a nivel C++20, evitando el bridge JS.",
       "f2_title": "Efimeralidad Total",
@@ -149,7 +149,7 @@
     "flow": {
       "title": "Flujo Operativo In-Memory",
       "intro": "El ciclo de vida en tiempo de ejecución de una petición segura sigue un flujo estricto para garantizar la resiliencia criptográfica:",
-      "step1": "La aplicación (<code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">App</code>) invoca <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">executeRequest()</code> en el <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">SovereignClientCore</code>.",
+      "step1": "La aplicación (<code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">App</code>) invoca <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">executeRequest()</code> en el <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">GhostClientCore</code>.",
       "step2": "Se verifica la integridad de la memoria. Si el Ledger ha sido comprometido (ej. inyección de código o memory dump), se lanza inmediatamente un <code class=\"text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">IntegrityBreachError</code>.",
       "step3": "Si el entorno es seguro, se comprueba la conexión a red:",
       "step3_online": "<strong class=\"text-white\">Online:</strong> Se adjunta la prueba DPoP efímera y se despacha la petición al <code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">NetworkAdapter</code>. Al recibir éxito, se ejecuta el borrado seguro en hardware (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">SecureZeroMemory</code>) sobre los buffers para no dejar rastros en memoria, y se retorna la respuesta.",

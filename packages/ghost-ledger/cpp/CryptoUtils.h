@@ -12,7 +12,7 @@
 #include <windows.h>
 #endif
 
-namespace sovereign::secure::crypto {
+namespace vesper::ghost::crypto {
 
 /**
  * SHA-256 implementation (pure C++17)
@@ -66,4 +66,4 @@ inline void secure_zero(void* ptr, size_t size) noexcept {
 #endif
 }
 
-} // namespace sovereign::secure::crypto
+} // namespace vesper::ghost::crypto

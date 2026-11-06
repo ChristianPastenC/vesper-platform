@@ -1,6 +1,6 @@
 #include "CryptoUtils.h"
 
-namespace sovereign::secure::crypto {
+namespace vesper::ghost::crypto {
 
 inline uint32_t rotr(uint32_t val, uint32_t shift) {
     return (val >> shift) | (val << (32 - shift));
@@ -85,4 +85,4 @@ bool constantTimeEqual(const std::vector<uint8_t>& a, const std::vector<uint8_t>
     return diff == 0;
 }
 
-} // namespace sovereign::secure::crypto
+} // namespace vesper::ghost::crypto

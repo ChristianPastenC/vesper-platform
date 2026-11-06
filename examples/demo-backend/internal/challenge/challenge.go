@@ -1,5 +1,5 @@
 // Package challenge implements the time-variant cryptographic challenge mechanism
-// used by the SovereignCore /api/handshake endpoint.
+// used by the VesperCore /api/handshake endpoint.
 //
 // # Design
 //

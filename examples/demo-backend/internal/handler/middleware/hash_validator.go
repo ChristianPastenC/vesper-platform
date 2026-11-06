@@ -11,7 +11,7 @@ import (
 )
 
 // HashValidator intercepts requests, reads the body, and validates the payload's integrity
-// by comparing the recalculated HMAC-SHA256 against the X-Sovereign-Hash header.
+// by comparing the recalculated HMAC-SHA256 against the X-Vesper-Hash header.
 func HashValidator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if os.Getenv("DEV_HASH_BYPASS") == "true" {
@@ -25,15 +25,15 @@ func HashValidator(next http.Handler) http.Handler {
 			return
 		}
 
-		clientHashHex := r.Header.Get("X-Sovereign-Hash")
+		clientHashHex := r.Header.Get("X-Vesper-Hash")
 		if clientHashHex == "" {
-			http.Error(w, "Forbidden: Missing X-Sovereign-Hash header", http.StatusForbidden)
+			http.Error(w, "Forbidden: Missing X-Vesper-Hash header", http.StatusForbidden)
 			return
 		}
 
 		clientHash, err := hex.DecodeString(clientHashHex)
 		if err != nil {
-			http.Error(w, "Forbidden: Invalid X-Sovereign-Hash format", http.StatusForbidden)
+			http.Error(w, "Forbidden: Invalid X-Vesper-Hash format", http.StatusForbidden)
 			return
 		}
 

@@ -1,31 +1,31 @@
-export type { ISovereignCryptoProvider } from './contracts/index.js';
-import type { ISovereignCryptoProvider } from './contracts/index.js';
-import type { ISovereignNetworkAdapter } from './contracts/index.js';
+export type { IGhostCryptoProvider } from './contracts/index.js';
+import type { IGhostCryptoProvider } from './contracts/index.js';
+import type { IGhostNetworkAdapter } from './contracts/index.js';
 import type { DPoPSigner } from './dpop/signer.js';
 import type { DPoPContextResolver } from './dpop/index.js';
 import type { DPoPAlgorithm } from './dpop/types.js';
 export type { DPoPAlgorithm };
 
 /** Request configuration with volatile TTL parameters. */
-export interface SovereignRequestConfig {
+export interface GhostRequestConfig {
   ttl?: number;
   requireDPoP?: boolean;
 }
 
 /** Error trapping HTTP response class. */
-export class SovereignHttpError extends Error {
+export class GhostHttpError extends Error {
   public readonly status: number;
   constructor(status: number, message = `HTTP ${status}`) {
     super(message);
-    this.name = 'SovereignHttpError';
+    this.name = 'GhostHttpError';
     this.status = status;
-    Object.setPrototypeOf(this, SovereignHttpError.prototype);
+    Object.setPrototypeOf(this, GhostHttpError.prototype);
   }
 }
 
 /** Fired when memory tampering is detected by the watchdog. */
 export class IntegrityBreachError extends Error {
-  constructor(message = '[SovereignCore] Ledger integrity compromised. Queue is frozen.') {
+  constructor(message = '[GhostLedger] Ledger integrity compromised. Queue is frozen.') {
     super(message);
     this.name = 'IntegrityBreachError';
     Object.setPrototypeOf(this, IntegrityBreachError.prototype);
@@ -40,12 +40,12 @@ export interface ErrorTrappingConfig {
 }
 
 /** Main constructor configuration parameter for the client. */
-export interface SovereignClientCoreConfig {
-  cryptoProvider: ISovereignCryptoProvider;
+export interface GhostClientCoreConfig {
+  cryptoProvider: IGhostCryptoProvider;
   networkResolver: NetworkStatusResolver;
   defaultTTL?: number;
   errorTrapping?: ErrorTrappingConfig;
-  networkAdapter?: ISovereignNetworkAdapter;
+  networkAdapter?: IGhostNetworkAdapter;
   observers?: SessionLifecycleObservers;
   dpop?: {
     algorithm?: DPoPAlgorithm;

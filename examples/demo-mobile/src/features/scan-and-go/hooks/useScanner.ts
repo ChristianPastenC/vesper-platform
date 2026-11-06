@@ -6,7 +6,7 @@ import { useAuthenticatedRequest } from '../../../core/auth/useAuthenticatedRequ
 import { randomUUID } from 'react-native-quick-crypto';
 import { encodeHeaders } from '@vesper-core/ghost-ledger';
 import { getAccessToken } from '../../../core/auth/tokenStore';
-import { BackendProduct } from '../../../features/catalog/hooks/useSovereignCatalog';
+import { BackendProduct } from '../../../features/catalog/hooks/useVesperCatalog';
 import { getApiUrl } from '../../../core/config';
 
 export interface ScannableProduct {

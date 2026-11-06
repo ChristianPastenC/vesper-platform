@@ -51,7 +51,7 @@ graph LR
     end
 
     subgraph Transport ["Untrusted Network (MitM Attack Surface)"]
-        Req["HTTP POST with:\n- X-Sovereign-Hash\n- DPoP Proof Token\n- Bearer Token"]
+        Req["HTTP POST with:\n- X-Vesper-Hash\n- DPoP Proof Token\n- Bearer Token"]
     end
 
     subgraph Backend ["Enterprise Verifier (demo-backend)"]
@@ -75,7 +75,7 @@ graph LR
 ```
 
 * **DPoP Session Binding:** The client signs each HTTP request with a single-use ECDSA P-256 private key held exclusively in native memory. The resulting DPoP JWT incorporates the HTTP method, targeted URI, and current timestamp. Stolen bearer tokens cannot be replayed without the private key.
-* **Cryptographic Payload Digest:** The client computes an HMAC-SHA256 digest of the raw serialized payload, attached as the `X-Sovereign-Hash` header. The backend verifier (`demo-backend`) recalculates this hash prior to unmarshaling. Any byte-level modification in transit causes immediate socket rejection (`HTTP 400 Bad Request`).
+* **Cryptographic Payload Digest:** The client computes an HMAC-SHA256 digest of the raw serialized payload, attached as the `X-Vesper-Hash` header. The backend verifier (`demo-backend`) recalculates this hash prior to unmarshaling. Any byte-level modification in transit causes immediate socket rejection (`HTTP 400 Bad Request`).
 
 ---
 
@@ -134,7 +134,7 @@ Vesper resolves this through **Zero-Disk Ephemeral Sequestration**:
 1. **Dead Store Elimination (DSE) Compiler Barriers:**  
    Standard `memset()` or `std::fill()` calls are routinely eliminated by optimizing compilers (GCC/Clang `-O2`/`-O3`) if the buffer goes out of scope or is immediately deallocated. Vesper enforces portable, compiler-safe memory sanitization in `packages/ghost-ledger/cpp/CryptoUtils.h`:
    ```cpp
-   // sovereign::secure::crypto::secure_zero
+   // vesper::ghost::crypto::secure_zero
    inline void secure_zero(void* ptr, size_t size) noexcept {
        volatile uint8_t* p = static_cast<volatile uint8_t*>(ptr);
        for (size_t i = 0; i < size; ++i) {
@@ -159,7 +159,7 @@ DORA Article 13 requires financial institutions to implement mechanisms to gathe
 2. **Rolling Keystream XOR Obfuscation:** The payload is masked in native C++ (`MmapTelemetryStorage.cpp`) using a deterministic keystream generated via:
    $$\text{Keystream} = \text{SHA256}(\text{SessionKey} \parallel \text{IV} \parallel \text{LittleEndian}(\text{Index}))$$
    This prevents plaintext transmission of operational anomalies across untrusted edge networks.
-3. **Ingestion Pipeline:** The Go ingestion service (`vesper-ingestion`) receives the telemetry stream at `/api/v1/support/telemetry` with headers `X-Sovereign-API-Key`, `X-Bundle-ID`, `X-Sovereign-Session-Key`, and `X-Sovereign-IV`. The endpoint decodes the binary block in under $5\text{ms}$, persists the record to SQLite (`metrics` table), and emits OpenTelemetry metric counters to the administrative portal (`vesper-console`).
+3. **Ingestion Pipeline:** The Go ingestion service (`vesper-ingestion`) receives the telemetry stream at `/api/v1/support/telemetry` with headers `X-Vesper-API-Key`, `X-Bundle-ID`, `X-Vesper-Session-Key`, and `X-Vesper-IV`. The endpoint decodes the binary block in under $5\text{ms}$, persists the record to SQLite (`metrics` table), and emits OpenTelemetry metric counters to the administrative portal (`vesper-console`).
 
 ---
 
@@ -175,7 +175,7 @@ sequenceDiagram
     participant CI as GitHub Actions Runner
     participant KVM as Headless Android Emulator (API 34)
     participant Frida as Frida Dynamic Injector (v16.5.1)
-    participant App as Demo Mobile App (mx.edu.sovereign.core)
+    participant App as Demo Mobile App (mx.edu.vesper.core)
     participant Core as Ghost Ledger C++ Enclave
 
     CI->>KVM: Boot KVM-Accelerated Hardware Emulator
@@ -196,9 +196,9 @@ During pipeline execution, the runner executes the comprehensive DAST test scrip
 ```bash
 # Automated CI/CD Execution Command
 cd examples/demo-mobile && python scripts/frida_dast_test.py \
-  --package mx.edu.sovereign.core \
+  --package mx.edu.vesper.core \
   --protected-apk ../../apks/protected/app-debug.apk \
-  --baseline-package mx.edu.sovereign.core \
+  --baseline-package mx.edu.vesper.core \
   --baseline-apk ../../apks/unprotected/app-unprotected.apk
 ```
 

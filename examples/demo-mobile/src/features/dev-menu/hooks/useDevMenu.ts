@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  SovereignMemoryQueue,
+  GhostMemoryQueue,
   serializeAdapterRequest,
   encodeJsonBody,
-  type SovereignAdapterRequest,
+  type GhostAdapterRequest,
 } from '@vesper-core/ghost-ledger';
-import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
+import { secureClient } from '../../../providers/ghost/useGhostInitializer';
 import { nativeCryptoProvider } from '../../../core/crypto/NativeCryptoProvider';
 import { validateHandshake } from '../../../core/network/handshakeValidator';
 import {
@@ -28,7 +28,7 @@ export interface FlushResult {
   message: string;
 }
 
-const buildSimulatedRequest = (label: string): SovereignAdapterRequest => ({
+const buildSimulatedRequest = (label: string): GhostAdapterRequest => ({
   method: 'POST',
   url: `${getApiUrl()}/dev-menu/simulated-transaction`,
   headers: { 'Content-Type': 'application/json' },
@@ -50,7 +50,7 @@ export const useDevMenu = () => {
   const [customBundleId, setCustomBundleId] = useState<string>('');
 
   const refreshStatus = useCallback(() => {
-    const queue = SovereignMemoryQueue.getInstance();
+    const queue = GhostMemoryQueue.getInstance();
     setStatus({
       queueSize: queue.size,
       isLocked: queue.getLocked(),
@@ -63,7 +63,7 @@ export const useDevMenu = () => {
   }, [refreshStatus]);
 
   const simulateOffline = useCallback(() => {
-    SovereignMemoryQueue.getInstance().toggleNetworkSim(false);
+    GhostMemoryQueue.getInstance().toggleNetworkSim(false);
     setIsSimulatedOffline(true);
     refreshStatus();
   }, [refreshStatus]);
@@ -71,7 +71,7 @@ export const useDevMenu = () => {
   const simulateOnline = useCallback(async () => {
     setIsBusy(true);
     try {
-      SovereignMemoryQueue.getInstance().toggleNetworkSim(true);
+      GhostMemoryQueue.getInstance().toggleNetworkSim(true);
       setIsSimulatedOffline(false);
       await secureClient.processSynchronizedQueue(validateHandshake);
     } finally {
@@ -82,13 +82,13 @@ export const useDevMenu = () => {
 
   const stopOperation = useCallback(() => {
     secureClient.purgeAll();
-    SovereignMemoryQueue.getInstance().toggleNetworkSim(false);
+    GhostMemoryQueue.getInstance().toggleNetworkSim(false);
     setIsSimulatedOffline(true);
     refreshStatus();
   }, [refreshStatus]);
 
   const flushTelemetryNow = useCallback(async (): Promise<FlushResult> => {
-    const queue = SovereignMemoryQueue.getInstance();
+    const queue = GhostMemoryQueue.getInstance();
     const snapshot = queue.getTelemetrySnapshot();
     const eventCount = Math.floor(snapshot.length / 17);
 
@@ -115,7 +115,7 @@ export const useDevMenu = () => {
       const response = await fetch(getTelemetryEndpoint(), {
         method: 'POST',
         headers: {
-          'X-Sovereign-API-Key': apiKey,
+          'X-Vesper-API-Key': apiKey,
           'X-Bundle-ID': bundleId,
           'Content-Type': 'application/octet-stream',
         },
@@ -153,7 +153,7 @@ export const useDevMenu = () => {
     async (label: string): Promise<string> => {
       setIsBusy(true);
       try {
-        const queue = SovereignMemoryQueue.getInstance();
+        const queue = GhostMemoryQueue.getInstance();
         queue.toggleNetworkSim(false);
         setIsSimulatedOffline(true);
 
@@ -176,7 +176,7 @@ export const useDevMenu = () => {
     if (!lastEnqueuedId) return;
     setIsBusy(true);
     try {
-      const queue = SovereignMemoryQueue.getInstance();
+      const queue = GhostMemoryQueue.getInstance();
       await queue.dequeue(nativeCryptoProvider, lastEnqueuedId);
       setLastEnqueuedId(null);
       refreshStatus();
@@ -188,7 +188,7 @@ export const useDevMenu = () => {
   const simulateE2EEvent = useCallback(async (): Promise<FlushResult> => {
     setIsBusy(true);
     try {
-      const queue = SovereignMemoryQueue.getInstance();
+      const queue = GhostMemoryQueue.getInstance();
       queue.toggleNetworkSim(false);
       setIsSimulatedOffline(true);
 

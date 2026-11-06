@@ -46,7 +46,7 @@
     "nitrogen",
     "CMakeLists.txt",
     "nitro.json",
-    "SovereignSecureClient.podspec"
+    "GhostSecureClient.podspec"
   ],
   "scripts": {
     "prepack": "yarn clean:native && yarn codegen && yarn build",

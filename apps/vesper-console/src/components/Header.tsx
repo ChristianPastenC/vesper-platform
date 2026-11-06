@@ -11,7 +11,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab }) => {
   const [tenantName, setTenantName] = useState('');
 
   useEffect(() => {
-    setTenantName(sessionStorage.getItem('sovereign_tenant_name') || 'Tenant');
+    setTenantName(sessionStorage.getItem('vesper_tenant_name') || 'Tenant');
   }, []);
 
   const handleLogout = () => {

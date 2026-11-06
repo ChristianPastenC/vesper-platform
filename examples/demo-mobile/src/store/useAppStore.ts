@@ -128,7 +128,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'sovereign-app-store',
+      name: 'vesper-app-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         // ONLY persist UX configurations (language, themeMode) and User Address

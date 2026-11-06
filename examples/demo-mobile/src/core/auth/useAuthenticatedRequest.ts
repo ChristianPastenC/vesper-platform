@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { useSovereignClient } from '../../providers/sovereign/SovereignClientContext';
+import { useGhostClient } from '../../providers/ghost/GhostClientContext';
 import { getRefreshToken, saveTokens } from './tokenStore';
 import { useAppStore } from '../../store/useAppStore';
-import type { SovereignAdapterRequest } from '@vesper-core/ghost-ledger';
+import type { GhostAdapterRequest } from '@vesper-core/ghost-ledger';
 import { getApiUrl } from '../config';
 
 export interface ExecuteRequestConfig {
@@ -17,12 +17,12 @@ export interface ExecuteRequestConfig {
 /**
  * useAuthenticatedRequest
  *
- * Wraps SovereignClientCore's executeRequest to provide automatic token refresh behavior.
+ * Wraps GhostClientCore's executeRequest to provide automatic token refresh behavior.
  * Intercepts 401 Unauthorized errors and automatically attempts to refresh the session
  * exactly once before falling back or throwing.
  */
 export const useAuthenticatedRequest = () => {
-  const client = useSovereignClient();
+  const client = useGhostClient();
   const logout = useAppStore((state) => state.logout);
 
   const execute = useCallback(
@@ -30,7 +30,7 @@ export const useAuthenticatedRequest = () => {
       const API_URL = getApiUrl();
       const finalUrl = config.url ?? `${API_URL}${config.path ?? ''}`;
 
-      const request: SovereignAdapterRequest = {
+      const request: GhostAdapterRequest = {
         method: config.method,
         url: finalUrl,
         headers: config.headers,
@@ -42,7 +42,7 @@ export const useAuthenticatedRequest = () => {
         // 1. Execute original request
         return await client.executeRequest<T>(requestId, request);
       } catch (error: unknown) {
-        // 2. If it fails (e.g. SovereignHttpError) with status === 401
+        // 2. If it fails (e.g. GhostHttpError) with status === 401
         const err = error as { status?: number; message?: string };
         if (err && err.status === 401) {
           const refreshToken = await getRefreshToken();

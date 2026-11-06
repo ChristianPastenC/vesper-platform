@@ -1,19 +1,19 @@
 import {
-  SovereignMemoryQueue,
-  SovereignClientCore,
+  GhostMemoryQueue,
+  GhostClientCore,
   serializeAdapterRequest,
 } from '@vesper-core/ghost-ledger';
 
 describe('Integration: Offline Queue', () => {
-  let queue: SovereignMemoryQueue;
-  let client: SovereignClientCore;
+  let queue: GhostMemoryQueue;
+  let client: GhostClientCore;
 
   beforeEach(() => {
-    (globalThis as unknown as { __SOVEREIGN_MOCK__: boolean }).__SOVEREIGN_MOCK__ = true;
-    queue = SovereignMemoryQueue.getInstance();
+    (globalThis as unknown as { __GHOST_MOCK__: boolean }).__GHOST_MOCK__ = true;
+    queue = GhostMemoryQueue.getInstance();
     queue.clearAll();
 
-    client = SovereignClientCore.getInstance({
+    client = GhostClientCore.getInstance({
       mock: true,
       cryptoProvider: {
         sha256: jest.fn(),
@@ -47,7 +47,7 @@ describe('Integration: Offline Queue', () => {
       }
     ).cryptoProvider;
 
-    // Enqueue a serialized SovereignAdapterRequest
+    // Enqueue a serialized GhostAdapterRequest
     const binaryReq = serializeAdapterRequest(request);
     await queue.enqueue(cryptoMock, 'test-req-1', binaryReq, 60000, jest.fn());
 

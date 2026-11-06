@@ -10,8 +10,8 @@ import { ThemeColors } from '../../core/theme/colors';
 import { useAppStore } from '../../store/useAppStore';
 import { Text } from '../../components/Text';
 
-import { useSovereignInitializer } from '../sovereign/useSovereignInitializer';
-import { SovereignClientContext } from '../sovereign/SovereignClientContext';
+import { useGhostInitializer } from '../ghost/useGhostInitializer';
+import { GhostClientContext } from '../ghost/GhostClientContext';
 import { createAppProviderStyles } from './AppProvider.styles';
 import { validateHandshake } from '../../core/network/handshakeValidator';
 import {
@@ -37,13 +37,13 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
-// Context is imported from SovereignClientContext.ts
+// Context is imported from GhostClientContext.ts
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Logic
   const theme = useTheme();
   const language = useAppStore((state) => state.language);
-  const { client, isBootstrapped, dpopPublicKey } = useSovereignInitializer();
+  const { client, isBootstrapped, dpopPublicKey } = useGhostInitializer();
 
   useEffect(() => {
     if (language) {
@@ -83,7 +83,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Main Render
   return (
     <SafeAreaProvider>
-      <SovereignClientContext.Provider value={{ client, dpopPublicKey }}>
+      <GhostClientContext.Provider value={{ client, dpopPublicKey }}>
         <QueryClientProvider client={queryClient}>
           <I18nextProvider i18n={i18n}>
             <ThemeContext.Provider value={theme}>
@@ -106,7 +106,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             </ThemeContext.Provider>
           </I18nextProvider>
         </QueryClientProvider>
-      </SovereignClientContext.Provider>
+      </GhostClientContext.Provider>
     </SafeAreaProvider>
   );
 };

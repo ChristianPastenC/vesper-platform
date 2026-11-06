@@ -14,10 +14,10 @@ export const LogConsole: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<Metric | null>(null);
 
   useEffect(() => {
-    const t = sessionStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('vesper_session_token');
     if (!t) {
-      sessionStorage.setItem('sovereign_session_token', 'demo_token');
-      sessionStorage.setItem('sovereign_tenant_name', 'Demo Corp (Offline Mode)');
+      sessionStorage.setItem('vesper_session_token', 'demo_token');
+      sessionStorage.setItem('vesper_tenant_name', 'Demo Corp (Offline Mode)');
       setToken('demo_token');
     } else {
       setToken(t);

@@ -161,7 +161,7 @@ While Stripe has introduced restricted offline card present capabilities for spe
 2. **Ephemeral Tokenization Queues Without Ledger Verification**: Queued offline transactions in Stripe Terminal exist as unconfirmed `PaymentIntent` drafts stored within encrypted local SQLite files. They lack tamper-evident cryptographic chaining ($H_n$). If an operating system crash or storage corruption occurs prior to synchronization, the intent is lost without a mathematical trace.
 3. **Severe Network Partition Vulnerabilities**: If a network connection drops while a `PaymentIntent` is transitioning from `requires_confirmation` to `succeeded`, Stripe Terminal's state machine enters a split-brain state, requiring manual administrative reconciliation via the Stripe Dashboard.
 
-### 3.3. Contrasting Stripe Terminal with Vesper's Sovereign Edge Ledger
+### 3.3. Contrasting Stripe Terminal with Vesper's Ghost Edge Ledger
 
 | Dimension | Stripe Terminal | Vesper Platform (`ghost-ledger` + `vesper-ingestion`) |
 | :--- | :--- | :--- |
@@ -216,7 +216,7 @@ graph TD
 #### 4.1.3. PowerSync
 - **Mechanics**: A modern client-side SQLite replication engine that synchronizes subsets of PostgreSQL tables to mobile devices via server-side change data capture (CDC).
 - **Cryptographic & Financial Deficiencies**:
-  - *Read-Replica Bias*: PowerSync is optimized for caching server data on the client, not for generating sovereign, non-repudiable offline audit trails at the edge.
+  - *Read-Replica Bias*: PowerSync is optimized for caching server data on the client, not for generating tamper-evident, non-repudiable offline audit trails at the edge.
   - *Absence of Hardware Enclave Integration*: PowerSync possesses no interface with iOS Secure Enclave or Android StrongBox Keymaster.
 
 ---
@@ -341,7 +341,7 @@ The following matrix benchmarks the Vesper Platform against leading commercial a
 
 ### 6.2. Strategic Gap Analysis & Architectural Differentiators
 
-Through empirical benchmarking and structural analysis, we identify four critical architectural differentiators that position Vesper as a next-generation sovereign transaction framework:
+Through empirical benchmarking and structural analysis, we identify four critical architectural differentiators that position Vesper as a next-generation zero-trust transaction framework:
 
 ```mermaid
 graph TD

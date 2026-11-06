@@ -19,21 +19,21 @@
 // ---------------------------------------------------------------------------
 export type {
   // Crypto provider contracts
-  ISovereignCryptoProvider,
+  IGhostCryptoProvider,
   IDPoPCryptoProvider,
   // Network adapter contracts
-  SovereignAdapterRequest,
-  SovereignAdapterResponse,
-  ISovereignNetworkAdapter,
-  ISovereignNetworkAdapterFactory,
+  GhostAdapterRequest,
+  GhostAdapterResponse,
+  IGhostNetworkAdapter,
+  IGhostNetworkAdapterFactory,
 } from './contracts/index.js';
 
 // ---------------------------------------------------------------------------
 // Core contracts & types
 // ---------------------------------------------------------------------------
 export type {
-  SovereignRequestConfig,
-  SovereignClientCoreConfig,
+  GhostRequestConfig,
+  GhostClientCoreConfig,
   ErrorTrappingConfig,
   LedgerBlock,
   NetworkStatusResolver,
@@ -41,11 +41,11 @@ export type {
 } from './types.js';
 
 // Typed HTTP error — throw from your executor to feed the Error Trapping Matrix
-export { SovereignHttpError, IntegrityBreachError } from './types.js';
+export { GhostHttpError, IntegrityBreachError } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Binary encoding helpers — produce zeroizable Uint8Array buffers for use
-// with SovereignAdapterRequest.body and SovereignAdapterRequest.encodedHeaders
+// with GhostAdapterRequest.body and GhostAdapterRequest.encodedHeaders
 // ---------------------------------------------------------------------------
 export {
   encodeJsonBody,
@@ -61,8 +61,8 @@ export {
 // ---------------------------------------------------------------------------
 // Ledger & interceptor
 // ---------------------------------------------------------------------------
-export { SovereignMemoryQueue } from './ledger/index.js';
-export { SovereignClientCore } from './core/index.js';
+export { GhostMemoryQueue } from './ledger/index.js';
+export { GhostClientCore } from './core/index.js';
 
 // ---------------------------------------------------------------------------
 // DPoP — asymmetric proof-of-possession signing client
@@ -80,14 +80,14 @@ export type {
 export { generateDPoPKeyPair } from './dpop/keys.js';
 export { DPoPSigner } from './dpop/signer.js';
 
-// SovereignClientCore ↔ DPoP integration bridge (lazy, fresh proof on every call)
+// GhostClientCore ↔ DPoP integration bridge (lazy, fresh proof on every call)
 export { withDPoP } from './dpop/executor.js';
 
 // ---------------------------------------------------------------------------
 // Transport adapters — functional utilities
 // ---------------------------------------------------------------------------
 
-// fetch — auto-throws SovereignHttpError for non-2xx responses
+// fetch — auto-throws GhostHttpError for non-2xx responses
 export type { FetchWithTrappingOptions, FetchAdapterOptions } from './adapters/fetch/index.js';
 export { fetchWithTrapping, FetchAdapter } from './adapters/fetch/index.js';
 

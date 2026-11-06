@@ -28,7 +28,7 @@ describe('StoreCard', () => {
     const { getByText, getByTestId } = render(
       <StoreCard
         id="1"
-        name="Sovereign Downtown"
+        name="Vesper Downtown"
         distance="1.2 km"
         hours="09:00 - 21:00"
         address="123 Main St"
@@ -36,7 +36,7 @@ describe('StoreCard', () => {
       />,
     );
 
-    expect(getByText('Sovereign Downtown')).toBeTruthy();
+    expect(getByText('Vesper Downtown')).toBeTruthy();
     expect(getByText('1.2 km')).toBeTruthy();
     expect(getByText('123 Main St')).toBeTruthy();
     expect(getByText('09:00 - 21:00')).toBeTruthy();

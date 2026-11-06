@@ -1,10 +1,10 @@
 ---
 import { Code } from 'astro:components';
 
-const example1 = `import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
+const example1 = `import { GhostClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import NetInfo from '@react-native-community/netinfo';
 
-const client = SovereignClientCore.getInstance({
+const client = GhostClientCore.getInstance({
   cryptoProvider: myQuickCryptoProvider,
   networkResolver: async () => (await NetInfo.fetch()).isConnected ?? false,
   networkAdapter: new FetchAdapter(),
@@ -19,11 +19,11 @@ const res = client.executeRequest('tx_101', {
 // Synchronous replay after reconnection
 await client.processSynchronizedQueue(async () => true);`;
 
-const example2 = `import { SovereignClientCore, AxiosAdapter } from '@vesper-core/ghost-ledger';
+const example2 = `import { GhostClientCore, AxiosAdapter } from '@vesper-core/ghost-ledger';
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
 
-const client = SovereignClientCore.getInstance({
+const client = GhostClientCore.getInstance({
   cryptoProvider: myQuickCryptoProvider,
   networkResolver: async () => (await NetInfo.fetch()).isConnected ?? false,
   networkAdapter: new AxiosAdapter({ axiosInstance: axios.create() }),
@@ -36,10 +36,10 @@ client.executeRequest('tx_102', {
   body: myPayload 
 });`;
 
-const example3 = `import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
+const example3 = `import { GhostClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import NetInfo from '@react-native-community/netinfo';
 
-const client = SovereignClientCore.getInstance({
+const client = GhostClientCore.getInstance({
   cryptoProvider: myQuickCryptoProvider,
   networkResolver: async () => (await NetInfo.fetch()).isConnected ?? false,
   networkAdapter: new FetchAdapter()
@@ -50,10 +50,10 @@ client.executeRequest('tx_103', {
   url: 'https://api.yourdomain.com/v1/data' 
 });`;
 
-const example4 = `import { SovereignClientCore, GraphQLAdapter } from '@vesper-core/ghost-ledger';
+const example4 = `import { GhostClientCore, GraphQLAdapter } from '@vesper-core/ghost-ledger';
 import NetInfo from '@react-native-community/netinfo';
 
-const client = SovereignClientCore.getInstance({
+const client = GhostClientCore.getInstance({
   cryptoProvider: myQuickCryptoProvider,
   networkResolver: async () => (await NetInfo.fetch()).isConnected ?? false,
   networkAdapter: new GraphQLAdapter({ 

@@ -23,7 +23,7 @@
 #  endif
 #endif
 
-namespace sovereign::secure {
+namespace vesper::ghost {
 
 static const uint32_t MAGIC_SIG = 0x54454C4D; // "TELM"
 static const uint32_t VERSION = 1;
@@ -307,4 +307,4 @@ std::vector<TelemetryEvent> MmapTelemetryStorage::readAllAndClear() {
     return result;
 }
 
-} // namespace sovereign::secure
+} // namespace vesper::ghost

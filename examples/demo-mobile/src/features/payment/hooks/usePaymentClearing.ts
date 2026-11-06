@@ -72,7 +72,7 @@ export const usePaymentClearing = () => {
       }
     } catch (error) {
       console.error(
-        '[PaymentClearing] Critical error while accessing SovereignSecureClient:',
+        '[PaymentClearing] Critical error while accessing GhostSecureClient:',
         error,
       );
     } finally {

@@ -27,9 +27,9 @@ export const LoginForm: React.FC = () => {
       }
 
       const data = await res.json();
-      sessionStorage.setItem('sovereign_session_token', data.token);
-      sessionStorage.setItem('sovereign_tenant_id', data.tenant_id);
-      sessionStorage.setItem('sovereign_tenant_name', data.name);
+      sessionStorage.setItem('vesper_session_token', data.token);
+      sessionStorage.setItem('vesper_tenant_id', data.tenant_id);
+      sessionStorage.setItem('vesper_tenant_name', data.name);
 
       window.location.href = '/dashboard';
     } catch (err: any) {

@@ -11,14 +11,14 @@ type contextKey string
 
 const TenantIDKey contextKey = "tenant_id"
 
-// ApiKeyValidator intercepts requests and requires a valid X-Sovereign-API-Key header.
+// ApiKeyValidator intercepts requests and requires a valid X-Vesper-API-Key header.
 func ApiKeyValidator(repo domain.AuthRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			apiKey := r.Header.Get("X-Sovereign-API-Key")
+			apiKey := r.Header.Get("X-Vesper-API-Key")
 
 			if apiKey == "" {
-				http.Error(w, "Missing X-Sovereign-API-Key header", http.StatusUnauthorized)
+				http.Error(w, "Missing X-Vesper-API-Key header", http.StatusUnauthorized)
 				return
 			}
 

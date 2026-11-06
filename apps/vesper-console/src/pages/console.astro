@@ -10,7 +10,7 @@ import { LogConsole } from '../components/LogConsole';
     id="app-container"
   >
     <script>
-      if (typeof window !== 'undefined' && !sessionStorage.getItem('sovereign_session_token')) {
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('vesper_session_token')) {
         window.location.href = '/login';
       }
     </script>

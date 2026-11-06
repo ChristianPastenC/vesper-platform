@@ -6,7 +6,7 @@ import type { IDPoPCryptoProvider } from '@vesper-core/ghost-ledger';
  *
  * Provides cryptographic primitives using react-native-quick-crypto, ensuring compatibility
  * with JSI and WebCrypto APIs in React Native Bare workflow.
- * Implements IDPoPCryptoProvider which extends ISovereignCryptoProvider.
+ * Implements IDPoPCryptoProvider which extends IGhostCryptoProvider.
  */
 export class NativeCryptoProvider implements IDPoPCryptoProvider {
   // Expose the SubtleCrypto implementation from react-native-quick-crypto

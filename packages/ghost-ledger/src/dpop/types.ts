@@ -1,6 +1,6 @@
-// ISovereignCryptoProvider and IDPoPCryptoProvider are defined in contracts.ts
+// IGhostCryptoProvider and IDPoPCryptoProvider are defined in contracts.ts
 // (zero-dependency layer) and re-exported here for the DPoP subpath consumers.
-export type { ISovereignCryptoProvider, IDPoPCryptoProvider } from '../contracts/index.js';
+export type { IGhostCryptoProvider, IDPoPCryptoProvider } from '../contracts/index.js';
 
 // ---------------------------------------------------------------------------
 // Algorithm identifiers
@@ -101,10 +101,10 @@ export interface DPoPProofOptions {
    * it here to include the `nonce` claim and satisfy the replay-prevention
    * requirement (RFC 9449 §8).
    *
-   * NOTE: If errorTrapping.freezeOn401 is enabled on SovereignClientCore,
+   * NOTE: If errorTrapping.freezeOn401 is enabled on GhostClientCore,
    * a 401/use_dpop_nonce response will freeze the session rather than
    * immediately retrying with the nonce. Disable freezeOn401 or handle
-   * nonce-retry outside of the SovereignCore queue when using server nonces.
+   * nonce-retry outside of the GhostLedger queue when using server nonces.
    */
   nonce?: string;
 }

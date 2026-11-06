@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { LoginScreen } from './LoginScreen';
-import { useSovereignLogin } from '../hooks/useSovereignLogin';
+import { useVesperLogin } from '../hooks/useVesperLogin';
 import { useTheme } from '../../../core/theme/useTheme';
 import { useNavigation } from '@react-navigation/native';
 
-jest.mock('../hooks/useSovereignLogin', () => ({
-  useSovereignLogin: jest.fn(),
+jest.mock('../hooks/useVesperLogin', () => ({
+  useVesperLogin: jest.fn(),
 }));
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -41,7 +41,7 @@ describe('LoginScreen View', () => {
   });
 
   it('renders form inputs correctly', () => {
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: mockSetName,
       email: '',
@@ -62,7 +62,7 @@ describe('LoginScreen View', () => {
   });
 
   it('triggers login submission callback', () => {
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: 'John',
       setName: mockSetName,
       email: 'john@example.com',
@@ -83,7 +83,7 @@ describe('LoginScreen View', () => {
   });
 
   it('displays error banner if validation fail error is returned', () => {
-    (useSovereignLogin as jest.Mock).mockReturnValue({
+    (useVesperLogin as jest.Mock).mockReturnValue({
       name: '',
       setName: mockSetName,
       email: '',

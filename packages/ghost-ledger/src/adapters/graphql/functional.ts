@@ -1,4 +1,4 @@
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 import { GraphQLRequestError } from './error.js';
 import type { GraphQLErrorShape, GraphQLRequest, GraphQLRequestOptions } from './types.js';
 
@@ -6,7 +6,7 @@ import type { GraphQLErrorShape, GraphQLRequest, GraphQLRequestOptions } from '.
  * graphqlWithTrapping
  *
  * A framework-agnostic GraphQL POST client that integrates with the
- * SovereignClientCore Error Trapping Matrix and works in all supported
+ * GhostClientCore Error Trapping Matrix and works in all supported
  * JS runtimes without any GraphQL client dependency.
  */
 export const graphqlWithTrapping = async <T>(
@@ -19,7 +19,7 @@ export const graphqlWithTrapping = async <T>(
 
   if (typeof fetchFn !== 'function') {
     throw new TypeError(
-      '[SovereignCore] graphqlWithTrapping: no fetch implementation available. ' +
+      '[GhostLedger] graphqlWithTrapping: no fetch implementation available. ' +
         'Pass a fetchImpl option (e.g. node-fetch, cross-fetch) for environments ' +
         'that do not provide a global fetch.',
     );
@@ -41,7 +41,7 @@ export const graphqlWithTrapping = async <T>(
   });
 
   if (!response.ok) {
-    throw new SovereignHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
+    throw new GhostHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
   }
 
   const envelope = (await response.json()) as {

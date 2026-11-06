@@ -117,7 +117,7 @@ func (f *FakeStoreGateway) getFallbackProducts(query domain.CatalogQuery) []doma
 		},
 		{
 			ID:          2,
-			Title:       "Sovereign Obsidian Smartwatch",
+			Title:       "Vesper Obsidian Smartwatch",
 			Price:       199.50,
 			Description: "Stay connected and track your health with our premium obsidian smartwatch.",
 			Category:    "electronics",

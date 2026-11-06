@@ -37,7 +37,7 @@ fi
 # 3. Verify Local Embedded DB Protection (Zero-Disk in Git)
 echo -n "[3/5] Verifying embedded database exclusion in Git (Zero-Disk)... "
 if git check-ignore apps/vesper-ingestion/telemetry.db >/dev/null 2>&1 && \
-   git check-ignore examples/demo-backend/data/sovereign.db >/dev/null 2>&1; then
+   git check-ignore examples/demo-backend/data/vesper.db >/dev/null 2>&1; then
     echo -e "${COLOR_SUCCESS}OK (SQLite and BoltDB properly ignored)${COLOR_RESET}"
 else
     echo -e "${COLOR_WARN}WARNING: Ensure *.db is present in .gitignore${COLOR_RESET}"

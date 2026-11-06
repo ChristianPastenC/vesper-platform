@@ -31,5 +31,5 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 jest.mock('react-native-config', () => ({
   API_URL: 'https://mock.api.com',
-  SOVEREIGN_ENVIRONMENT: 'development',
+  VESPER_ENVIRONMENT: 'development',
 }));

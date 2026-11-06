@@ -47,7 +47,7 @@ describe('StoresScreen', () => {
       stores: [
         {
           id: '1',
-          name: 'Sovereign Downtown',
+          name: 'Vesper Downtown',
           distance: '1.2 km',
           hours: '09:00 - 21:00',
           address: '123 Main St',
@@ -67,7 +67,7 @@ describe('StoresScreen', () => {
     expect(getByText('Our Stores')).toBeTruthy();
     expect(getByText('Nearby Locations')).toBeTruthy();
     expect(getByTestId('store-locator-map')).toBeTruthy();
-    expect(getByText('Sovereign Downtown')).toBeTruthy();
+    expect(getByText('Vesper Downtown')).toBeTruthy();
 
     const routeBtn = getByTestId('store-route-btn');
     fireEvent.press(routeBtn);

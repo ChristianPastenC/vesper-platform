@@ -1,18 +1,18 @@
-import type { SovereignAdapterRequest } from '../contracts/index.js';
+import type { GhostAdapterRequest } from '../contracts/index.js';
 import type {
   PendingDPoPContext,
-  SovereignRequestConfig,
-  SovereignClientCoreConfig,
+  GhostRequestConfig,
+  GhostClientCoreConfig,
 } from '../types.js';
 import type { DPoPSigner } from '../dpop/signer.js';
 import { decodeHeaders } from '../binary.js';
 
 export const resolveDPoPContext = (
-  request: SovereignAdapterRequest,
+  request: GhostAdapterRequest,
   dpopSigner?: DPoPSigner,
-  dpopConfig?: SovereignClientCoreConfig['dpop'],
+  dpopConfig?: GhostClientCoreConfig['dpop'],
   dpop?: PendingDPoPContext,
-  config?: SovereignRequestConfig,
+  config?: GhostRequestConfig,
 ): PendingDPoPContext | undefined => {
   if (dpop) return dpop;
 
@@ -60,7 +60,7 @@ export const resolveDPoPContext = (
 };
 
 export const zeroRequestBuffers = (
-  request: Pick<SovereignAdapterRequest, 'body' | 'encodedHeaders'>,
+  request: Pick<GhostAdapterRequest, 'body' | 'encodedHeaders'>,
 ): void => {
   if (request.body && request.body.length > 0) {
     request.body.fill(0);

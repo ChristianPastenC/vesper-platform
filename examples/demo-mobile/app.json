@@ -14,13 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "mx.edu.sovereign.core"
+      "bundleIdentifier": "mx.edu.vesper.core"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0f0f0f"
       },
-      "package": "mx.edu.sovereign.core",
+      "package": "mx.edu.vesper.core",
       "usesCleartextTraffic": true
     },
     "plugins": [

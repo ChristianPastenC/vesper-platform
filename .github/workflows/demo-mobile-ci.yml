@@ -105,7 +105,7 @@ jobs:
       - name: Bundle JS (dev mode) for standalone testing
         working-directory: examples/demo-mobile
         env:
-          EXPO_PUBLIC_SOVEREIGN_MOCK: 'true'
+          EXPO_PUBLIC_GHOST_MOCK: 'true'
           # Must match the demo tenant that apps/vesper-ingestion auto-seeds
           # into a fresh DB (see the "Start telemetry ingestion API" step in
           # the DAST job below) -- otherwise the app's own TOFU bundle-ID
@@ -137,7 +137,7 @@ jobs:
       - name: Bundle JS (dev mode) for standalone testing (protected)
         working-directory: examples/demo-mobile
         env:
-          EXPO_PUBLIC_SOVEREIGN_MOCK: 'false'
+          EXPO_PUBLIC_GHOST_MOCK: 'false'
           TELEMETRY_API_KEY: sk_test_demo123
           TELEMETRY_BUNDLE_ID: com.demo.app
         run: |
@@ -264,7 +264,7 @@ jobs:
       - name: Start telemetry ingestion API (real backend, not mocked)
         # The app's "Simulate E2E Event & Send to Dashboard" / "Flush
         # Buffered Telemetry" DAST actions do a real POST (binary payload,
-        # X-Sovereign-API-Key/X-Bundle-ID headers) to this service instead
+        # X-Vesper-API-Key/X-Bundle-ID headers) to this service instead
         # of asserting success locally. The emulator reaches the runner's
         # localhost via 10.0.2.2, which is already what the app's
         # getTelemetryEndpoint() fallback resolves to on Android -- no app
@@ -304,7 +304,7 @@ jobs:
             sleep 3
             
             echo "⚔️ Triggering DAST Python Script (Frida will install and spawn the apps)..."
-            cd examples/demo-mobile && python scripts/frida_dast_test.py --package mx.edu.sovereign.core --protected-apk ../../apks/protected/app-debug.apk --baseline-package mx.edu.sovereign.core --baseline-apk ../../apks/unprotected/app-unprotected.apk
+            cd examples/demo-mobile && python scripts/frida_dast_test.py --package mx.edu.vesper.core --protected-apk ../../apks/protected/app-debug.apk --baseline-package mx.edu.vesper.core --baseline-apk ../../apks/unprotected/app-unprotected.apk
             
             # Render the report natively on the GitHub Actions Summary page
             if [ -f examples/demo-mobile/security-report.md ]; then cat examples/demo-mobile/security-report.md >> $GITHUB_STEP_SUMMARY; fi

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Sovereign Telemetry CLI")
+		fmt.Println("Vesper Telemetry CLI")
 		fmt.Println("Usage: go run ./cmd/cli [command]")
 		fmt.Println("\nCommands:")
 		fmt.Println("  clean-db    Clears all records from the SQLite database")

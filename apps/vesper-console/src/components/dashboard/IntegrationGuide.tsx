@@ -14,11 +14,11 @@ yarn add @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick
 # Using NPM
 npm install @vesper-core/ghost-ledger react-native-nitro-modules react-native-quick-crypto @react-native-community/netinfo`;
   
-  const step2Code = `import { SovereignClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
+  const step2Code = `import { GhostClientCore, FetchAdapter } from '@vesper-core/ghost-ledger';
 import QuickCrypto from 'react-native-quick-crypto';
 import NetInfo from '@react-native-community/netinfo';
 
-export const ghostClient = SovereignClientCore.getInstance({
+export const ghostClient = GhostClientCore.getInstance({
   cryptoProvider: {
     getRandomBytes: (n) => new Uint8Array(QuickCrypto.randomBytes(n)),
     sha256: async (d) => new Uint8Array(QuickCrypto.createHash('sha256').update(d).digest())
@@ -44,10 +44,10 @@ export const ghostClient = SovereignClientCore.getInstance({
 
   const step2Highlighted = (
     <pre className="text-[11px] font-mono whitespace-pre text-slate-300 m-0 p-0">
-      <span className="text-purple-400">import</span> {'{'} SovereignClientCore, FetchAdapter {'}'} <span className="text-purple-400">from</span> <span className="text-emerald-300">'@vesper-core/ghost-ledger'</span>;{'\n'}
+      <span className="text-purple-400">import</span> {'{'} GhostClientCore, FetchAdapter {'}'} <span className="text-purple-400">from</span> <span className="text-emerald-300">'@vesper-core/ghost-ledger'</span>;{'\n'}
       <span className="text-purple-400">import</span> QuickCrypto <span className="text-purple-400">from</span> <span className="text-emerald-300">'react-native-quick-crypto'</span>;{'\n'}
       <span className="text-purple-400">import</span> NetInfo <span className="text-purple-400">from</span> <span className="text-emerald-300">'@react-native-community/netinfo'</span>;{'\n\n'}
-      <span className="text-purple-400">export const</span> ghostClient = SovereignClientCore.<span className="text-blue-300">getInstance</span>({'{'}{'\n'}
+      <span className="text-purple-400">export const</span> ghostClient = GhostClientCore.<span className="text-blue-300">getInstance</span>({'{'}{'\n'}
       {'  '}<span className="text-slate-400">cryptoProvider</span>: {'{'}{'\n'}
       {'    '}<span className="text-blue-300">getRandomBytes</span>: (n) <span className="text-blue-400">{'=>'}</span> <span className="text-purple-400">new</span> <span className="text-orange-300">Uint8Array</span>(QuickCrypto.<span className="text-blue-300">randomBytes</span>(n)),{'\n'}
       {'    '}<span className="text-blue-300">sha256</span>: <span className="text-purple-400">async</span> (d) <span className="text-blue-400">{'=>'}</span> <span className="text-purple-400">new</span> <span className="text-orange-300">Uint8Array</span>(QuickCrypto.<span className="text-blue-300">createHash</span>(<span className="text-emerald-300">'sha256'</span>).<span className="text-blue-300">update</span>(d).<span className="text-blue-300">digest</span>()){'\n'}

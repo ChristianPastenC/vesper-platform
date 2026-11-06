@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
-import type { NetworkStatusResolver, SovereignClientCore } from '@vesper-core/ghost-ledger';
-import { SovereignMemoryQueue } from '@vesper-core/ghost-ledger';
+import type { NetworkStatusResolver, GhostClientCore } from '@vesper-core/ghost-ledger';
+import { GhostMemoryQueue } from '@vesper-core/ghost-ledger';
 import { useAppStore } from '../../store/useAppStore';
 
 let isCurrentlyOnline = false;
@@ -23,13 +23,13 @@ export const networkResolver: NetworkStatusResolver = async (): Promise<boolean>
 /**
  * Initializes the network status listener.
  * Observes offline → online transitions and executes processSynchronizedQueue
- * on the provided Sovereign client instance.
+ * on the provided Ghost client instance.
  *
- * @param client Instance of SovereignClientCore
+ * @param client Instance of GhostClientCore
  * @param handshakeValidator Identity validation function for reconnections
  */
 export const startNetworkTransitionsListener = (
-  client: SovereignClientCore,
+  client: GhostClientCore,
   handshakeValidator: () => Promise<boolean>,
 ): void => {
   if (unsubscribe) {
@@ -42,7 +42,7 @@ export const startNetworkTransitionsListener = (
     useAppStore.setState({ isOnline: online });
     // Mirror real connectivity into the native ledger: it only queues/hashes
     // requests (and thus only emits telemetry) while genuinely offline.
-    SovereignMemoryQueue.getInstance().toggleNetworkSim(online);
+    GhostMemoryQueue.getInstance().toggleNetworkSim(online);
   });
 
   unsubscribe = NetInfo.addEventListener((state) => {
@@ -53,7 +53,7 @@ export const startNetworkTransitionsListener = (
     if (!isCurrentlyOnline && isOnlineNow) {
       isCurrentlyOnline = true;
       useAppStore.setState({ isOnline: true });
-      SovereignMemoryQueue.getInstance().toggleNetworkSim(true);
+      GhostMemoryQueue.getInstance().toggleNetworkSim(true);
 
       // Trigger inactive queue synchronization (DPoP, Ledger, etc)
       client.processSynchronizedQueue(handshakeValidator).catch((err: unknown) => {
@@ -67,7 +67,7 @@ export const startNetworkTransitionsListener = (
     else if (isCurrentlyOnline && !isOnlineNow) {
       isCurrentlyOnline = false;
       useAppStore.setState({ isOnline: false });
-      SovereignMemoryQueue.getInstance().toggleNetworkSim(false);
+      GhostMemoryQueue.getInstance().toggleNetworkSim(false);
     }
   });
 };

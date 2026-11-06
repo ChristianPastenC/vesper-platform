@@ -48,7 +48,7 @@ describe('ProfileScreen View Settings Redesign', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAppStore as unknown as jest.Mock).mockReturnValue('123 Sovereign Way');
+    (useAppStore as unknown as jest.Mock).mockReturnValue('123 Vesper Way');
     (useNavigation as jest.Mock).mockReturnValue({
       navigate: mockNavigate,
     });

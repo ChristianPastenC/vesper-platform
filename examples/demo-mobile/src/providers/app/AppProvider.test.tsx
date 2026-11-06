@@ -40,8 +40,8 @@ jest.mock('../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
-jest.mock('../sovereign/useSovereignInitializer', () => ({
-  useSovereignInitializer: jest.fn(),
+jest.mock('../ghost/useGhostInitializer', () => ({
+  useGhostInitializer: jest.fn(),
 }));
 
 jest.mock('../../core/network/networkResolver', () => ({
@@ -54,7 +54,7 @@ jest.mock('../../core/network/handshakeValidator', () => ({
 }));
 
 import { useAppStore } from '../../store/useAppStore';
-import { useSovereignInitializer } from '../sovereign/useSovereignInitializer';
+import { useGhostInitializer } from '../ghost/useGhostInitializer';
 import { changeLanguage, t } from '../../core/i18n/i18n';
 
 describe('AppProvider', () => {
@@ -67,7 +67,7 @@ describe('AppProvider', () => {
       const state = { language: 'en', isFrozen: false };
       return selector(state);
     });
-    (useSovereignInitializer as jest.Mock).mockReturnValue({
+    (useGhostInitializer as jest.Mock).mockReturnValue({
       client: null,
       isBootstrapped: false,
       dpopPublicKey: null,
@@ -88,7 +88,7 @@ describe('AppProvider', () => {
       const state = { language: 'en', isFrozen: false };
       return selector(state);
     });
-    (useSovereignInitializer as jest.Mock).mockReturnValue({
+    (useGhostInitializer as jest.Mock).mockReturnValue({
       client: {},
       isBootstrapped: true,
       dpopPublicKey: 'mockedKey',
@@ -108,7 +108,7 @@ describe('AppProvider', () => {
       const state = { language: 'en', isFrozen: true };
       return selector(state);
     });
-    (useSovereignInitializer as jest.Mock).mockReturnValue({
+    (useGhostInitializer as jest.Mock).mockReturnValue({
       client: {},
       isBootstrapped: true,
       dpopPublicKey: 'mockedKey',
@@ -128,7 +128,7 @@ describe('AppProvider', () => {
       const state = { language: null, isFrozen: false };
       return selector(state);
     });
-    (useSovereignInitializer as jest.Mock).mockReturnValue({
+    (useGhostInitializer as jest.Mock).mockReturnValue({
       client: {},
       isBootstrapped: true,
       dpopPublicKey: 'mockedKey',
@@ -148,7 +148,7 @@ describe('AppProvider', () => {
       const state = { language: 'en', isFrozen: true };
       return selector(state);
     });
-    (useSovereignInitializer as jest.Mock).mockReturnValue({
+    (useGhostInitializer as jest.Mock).mockReturnValue({
       client: {},
       isBootstrapped: true,
       dpopPublicKey: 'mockedKey',

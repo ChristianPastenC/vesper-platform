@@ -1,4 +1,4 @@
-import { SovereignHttpError } from '../types.js';
+import { GhostHttpError } from '../types.js';
 import {
   HTTP_GATEWAY_TIMEOUT,
   HTTP_SERVICE_UNAVAILABLE,
@@ -13,7 +13,7 @@ export const extractHttpStatus = (error: unknown): number | null => {
   if (!error || typeof error !== 'object') return null;
   const e = error as Record<string, unknown>;
 
-  if (error instanceof SovereignHttpError) return error.status;
+  if (error instanceof GhostHttpError) return error.status;
 
   if (e['isAxiosError'] === true) {
     const response = e['response'] as Record<string, unknown> | undefined;

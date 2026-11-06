@@ -1,8 +1,8 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useSovereignLogin } from '../../features/auth/hooks/useSovereignLogin';
+import { useVesperLogin } from '../../features/auth/hooks/useVesperLogin';
 import { useAppStore } from '../../store/useAppStore';
 import * as tokenStore from '../../core/auth/tokenStore';
-import { FetchAdapter, SovereignClientCore } from '@vesper-core/ghost-ledger';
+import { FetchAdapter, GhostClientCore } from '@vesper-core/ghost-ledger';
 
 jest.mock('../../core/auth/tokenStore', () => ({
   saveTokens: jest.fn(),
@@ -32,7 +32,7 @@ const mockRequest = jest.fn();
 const mockAdapter = new FetchAdapter();
 mockAdapter.request = mockRequest;
 
-const mockClient = SovereignClientCore.getInstance({
+const mockClient = GhostClientCore.getInstance({
   mock: true,
   cryptoProvider: {
     sha256: jest.fn(),
@@ -48,8 +48,8 @@ const mockClient = SovereignClientCore.getInstance({
   errorTrapping: { freezeOn503_504: false, freezeOn401: false },
 });
 
-jest.mock('../../providers/sovereign/SovereignClientContext', () => ({
-  useSovereignClient: () => mockClient,
+jest.mock('../../providers/ghost/GhostClientContext', () => ({
+  useGhostClient: () => mockClient,
 }));
 
 jest.mock('../../core/config', () => ({
@@ -63,7 +63,7 @@ describe('Integration: Auth Flow', () => {
   });
 
   it('handles valid login and invalid login correctly', async () => {
-    const { result } = renderHook(() => useSovereignLogin());
+    const { result } = renderHook(() => useVesperLogin());
 
     mockRequest.mockResolvedValueOnce({
       status: 200,

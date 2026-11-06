@@ -1,7 +1,7 @@
 import type {
-  ISovereignNetworkAdapter,
-  SovereignAdapterRequest,
-  SovereignAdapterResponse,
+  IGhostNetworkAdapter,
+  GhostAdapterRequest,
+  GhostAdapterResponse,
 } from '../../contracts/index.js';
 import type { AxiosAdapterOptions, AxiosCompatRequestConfig, AxiosInstance } from './types.js';
 import { axiosWithTrapping } from './functional.js';
@@ -10,7 +10,7 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
 /**
  * AxiosAdapter
  *
- * Concrete implementation of ISovereignNetworkAdapter backed by an Axios
+ * Concrete implementation of IGhostNetworkAdapter backed by an Axios
  * (or Axios-compatible) instance.
  *
  * Binary-isolation contract:
@@ -21,7 +21,7 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
  *     immediately before dispatch. The legacy `headers` Record is supported for
  *     backward compatibility but is not zeroizable.
  */
-export class AxiosAdapter implements ISovereignNetworkAdapter {
+export class AxiosAdapter implements IGhostNetworkAdapter {
   private readonly axiosInstance: AxiosInstance;
 
   constructor(options: AxiosAdapterOptions) {
@@ -29,8 +29,8 @@ export class AxiosAdapter implements ISovereignNetworkAdapter {
   }
 
   public async request<T = unknown>(
-    config: SovereignAdapterRequest,
-  ): Promise<SovereignAdapterResponse<T>> {
+    config: GhostAdapterRequest,
+  ): Promise<GhostAdapterResponse<T>> {
     // Decode headers only at dispatch time.
     const resolvedHeaders: Record<string, string | undefined> =
       config.encodedHeaders !== undefined && config.encodedHeaders.length > 0

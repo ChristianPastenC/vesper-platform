@@ -1,65 +1,65 @@
 cmake_minimum_required(VERSION 3.9)
-project(SovereignSecureClient)
+project(GhostSecureClient)
 
 # Set the standard compiler version to C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---------------------------------------------------------------------------
-# Target 1: SovereignSecureCore (Pure C++ Standalone Static Library)
+# Target 1: GhostSecureCore (Pure C++ Standalone Static Library)
 # ---------------------------------------------------------------------------
-add_library(SovereignSecureCore STATIC
+add_library(GhostSecureCore STATIC
     cpp/CryptoUtils.cpp
     cpp/CryptoUtils.h
-    cpp/SovereignTypes.h
-    cpp/SovereignLedger.cpp
-    cpp/SovereignLedger.h
-    cpp/SovereignSecureCore.cpp
-    cpp/SovereignSecureCore.h
-    cpp/SovereignTelemetryEngine.cpp
-    cpp/SovereignTelemetryEngine.h
+    cpp/GhostTypes.h
+    cpp/GhostLedger.cpp
+    cpp/GhostLedger.h
+    cpp/GhostSecureCore.cpp
+    cpp/GhostSecureCore.h
+    cpp/GhostTelemetryEngine.cpp
+    cpp/GhostTelemetryEngine.h
     cpp/MmapTelemetryStorage.cpp
     cpp/MmapTelemetryStorage.h
 )
 
 # Configure include search paths for the static library
-target_include_directories(SovereignSecureCore PUBLIC
+target_include_directories(GhostSecureCore PUBLIC
     cpp
 )
 
 # Standard C++ optimization flags
-target_compile_options(SovereignSecureCore PRIVATE
+target_compile_options(GhostSecureCore PRIVATE
     -Wall
     -Werror
     -O3
 )
 
 if (WIN32)
-    target_link_libraries(SovereignSecureCore PUBLIC bcrypt)
+    target_link_libraries(GhostSecureCore PUBLIC bcrypt)
 endif()
 
 # ---------------------------------------------------------------------------
-# Target 2: SovereignSecureClient (Conditional JSI Wrapper Shared Library)
+# Target 2: GhostSecureClient (Conditional JSI Wrapper Shared Library)
 # ---------------------------------------------------------------------------
 # Only compile the JSI wrapper if building for Android (NDK) or iOS/macOS (Apple targets)
 if (ANDROID OR APPLE)
-    add_library(SovereignSecureClient SHARED
-        cpp/SovereignSecureClient.cpp
-        cpp/SovereignSecureClient.hpp
+    add_library(GhostSecureClient SHARED
+        cpp/GhostSecureClient.cpp
+        cpp/GhostSecureClient.hpp
     )
 
     # Configure include search paths for JSI wrapper
-    target_include_directories(SovereignSecureClient PUBLIC
+    target_include_directories(GhostSecureClient PUBLIC
         cpp
     )
 
     # Link JSI wrapper against the pure C++ static library core
-    target_link_libraries(SovereignSecureClient PRIVATE
-        SovereignSecureCore
+    target_link_libraries(GhostSecureClient PRIVATE
+        GhostSecureCore
     )
 
     # Mobile compiler settings requiring exception handling and RTTI
-    target_compile_options(SovereignSecureClient PRIVATE
+    target_compile_options(GhostSecureClient PRIVATE
         -Wall
         -Werror
         -O3
@@ -70,13 +70,9 @@ if (ANDROID OR APPLE)
     # Nitrogen's Android autolinking pulls in fbjni, an Android-only (NDK)
     # dependency -- CMake can't resolve it on a plain Apple/macOS host, so
     # this must stay gated on ANDROID specifically rather than the broader
-    # `if (ANDROID OR APPLE)` this block is already inside. Previously this
-    # ran unconditionally whenever the file existed, which is always true
-    # once codegen has run once, breaking `cmake -S .` on macOS entirely
-    # (including for `yarn test:cpp`, which never runs on Apple hosts in CI
-    # and so never caught this).
-    if (ANDROID AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/nitrogen/generated/android/SovereignSecureClient+autolinking.cmake")
-        include("${CMAKE_CURRENT_SOURCE_DIR}/nitrogen/generated/android/SovereignSecureClient+autolinking.cmake")
+    # `if (ANDROID OR APPLE)` this block is already inside.
+    if (ANDROID AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/nitrogen/generated/android/GhostSecureClient+autolinking.cmake")
+        include("${CMAKE_CURRENT_SOURCE_DIR}/nitrogen/generated/android/GhostSecureClient+autolinking.cmake")
     endif()
 endif()
 
@@ -98,30 +94,28 @@ if (BUILD_TESTING)
 
     enable_testing()
 
-    add_executable(SovereignSecureCoreTests
-        cpp/tests/SovereignSecureCoreTests.cpp
-        cpp/tests/SovereignLedgerTests.cpp
+    add_executable(GhostSecureCoreTests
+        cpp/tests/GhostSecureCoreTests.cpp
+        cpp/tests/GhostLedgerTests.cpp
         cpp/tests/CryptoUtilsTests.cpp
         cpp/tests/VolatileQueueTests.cpp
         cpp/tests/MemoryForensicsTests.cpp
     )
 
-    target_include_directories(SovereignSecureCoreTests PRIVATE cpp)
+    target_include_directories(GhostSecureCoreTests PRIVATE cpp)
 
     # MemoryForensicsTests.cpp specifically demonstrates that secure_zero()
     # survives dead-store elimination where a naive std::fill doesn't -- that
     # difference only exists under optimization (matching the -O3 the real
-    # library ships with above). Without this, the test would be comparing
-    # two calls that both survive because nothing was eliminated, which
-    # proves nothing.
-    target_compile_options(SovereignSecureCoreTests PRIVATE -O3)
+    # library ships with above).
+    target_compile_options(GhostSecureCoreTests PRIVATE -O3)
 
-    target_link_libraries(SovereignSecureCoreTests
+    target_link_libraries(GhostSecureCoreTests
         PRIVATE
-        SovereignSecureCore
+        GhostSecureCore
         GTest::gtest_main
     )
 
     include(GoogleTest)
-    gtest_discover_tests(SovereignSecureCoreTests)
+    gtest_discover_tests(GhostSecureCoreTests)
 endif()

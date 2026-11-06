@@ -53,9 +53,9 @@ export const LogInspector: React.FC<LogInspectorProps> = ({ selectedLog, onClose
                 {t("console.exception")}
               </h3>
               <div className="bg-red-950/30 border border-red-500/20 p-4 rounded-xl font-mono text-xs text-red-300 overflow-x-auto whitespace-pre shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
-                <span className="text-red-400 font-bold">Exception in sovereign::secure::VolatileQueue::verifyIntegrity()</span>
+                <span className="text-red-400 font-bold">Exception in vesper::ghost::VolatileQueue::verifyIntegrity()</span>
                 <br /><span className="text-slate-500">  at MemoryArena.cpp:142</span>
-                <br /><span className="text-slate-500">  at SovereignLedger.cpp:89</span>
+                <br /><span className="text-slate-500">  at GhostLedger.cpp:89</span>
                 <br /><br /><span className="text-red-500 bg-red-500/10 px-1 py-0.5 rounded border border-red-500/20">[SIGABRT] Execution halted. Integrity rules violated.</span>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useDevMenu } from './useDevMenu';
-import { SovereignMemoryQueue } from '@vesper-core/ghost-ledger';
-import { secureClient } from '../../../providers/sovereign/useSovereignInitializer';
+import { GhostMemoryQueue } from '@vesper-core/ghost-ledger';
+import { secureClient } from '../../../providers/ghost/useGhostInitializer';
 import { getTelemetryApiKey } from '../../../core/config';
 import { useAppStore } from '../../../store/useAppStore';
 
@@ -9,7 +9,7 @@ jest.mock('../../../store/useAppStore', () => ({
   useAppStore: jest.fn(),
 }));
 
-jest.mock('../../../providers/sovereign/useSovereignInitializer', () => ({
+jest.mock('../../../providers/ghost/useGhostInitializer', () => ({
   secureClient: {
     purgeAll: jest.fn(),
     processSynchronizedQueue: jest.fn().mockResolvedValue(undefined),
@@ -42,7 +42,7 @@ const mockQueue = {
 };
 
 jest.mock('@vesper-core/ghost-ledger', () => ({
-  SovereignMemoryQueue: { getInstance: jest.fn() },
+  GhostMemoryQueue: { getInstance: jest.fn() },
   serializeAdapterRequest: jest.fn(() => new Uint8Array([1, 2, 3])),
   encodeJsonBody: jest.fn(() => new Uint8Array([4, 5, 6])),
 }));
@@ -52,7 +52,7 @@ describe('useDevMenu', () => {
     jest.clearAllMocks();
     mockQueue.size = 0;
     mockQueue.isIntegrityCompromised = false;
-    (SovereignMemoryQueue.getInstance as jest.Mock).mockReturnValue(mockQueue);
+    (GhostMemoryQueue.getInstance as jest.Mock).mockReturnValue(mockQueue);
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) =>
       selector({ isFrozen: false }),
     );
@@ -169,7 +169,7 @@ describe('useDevMenu', () => {
 
     act(() => {
       result.current.setCustomApiKey('  sk_custom_live_key  ');
-      result.current.setCustomBundleId('  mx.edu.sovereign.custom  ');
+      result.current.setCustomBundleId('  mx.edu.vesper.custom  ');
     });
 
     let flushResult;
@@ -182,8 +182,8 @@ describe('useDevMenu', () => {
       expect.objectContaining({
         method: 'POST',
         headers: {
-          'X-Sovereign-API-Key': 'sk_custom_live_key',
-          'X-Bundle-ID': 'mx.edu.sovereign.custom',
+          'X-Vesper-API-Key': 'sk_custom_live_key',
+          'X-Bundle-ID': 'mx.edu.vesper.custom',
           'Content-Type': 'application/octet-stream',
         },
       }),

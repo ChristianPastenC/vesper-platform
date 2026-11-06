@@ -1,16 +1,16 @@
-import { SovereignClientCore } from '../../core/client.js';
-import { ISovereignCryptoProvider, ISovereignNetworkAdapter } from '../../contracts/index.js';
-import { SovereignMemoryQueue } from '../../ledger/queue.js';
+import { GhostClientCore } from '../../core/client.js';
+import { IGhostCryptoProvider, IGhostNetworkAdapter } from '../../contracts/index.js';
+import { GhostMemoryQueue } from '../../ledger/queue.js';
 import { IntegrityBreachError } from '../../types.js';
 
-describe('SovereignClientCore', () => {
-  let mockCryptoProvider: jest.Mocked<ISovereignCryptoProvider>;
-  let mockNetworkAdapter: jest.Mocked<ISovereignNetworkAdapter>;
+describe('GhostClientCore', () => {
+  let mockCryptoProvider: jest.Mocked<IGhostCryptoProvider>;
+  let mockNetworkAdapter: jest.Mocked<IGhostNetworkAdapter>;
   let mockNetworkResolver: jest.Mock<Promise<boolean>, []>;
 
   beforeEach(() => {
-    (SovereignClientCore as unknown as { instance: unknown }).instance = undefined;
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = undefined;
+    (GhostClientCore as unknown as { instance: unknown }).instance = undefined;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = undefined;
 
     mockCryptoProvider = {
       hash: jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
@@ -39,12 +39,12 @@ describe('SovereignClientCore', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    SovereignMemoryQueue.getInstance().stopWatchdog();
-    SovereignMemoryQueue.getInstance().clearAll();
+    GhostMemoryQueue.getInstance().stopWatchdog();
+    GhostMemoryQueue.getInstance().clearAll();
   });
 
   it('should initialize successfully', () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -57,7 +57,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should execute request when online', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -78,7 +78,7 @@ describe('SovereignClientCore', () => {
   it('should queue request when offline', async () => {
     mockNetworkResolver.mockResolvedValue(false);
 
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -101,7 +101,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should trap errors and freeze', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -128,7 +128,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should process queue and reject if handshake fails', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -139,7 +139,7 @@ describe('SovereignClientCore', () => {
   });
 
   it.skip('should process queue and resolve pending requests', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -175,7 +175,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should block execution if integrity is compromised', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -183,26 +183,26 @@ describe('SovereignClientCore', () => {
     });
 
     // force memory compromised
-    jest.spyOn(SovereignMemoryQueue.getInstance(), 'isIntegrityCompromised', 'get').mockReturnValue(true);
+    jest.spyOn(GhostMemoryQueue.getInstance(), 'isIntegrityCompromised', 'get').mockReturnValue(true);
 
     await expect(client.executeRequest('req-compromised', { method: 'GET', url: 'https://api.test.com' })).rejects.toThrow(IntegrityBreachError);
     await expect(client.processSynchronizedQueue(async () => true)).rejects.toThrow(IntegrityBreachError);
   });
 
   it('should handle process queue verification failure', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
       mock: true
     });
 
-    jest.spyOn(SovereignMemoryQueue.prototype, 'verifyLedgerIntegrity').mockResolvedValueOnce(false); // Fail integrity
+    jest.spyOn(GhostMemoryQueue.prototype, 'verifyLedgerIntegrity').mockResolvedValueOnce(false); // Fail integrity
     await expect(client.processSynchronizedQueue(async () => true)).rejects.toThrow(IntegrityBreachError);
   });
 
   it.skip('should handle process queue with DPoP auto-binding', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -228,7 +228,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should throw if executeRequest called without network adapter', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: undefined as never,
@@ -239,7 +239,7 @@ describe('SovereignClientCore', () => {
   });
 
   it('should bootstrap DPoP', async () => {
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,
@@ -256,7 +256,7 @@ describe('SovereignClientCore', () => {
   it('should reject pending requests if they expire in RAM', async () => {
     mockNetworkResolver.mockResolvedValue(false);
 
-    const client = SovereignClientCore.getInstance({
+    const client = GhostClientCore.getInstance({
       cryptoProvider: mockCryptoProvider,
       networkResolver: mockNetworkResolver,
       networkAdapter: mockNetworkAdapter,

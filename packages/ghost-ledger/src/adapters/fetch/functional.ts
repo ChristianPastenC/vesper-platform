@@ -1,12 +1,12 @@
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 import type { FetchWithTrappingOptions } from './types.js';
 
 /**
  * fetchWithTrapping
  *
  * A thin wrapper around the Fetch API that automatically throws a typed
- * SovereignHttpError for any non-2xx response, making fetch-based executors
- * fully compatible with the SovereignClientCore Error Trapping Matrix.
+ * GhostHttpError for any non-2xx response, making fetch-based executors
+ * fully compatible with the GhostClientCore Error Trapping Matrix.
  */
 export const fetchWithTrapping = async (
   url: RequestInfo | URL,
@@ -18,7 +18,7 @@ export const fetchWithTrapping = async (
 
   if (typeof fetchFn !== 'function') {
     throw new TypeError(
-      '[SovereignCore] fetchWithTrapping: no fetch implementation available. ' +
+      '[GhostLedger] fetchWithTrapping: no fetch implementation available. ' +
         'Pass a fetchImpl option (e.g. node-fetch, cross-fetch) for environments ' +
         'that do not provide a global fetch.',
     );
@@ -27,7 +27,7 @@ export const fetchWithTrapping = async (
   const response = await fetchFn(url as RequestInfo, requestInit);
 
   if (!response.ok) {
-    throw new SovereignHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
+    throw new GhostHttpError(response.status, `HTTP ${response.status} ${response.statusText}`);
   }
 
   return response;

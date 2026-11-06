@@ -288,7 +288,7 @@ paths:
       parameters:
       - description: API Key
         in: header
-        name: X-Sovereign-API-Key
+        name: X-Vesper-API-Key
         required: true
         type: string
       - description: Bundle ID of the mobile app

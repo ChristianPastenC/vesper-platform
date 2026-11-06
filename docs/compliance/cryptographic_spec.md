@@ -14,7 +14,7 @@ The Vesper Platform standardizes on the following cryptographic algorithms to en
 | :--- | :--- | :--- |
 | **Session Authentication** | ECDSA (Curve P-256) / ES256 | JWT signing and validation |
 | **Proof-of-Possession** | ECDSA (Curve P-256) | DPoP signature verification (Anti-Theft) |
-| **Payload Integrity** | HMAC-SHA256 | MitM protection via `X-Sovereign-Hash` |
+| **Payload Integrity** | HMAC-SHA256 | MitM protection via `X-Vesper-Hash` |
 | **Offline Ledger Chaining** | SHA-256 | Immutable offline transaction sequencing |
 
 ---
@@ -30,7 +30,7 @@ To eliminate the risk of bearer token theft and replay attacks, the platform emp
 ### 3.2. Payload Integrity Validation (HMAC)
 Data sent over hostile networks is strictly protected against tampering.
 * **Engineered Component**: `internal/handler/middleware/hash_validator.go`
-* **Mechanism**: The `@vesper-core/ghost-ledger` computes an HMAC-SHA256 hash of the JSON payload body immediately before transport. This hash is appended to the request as the `X-Sovereign-Hash` header. The Go backend recalculates the hash upon receipt.
+* **Mechanism**: The `@vesper-core/ghost-ledger` computes an HMAC-SHA256 hash of the JSON payload body immediately before transport. This hash is appended to the request as the `X-Vesper-Hash` header. The Go backend recalculates the hash upon receipt.
 * **Security Outcome**: Prevents Man-in-the-Middle (MitM) attackers from modifying transaction amounts or routing details in transit. Any byte mismatch immediately triggers a `400 Bad Request` and terminates the connection.
 
 ### 3.3. Offline Transaction Ledger (Cryptographic Chaining)

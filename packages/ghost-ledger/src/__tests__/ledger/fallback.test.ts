@@ -1,8 +1,8 @@
-import { SovereignSecureClientFallback } from '../../ledger/fallback.js';
-import { SovereignMemoryQueue } from '../../ledger/queue.js';
+import { GhostSecureClientFallback } from '../../ledger/fallback.js';
+import { GhostMemoryQueue } from '../../ledger/queue.js';
 
-describe('SovereignSecureClientFallback', () => {
-  let fallback: SovereignSecureClientFallback;
+describe('GhostSecureClientFallback', () => {
+  let fallback: GhostSecureClientFallback;
   let mockQueue: Record<string, jest.Mock>;
 
   beforeEach(() => {
@@ -17,13 +17,13 @@ describe('SovereignSecureClientFallback', () => {
     };
 
     // Override the singleton instance of queue in tests
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = mockQueue;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = mockQueue;
 
-    fallback = new SovereignSecureClientFallback();
+    fallback = new GhostSecureClientFallback();
   });
 
   afterEach(() => {
-    (SovereignMemoryQueue as unknown as { instance: unknown }).instance = undefined;
+    (GhostMemoryQueue as unknown as { instance: unknown }).instance = undefined;
   });
 
   it('should get queue status', () => {

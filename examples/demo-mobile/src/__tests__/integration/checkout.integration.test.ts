@@ -8,8 +8,8 @@ import { decodeHeaders } from '@vesper-core/ghost-ledger';
 import crypto from 'crypto';
 
 const mockExecuteRequest = jest.fn();
-jest.mock('../../providers/sovereign/SovereignClientContext', () => ({
-  useSovereignClient: () => ({
+jest.mock('../../providers/ghost/GhostClientContext', () => ({
+  useGhostClient: () => ({
     executeRequest: mockExecuteRequest,
   }),
 }));

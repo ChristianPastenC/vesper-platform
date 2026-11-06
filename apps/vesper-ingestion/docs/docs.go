@@ -350,7 +350,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "API Key",
-                        "name": "X-Sovereign-API-Key",
+                        "name": "X-Vesper-API-Key",
                         "in": "header",
                         "required": true
                     },

@@ -58,7 +58,7 @@ graph TD
 * **Likelihood:** Possible (3)
 * **Impact:** Critical (5)
 * **Inherent Risk:** 🔴 **Critical**
-* **Mitigation:** **Mandatory Cryptographic Re-Handshake.** The outbound transport layer remains cryptographically locked post-recovery until a time-variant challenge (DPoP) validates endpoint authenticity. Payload integrity is guaranteed via `X-Sovereign-Hash` (HMAC-SHA256).
+* **Mitigation:** **Mandatory Cryptographic Re-Handshake.** The outbound transport layer remains cryptographically locked post-recovery until a time-variant challenge (DPoP) validates endpoint authenticity. Payload integrity is guaranteed via `X-Vesper-Hash` (HMAC-SHA256).
 * **Residual Risk:** 🟢 **Low**
 
 ### 3.2. Repudiation (R)

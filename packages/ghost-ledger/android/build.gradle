@@ -21,7 +21,7 @@ def isNewArchitectureEnabled() {
 
 apply plugin: "com.android.library"
 apply plugin: "org.jetbrains.kotlin.android"
-apply from: "../nitrogen/generated/android/SovereignSecureClient+autolinking.gradle"
+apply from: "../nitrogen/generated/android/GhostSecureClient+autolinking.gradle"
 apply from: "./fix-prefab.gradle"
 
 if (isNewArchitectureEnabled()) {
@@ -29,15 +29,15 @@ if (isNewArchitectureEnabled()) {
 }
 
 def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["SovereignSecureClient_" + name]
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["GhostSecureClient_" + name]
 }
 
 def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["SovereignSecureClient_" + name]).toInteger()
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["GhostSecureClient_" + name]).toInteger()
 }
 
 android {
-  namespace "com.sovereign.secureclient"
+  namespace "com.vesper.ghostledger"
 
   ndkVersion getExtOrDefault("ndkVersion")
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")

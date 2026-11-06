@@ -19,7 +19,7 @@ The production build of this portal is continuously deployed on Netlify. You can
 `vesper-console` is the primary web interface that developers and administrators interact with to use the Vesper platform. Instead of managing the cryptography and SDKs manually, a tenant (e.g., an E-commerce company) uses this console to:
 
 1. **Register a Tenant Account:** Create an organization profile within the platform.
-2. **Generate API Keys:** Mint cryptographic `X-Sovereign-API-Key` strings. These keys are strictly bound to a mobile application's `bundle_id` (e.g., `com.democorp.app`) and are required to initialize the C++ `ghost-ledger` SDK on iOS and Android.
+2. **Generate API Keys:** Mint cryptographic `X-Vesper-API-Key` strings. These keys are strictly bound to a mobile application's `bundle_id` (e.g., `com.democorp.app`) and are required to initialize the C++ `ghost-ledger` SDK on iOS and Android.
 3. **Monitor SDK Telemetry:** View live charts detailing cryptographic performance (latency) and security events (integrity breaches, memory tampering) reported by mobile clients globally.
 
 ---

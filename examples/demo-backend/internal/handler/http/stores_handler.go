@@ -56,7 +56,7 @@ func (h *StoresHandler) GetStores(w http.ResponseWriter, r *http.Request) {
 					Hours    string `json:"hours"`
 					Address  string `json:"address"`
 					Image    string `json:"image"`
-				}{ID: "1", Name: "Sovereign Downtown", Distance: "1.2 km", Hours: "09:00 - 21:00", Address: "123 Main St, Downtown", Image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400&auto=format&fit=crop"},
+				}{ID: "1", Name: "Vesper Downtown", Distance: "1.2 km", Hours: "09:00 - 21:00", Address: "123 Main St, Downtown", Image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400&auto=format&fit=crop"},
 			},
 			{
 				Type: "Feature",
@@ -71,7 +71,7 @@ func (h *StoresHandler) GetStores(w http.ResponseWriter, r *http.Request) {
 					Hours    string `json:"hours"`
 					Address  string `json:"address"`
 					Image    string `json:"image"`
-				}{ID: "2", Name: "Sovereign Uptown", Distance: "3.4 km", Hours: "10:00 - 20:00", Address: "456 High St, Uptown", Image: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?q=80&w=400&auto=format&fit=crop"},
+				}{ID: "2", Name: "Vesper Uptown", Distance: "3.4 km", Hours: "10:00 - 20:00", Address: "456 High St, Uptown", Image: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?q=80&w=400&auto=format&fit=crop"},
 			},
 			{
 				Type: "Feature",
@@ -86,7 +86,7 @@ func (h *StoresHandler) GetStores(w http.ResponseWriter, r *http.Request) {
 					Hours    string `json:"hours"`
 					Address  string `json:"address"`
 					Image    string `json:"image"`
-				}{ID: "3", Name: "Sovereign Mission", Distance: "5.1 km", Hours: "11:00 - 19:00", Address: "789 Mission St", Image: "https://images.unsplash.com/photo-1580913428706-c311e67898b3?q=80&w=400&auto=format&fit=crop"},
+				}{ID: "3", Name: "Vesper Mission", Distance: "5.1 km", Hours: "11:00 - 19:00", Address: "789 Mission St", Image: "https://images.unsplash.com/photo-1580913428706-c311e67898b3?q=80&w=400&auto=format&fit=crop"},
 			},
 			{
 				Type: "Feature",
@@ -101,7 +101,7 @@ func (h *StoresHandler) GetStores(w http.ResponseWriter, r *http.Request) {
 					Hours    string `json:"hours"`
 					Address  string `json:"address"`
 					Image    string `json:"image"`
-				}{ID: "4", Name: "Sovereign West", Distance: "8.0 km", Hours: "08:00 - 22:00", Address: "321 West Ave", Image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=400&auto=format&fit=crop"},
+				}{ID: "4", Name: "Vesper West", Distance: "8.0 km", Hours: "08:00 - 22:00", Address: "321 West Ave", Image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=400&auto=format&fit=crop"},
 			},
 		},
 	}

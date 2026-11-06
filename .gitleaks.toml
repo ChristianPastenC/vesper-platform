@@ -16,7 +16,7 @@ paths = [
 ]
 regexes = [
   '''sk_test_demo123''',
-  '''demo@sovereign\.local''',
+  '''demo@vesper\.local''',
   '''demo123''',
   '''test-challenge-key''',
   '''vesper-payload-secret-hmac-key-min-32-chars-2026''',

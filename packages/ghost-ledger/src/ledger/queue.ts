@@ -1,38 +1,38 @@
 interface NodeRequire {
   (moduleName: 'react-native-nitro-modules'): {
-    NitroModules: { createHybridObject: (name: string) => SovereignSecureClient };
+    NitroModules: { createHybridObject: (name: string) => GhostSecureClient };
   };
-  (moduleName: './SovereignSecureClient.node'): SovereignSecureClient;
+  (moduleName: './GhostSecureClient.node'): GhostSecureClient;
   (moduleName: string): unknown;
 }
 declare const require: NodeRequire;
 
 import { IntegrityBreachError, type LedgerBlock } from '../types.js';
-import type { ISovereignCryptoProvider } from '../contracts/index.js';
-import type { SovereignSecureClient } from '../specs/SovereignSecureClient.nitro.js';
-import { SovereignSecureClientFallback } from './fallback.js';
+import type { IGhostCryptoProvider } from '../contracts/index.js';
+import type { GhostSecureClient } from '../specs/GhostSecureClient.nitro.js';
+import { GhostSecureClientFallback } from './fallback.js';
 
 // Load native JSI object in React Native Hermes, node addon in desktop, or fallback to pure JS
-let nativeClient: SovereignSecureClient | null = null;
+let nativeClient: GhostSecureClient | null = null;
 let forcedMock = false;
 
 export const configureQueueEngine = (options: { mock?: boolean | undefined }): void => {
   if (options.mock) {
     forcedMock = true;
-    nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+    nativeClient = new GhostSecureClientFallback() as unknown as GhostSecureClient;
   }
 };
 
-export const getNativeClient = (): SovereignSecureClient => {
+export const getNativeClient = (): GhostSecureClient => {
   if (nativeClient) return nativeClient;
 
   const isMockEnv =
     forcedMock ||
     (typeof globalThis !== 'undefined' &&
-      (globalThis as Record<string, unknown>).__SOVEREIGN_MOCK__ === true);
+      (globalThis as Record<string, unknown>).__GHOST_MOCK__ === true);
 
   if (isMockEnv) {
-    nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+    nativeClient = new GhostSecureClientFallback() as unknown as GhostSecureClient;
     return nativeClient;
   }
 
@@ -43,31 +43,31 @@ export const getNativeClient = (): SovereignSecureClient => {
       // Use dynamic string name to prevent Metro/Webpack from statically failing on this optional peer dependency
       const nitroModuleName = 'react-native-nitro-modules';
       const { NitroModules } = require(nitroModuleName);
-      nativeClient = NitroModules.createHybridObject('SovereignSecureClient');
+      nativeClient = NitroModules.createHybridObject('GhostSecureClient');
     } catch {
-      nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+      nativeClient = new GhostSecureClientFallback() as unknown as GhostSecureClient;
     }
   } else {
     try {
-      nativeClient = require('./SovereignSecureClient.node');
+      nativeClient = require('./GhostSecureClient.node');
     } catch {
-      nativeClient = new SovereignSecureClientFallback() as unknown as SovereignSecureClient;
+      nativeClient = new GhostSecureClientFallback() as unknown as GhostSecureClient;
     }
   }
   return nativeClient!;
 }
 
-export class SovereignMemoryQueue {
-  private static instance: SovereignMemoryQueue;
+export class GhostMemoryQueue {
+  private static instance: GhostMemoryQueue;
   private readonly expiryTimers = new Map<string, unknown>();
   private watchdogTimer?: unknown;
   private isWatchdogRunning = false;
 
   private constructor() { }
 
-  public static getInstance(): SovereignMemoryQueue {
-    if (!SovereignMemoryQueue.instance) SovereignMemoryQueue.instance = new SovereignMemoryQueue();
-    return SovereignMemoryQueue.instance;
+  public static getInstance(): GhostMemoryQueue {
+    if (!GhostMemoryQueue.instance) GhostMemoryQueue.instance = new GhostMemoryQueue();
+    return GhostMemoryQueue.instance;
   }
 
   public get size(): number {
@@ -80,15 +80,15 @@ export class SovereignMemoryQueue {
   public set isIntegrityCompromised(value: boolean) { }
 
   public async enqueue(
-    cryptoProvider: ISovereignCryptoProvider,
+    cryptoProvider: IGhostCryptoProvider,
     id: string,
     binaryPayload: Uint8Array,
     ttl: number,
     onExpire: (id: string) => void,
   ): Promise<void> {
     const status = getNativeClient().getQueueStatus();
-    if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
-    if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
+    if (status.isLocked) throw new IntegrityBreachError('[GhostLedger] Ledger locked.');
+    if (status.isIntegrityCompromised) throw new Error('[GhostLedger] Ledger compromised.');
 
     const existingTimer = this.expiryTimers.get(id);
     if (existingTimer) {
@@ -130,10 +130,10 @@ export class SovereignMemoryQueue {
       : undefined;
   }
 
-  public async dequeue(cryptoProvider: ISovereignCryptoProvider, id: string): Promise<void> {
+  public async dequeue(cryptoProvider: IGhostCryptoProvider, id: string): Promise<void> {
     const status = getNativeClient().getQueueStatus();
-    if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
-    if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
+    if (status.isLocked) throw new IntegrityBreachError('[GhostLedger] Ledger locked.');
+    if (status.isIntegrityCompromised) throw new Error('[GhostLedger] Ledger compromised.');
 
     const timer = this.expiryTimers.get(id);
     if (timer) {
@@ -144,12 +144,12 @@ export class SovereignMemoryQueue {
   }
 
   public async activeZeroization(
-    cryptoProvider: ISovereignCryptoProvider,
+    cryptoProvider: IGhostCryptoProvider,
     id: string,
   ): Promise<void> {
     const status = getNativeClient().getQueueStatus();
-    if (status.isLocked) throw new IntegrityBreachError('[SovereignCore] Ledger locked.');
-    if (status.isIntegrityCompromised) throw new Error('[SovereignCore] Ledger compromised.');
+    if (status.isLocked) throw new IntegrityBreachError('[GhostLedger] Ledger locked.');
+    if (status.isIntegrityCompromised) throw new Error('[GhostLedger] Ledger compromised.');
 
     const timer = this.expiryTimers.get(id);
     if (timer) {
@@ -167,12 +167,12 @@ export class SovereignMemoryQueue {
     getNativeClient().clearQueue();
   }
 
-  public async verifyLedgerIntegrity(_cryptoProvider: ISovereignCryptoProvider): Promise<boolean> {
+  public async verifyLedgerIntegrity(_cryptoProvider: IGhostCryptoProvider): Promise<boolean> {
     return getNativeClient().verifyIntegrity();
   }
 
   public startWatchdog(
-    _cryptoProvider: ISovereignCryptoProvider,
+    _cryptoProvider: IGhostCryptoProvider,
     onTamper: () => void,
     intervalMs: number = 1000,
   ): void {

@@ -22,7 +22,7 @@ export const ApiKeyManager: React.FC = () => {
   const [keyToRevoke, setKeyToRevoke] = useState<string | null>(null);
 
   useEffect(() => {
-    const t = sessionStorage.getItem('sovereign_session_token');
+    const t = sessionStorage.getItem('vesper_session_token');
     if (!t) {
       setToken('demo_token');
     } else {
@@ -38,7 +38,7 @@ export const ApiKeyManager: React.FC = () => {
         headers: { 'Authorization': token }
       });
       if (res.status === 401) {
-        sessionStorage.removeItem('sovereign_session_token');
+        sessionStorage.removeItem('vesper_session_token');
         window.location.href = '/login';
         return;
       }
@@ -122,9 +122,9 @@ export const ApiKeyManager: React.FC = () => {
           <RiKey2Line size={20} className="text-emerald-400" /> {t('dashboard.api_keys.title')}
         </h2>
         <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-          {t('dashboard.api_keys.subtitle').split('SovereignClientCore')[0]}
-          <code className="bg-white/5 text-emerald-300 px-1.5 py-0.5 rounded text-xs">SovereignClientCore</code>
-          {t('dashboard.api_keys.subtitle').split('SovereignClientCore')[1]}
+          {t('dashboard.api_keys.subtitle').split('GhostClientCore')[0]}
+          <code className="bg-white/5 text-emerald-300 px-1.5 py-0.5 rounded text-xs">GhostClientCore</code>
+          {t('dashboard.api_keys.subtitle').split('GhostClientCore')[1]}
         </p>
 
         <div className="space-y-3 mb-6">

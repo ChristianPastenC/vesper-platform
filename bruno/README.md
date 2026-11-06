@@ -1,6 +1,6 @@
-# Sovereign Core Platform - Bruno API Collections
+# Vesper Core Platform - Bruno API Collections
 
-This directory contains [Bruno](https://www.usebruno.com/) collections to interact with the different services of the Sovereign Core Platform.
+This directory contains [Bruno](https://www.usebruno.com/) collections to interact with the different services of the Vesper Core Platform.
 
 Bruno is an open-source IDE for exploring and testing APIs. We use it instead of Postman or Insomnia.
 

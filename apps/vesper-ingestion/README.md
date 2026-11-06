@@ -53,7 +53,7 @@ sequenceDiagram
 
 ## Security & Reliability Features
 
-1. **API Key Validation**: The telemetry endpoint requires an `X-Sovereign-API-Key` header, which is strictly validated against the SQLite database using the `ApiKeyValidator` middleware before any binary processing begins.
+1. **API Key Validation**: The telemetry endpoint requires an `X-Vesper-API-Key` header, which is strictly validated against the SQLite database using the `ApiKeyValidator` middleware before any binary processing begins.
 2. **Strict CORS Configuration**: Configured explicitly to allow cross-origin requests from the Vesper Console (`http://localhost:4000` in development).
 
 ---

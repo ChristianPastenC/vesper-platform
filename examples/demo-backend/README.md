@@ -92,7 +92,7 @@ The server uses the following environment variables. You can configure these in 
 | Variable | Description |
 | :--- | :--- |
 | `PORT` | **Optional.** The port the server binds to. Defaults to `8080`. |
-| `DB_PATH` | **Optional.** Path to the BoltDB file. Defaults to `./data/sovereign.db`. |
+| `DB_PATH` | **Optional.** Path to the BoltDB file. Defaults to `./data/vesper.db`. |
 | `PAYLOAD_SECRET_KEY` | **Recommended.** Secret key (min 32 chars) used to validate the HMAC-SHA256 signature of request payloads. If not set, modifying requests will be rejected by the HashValidator. |
 | `ECDSA_PRIVATE_KEY_PEM` | **Optional.** Base64URL-encoded DER EC private key. If provided, the server persists JWT signatures across restarts. If missing, an ephemeral key is auto-generated. |
 

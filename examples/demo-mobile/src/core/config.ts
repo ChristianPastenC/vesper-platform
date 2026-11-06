@@ -29,7 +29,7 @@ export const getTelemetryApiKey = (): string | undefined =>
 // Must match app.json's ios.bundleIdentifier / android.package — the telemetry-api
 // binds an API Key to this value on first use (TOFU) and rejects any mismatch.
 export const getTelemetryBundleId = (): string =>
-  Config.TELEMETRY_BUNDLE_ID ?? 'mx.edu.sovereign.core';
+  Config.TELEMETRY_BUNDLE_ID ?? 'mx.edu.vesper.core';
 
 export const getTelemetryEndpoint = (): string => {
   const url = Config.TELEMETRY_ENDPOINT;

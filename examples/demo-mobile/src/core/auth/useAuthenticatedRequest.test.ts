@@ -1,11 +1,11 @@
 import { renderHook } from '@testing-library/react-native';
 import { useAuthenticatedRequest } from './useAuthenticatedRequest';
-import { useSovereignClient } from '../../providers/sovereign/SovereignClientContext';
+import { useGhostClient } from '../../providers/ghost/GhostClientContext';
 import { getRefreshToken, saveTokens } from './tokenStore';
 import { useAppStore } from '../../store/useAppStore';
 
-jest.mock('../../providers/sovereign/SovereignClientContext', () => ({
-  useSovereignClient: jest.fn(),
+jest.mock('../../providers/ghost/GhostClientContext', () => ({
+  useGhostClient: jest.fn(),
 }));
 
 jest.mock('./tokenStore', () => ({
@@ -30,7 +30,7 @@ describe('useAuthenticatedRequest', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useSovereignClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
+    (useGhostClient as jest.Mock).mockReturnValue({ executeRequest: mockExecuteRequest });
     (useAppStore as unknown as jest.Mock).mockImplementation((selector) => {
       return selector({ logout: mockLogout });
     });

@@ -52,27 +52,27 @@ func TestHashValidator(t *testing.T) {
 			expectedBody:   "",
 		},
 		{
-			name:           "Missing X-Sovereign-Hash header",
+			name:           "Missing X-Vesper-Hash header",
 			method:         http.MethodPost,
 			body:           `{"amount": 100}`,
 			headers:        nil,
 			expectedStatus: http.StatusForbidden,
-			expectedBody:   "Forbidden: Missing X-Sovereign-Hash header\n",
+			expectedBody:   "Forbidden: Missing X-Vesper-Hash header\n",
 		},
 		{
 			name:           "Invalid hex format",
 			method:         http.MethodPost,
 			body:           `{"amount": 100}`,
-			headers:        map[string]string{"X-Sovereign-Hash": "invalid-hex"},
+			headers:        map[string]string{"X-Vesper-Hash": "invalid-hex"},
 			expectedStatus: http.StatusForbidden,
-			expectedBody:   "Forbidden: Invalid X-Sovereign-Hash format\n",
+			expectedBody:   "Forbidden: Invalid X-Vesper-Hash format\n",
 		},
 		{
 			name:   "Missing secret key in env",
 			method: http.MethodPost,
 			body:   `{"amount": 100}`,
 			headers: map[string]string{
-				"X-Sovereign-Hash": createHash("dummy", `{"amount": 100}`),
+				"X-Vesper-Hash": createHash("dummy", `{"amount": 100}`),
 			},
 			setupEnv: func() {
 				os.Setenv("PAYLOAD_SECRET_KEY", "")
@@ -85,7 +85,7 @@ func TestHashValidator(t *testing.T) {
 			method: http.MethodPost,
 			body:   `{"amount": 100}`,
 			headers: map[string]string{
-				"X-Sovereign-Hash": createHash("wrong-secret", `{"amount": 100}`),
+				"X-Vesper-Hash": createHash("wrong-secret", `{"amount": 100}`),
 			},
 			expectedStatus: http.StatusForbidden,
 			expectedBody:   "Forbidden: Payload integrity verification failed\n",
@@ -95,7 +95,7 @@ func TestHashValidator(t *testing.T) {
 			method: http.MethodPost,
 			body:   `{"amount": 100}`,
 			headers: map[string]string{
-				"X-Sovereign-Hash": createHash(secretKey, `{"amount": 100}`),
+				"X-Vesper-Hash": createHash(secretKey, `{"amount": 100}`),
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"amount": 100}`,

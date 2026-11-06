@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include "VolatileQueue.hpp"
-#include "SovereignTelemetryEngine.h"
+#include "GhostTelemetryEngine.h"
 #include <vector>
 #include <thread>
 #include <chrono>
 
-namespace sovereign::secure::test {
+namespace vesper::ghost::test {
 
 class VolatileQueueTest : public ::testing::Test {
 protected:
@@ -13,7 +13,7 @@ protected:
 
     void SetUp() override {
         queue.clearQueue();
-        SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+        GhostTelemetryEngine::getInstance().getSnapshotAndClear();
     }
 };
 
@@ -97,7 +97,7 @@ TEST_F(VolatileQueueTest, TelemetryEngineRecordsEvents) {
     std::vector<uint8_t> payload = {0x01};
     queue.enqueue("txn_telemetry_1", payload, 5000.0);
     
-    auto snapshot = SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+    auto snapshot = GhostTelemetryEngine::getInstance().getSnapshotAndClear();
     EXPECT_FALSE(snapshot.empty());
     
     bool foundComputeHash = false;
@@ -112,7 +112,7 @@ TEST_F(VolatileQueueTest, TelemetryEngineRecordsEvents) {
 
     queue.zeroize("txn_telemetry_1");
     
-    auto snapshot2 = SovereignTelemetryEngine::getInstance().getSnapshotAndClear();
+    auto snapshot2 = GhostTelemetryEngine::getInstance().getSnapshotAndClear();
     EXPECT_FALSE(snapshot2.empty());
     
     bool foundZeroize = false;
@@ -124,4 +124,4 @@ TEST_F(VolatileQueueTest, TelemetryEngineRecordsEvents) {
     EXPECT_TRUE(foundZeroize);
 }
 
-} // namespace sovereign::secure::test
+} // namespace vesper::ghost::test

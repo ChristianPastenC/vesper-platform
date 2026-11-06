@@ -12,7 +12,7 @@
     "subtitle": "Monitor the health and cryptographic integrity of your installed SDK fleet in real time.",
     "api_keys": {
       "title": "API Keys",
-      "subtitle": "Generate keys to inject into the SovereignClientCore configuration on the client device.",
+      "subtitle": "Generate keys to inject into the GhostClientCore configuration on the client device.",
       "no_keys": "No keys generated.",
       "revoke": "Revoke",
       "pending": "Pending binding",
@@ -60,7 +60,7 @@
       "testing_desc1": "Remember to enable ",
       "testing_code1": "mock: true",
       "testing_desc2": " or ",
-      "testing_code2": "globalThis.__SOVEREIGN_MOCK__ = true",
+      "testing_code2": "globalThis.__GHOST_MOCK__ = true",
       "testing_desc3": " in your tests, since native C++ modules cannot be executed in standard Node.js.",
       "telemetry_limit_title": "Telemetry Persistence Notice (Database)",
       "telemetry_limit_desc": "While the 17-byte binary telemetry emitter works in C++ and Node.js fallback, backend persistence is currently incomplete due to using an ephemeral SQLite instance (telemetry.db). TOFU key bindings and metrics reset on container cold starts."
@@ -96,7 +96,7 @@
     },
     "register": {
       "title": "Organization Registration",
-      "subtitle": "Create an enterprise tenant to issue API keys and manage the Sovereign fleet.",
+      "subtitle": "Create an enterprise tenant to issue API keys and manage the Vesper fleet.",
       "error": "Error registering the organization.",
       "name": "Organization Name",
       "name_ph": "e.g. Acme Corp",
@@ -124,7 +124,7 @@
     },
     "features": {
       "title": "Secure Native Integration",
-      "desc": "Unlike other NPM libraries that keep cryptographic material exposed in the JS garbage collector memory, Sovereign SDK operates a native C++20 engine that destroys the material using <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>memset_s / SecureZeroMemory</code> immediately after signing the transaction.",
+      "desc": "Unlike other NPM libraries that keep cryptographic material exposed in the JS garbage collector memory, Ghost Ledger SDK operates a native C++20 engine that destroys the material using <code class='bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-sm'>memset_s / SecureZeroMemory</code> immediately after signing the transaction.",
       "f1_title": "Hermes & V8 Bypass",
       "f1_desc": "We use JSI to execute crypto-operations at the C++20 level, avoiding the JS bridge.",
       "f2_title": "Total Ephemerality",
@@ -149,7 +149,7 @@
     "flow": {
       "title": "In-Memory Operational Flow",
       "intro": "The runtime lifecycle of a secure request follows a strict flow to ensure cryptographic resilience:",
-      "step1": "The application (<code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">App</code>) invokes <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">executeRequest()</code> on the <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">SovereignClientCore</code>.",
+      "step1": "The application (<code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">App</code>) invokes <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">executeRequest()</code> on the <code class=\"text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">GhostClientCore</code>.",
       "step2": "Memory integrity is verified. If the Ledger has been compromised (e.g. code injection or memory dump), an <code class=\"text-red-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm\">IntegrityBreachError</code> is immediately thrown.",
       "step3": "If the environment is safe, network connection is checked:",
       "step3_online": "<strong class=\"text-white\">Online:</strong> The ephemeral DPoP proof is attached and the request is dispatched to the <code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">NetworkAdapter</code>. Upon success, hardware secure erasure (<code class=\"text-emerald-400 bg-slate-800 px-1 rounded\">SecureZeroMemory</code>) is executed on the buffers to leave no trace in memory, and the response is returned.",

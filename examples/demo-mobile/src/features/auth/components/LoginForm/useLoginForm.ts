@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { useSovereignLogin } from '../../hooks/useSovereignLogin';
+import { useVesperLogin } from '../../hooks/useVesperLogin';
 
 export const useLoginForm = () => {
   const { t } = useTranslation();
-  const loginState = useSovereignLogin();
+  const loginState = useVesperLogin();
 
   return {
     ...loginState,

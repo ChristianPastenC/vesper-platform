@@ -1,11 +1,11 @@
 import { resolveDPoPContext, zeroRequestBuffers } from '../../core/utils.js';
 import { encodeHeaders } from '../../binary.js';
-import type { SovereignAdapterRequest } from '../../contracts/index.js';
+import type { GhostAdapterRequest } from '../../contracts/index.js';
 import type { DPoPSigner } from '../../dpop/signer.js';
 
 describe('Core Utils', () => {
   it('should resolve DPoP context from headers', () => {
-    const request: SovereignAdapterRequest = {
+    const request: GhostAdapterRequest = {
       method: 'GET',
       url: 'https://api.test.com',
       headers: { Authorization: 'DPoP token123' },
@@ -22,7 +22,7 @@ describe('Core Utils', () => {
   });
 
   it('should resolve DPoP context with encodedHeaders', () => {
-    const request: SovereignAdapterRequest = {
+    const request: GhostAdapterRequest = {
       method: 'POST',
       url: 'https://api.test.com',
       encodedHeaders: encodeHeaders({ 'DPoP': 'true' }),
@@ -34,7 +34,7 @@ describe('Core Utils', () => {
   });
 
   it('should resolve DPoP context with DPoP header', () => {
-    const request: SovereignAdapterRequest = {
+    const request: GhostAdapterRequest = {
       method: 'PUT',
       url: 'https://api.test.com',
       headers: { DPoP: 'true' },
@@ -46,7 +46,7 @@ describe('Core Utils', () => {
   });
 
   it('should resolve DPoP context with fallback dpopConfig', () => {
-    const request: SovereignAdapterRequest = {
+    const request: GhostAdapterRequest = {
       method: 'PATCH',
       url: 'https://api.test.com',
     };

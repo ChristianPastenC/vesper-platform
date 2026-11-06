@@ -130,7 +130,7 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 
 		mac := hmac.New(sha256.New, []byte(secretKey))
 		mac.Write([]byte(validBody))
-		req.Header.Set("X-Sovereign-Hash", hex.EncodeToString(mac.Sum(nil)))
+		req.Header.Set("X-Vesper-Hash", hex.EncodeToString(mac.Sum(nil)))
 
 		// 4. Use httptest.NewRecorder() and the injected router directly
 		w := httptest.NewRecorder()
@@ -179,7 +179,7 @@ func TestCheckoutIntegration_RouterComplete(t *testing.T) {
 
 		mac := hmac.New(sha256.New, []byte(secretKey))
 		mac.Write([]byte(invalidBody))
-		req.Header.Set("X-Sovereign-Hash", hex.EncodeToString(mac.Sum(nil)))
+		req.Header.Set("X-Vesper-Hash", hex.EncodeToString(mac.Sum(nil)))
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)

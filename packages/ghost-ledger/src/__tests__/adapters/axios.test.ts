@@ -1,5 +1,5 @@
 import { AxiosAdapter } from '../../adapters/axios/adapter.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 
 describe('AxiosAdapter', () => {
   const mockAxiosInstance = {
@@ -20,7 +20,7 @@ describe('AxiosAdapter', () => {
     expect(response.data).toEqual({ success: true });
   });
 
-  it('should rethrow Axios errors as SovereignHttpError', async () => {
+  it('should rethrow Axios errors as GhostHttpError', async () => {
     mockAxiosInstance.request.mockResolvedValue({
       status: 500,
       data: 'Error',
@@ -34,8 +34,8 @@ describe('AxiosAdapter', () => {
       await adapter.request({ method: 'GET', url: 'https://test.com' });
       fail('Should have thrown');
     } catch (e) {
-      expect(e).toBeInstanceOf(SovereignHttpError);
-      expect((e as SovereignHttpError).status).toBe(500);
+      expect(e).toBeInstanceOf(GhostHttpError);
+      expect((e as GhostHttpError).status).toBe(500);
     }
   });
 });

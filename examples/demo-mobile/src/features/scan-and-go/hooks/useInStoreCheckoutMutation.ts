@@ -17,7 +17,7 @@ interface CheckoutResponse {
   isQueued?: boolean;
 }
 
-interface SovereignCheckoutResponse {
+interface VesperCheckoutResponse {
   transactionId: string;
   status: string;
   receiptHash: string;
@@ -51,7 +51,7 @@ export const useInStoreCheckoutMutation = () => {
         'X-Idempotency-Key': idempotencyKey,
       });
 
-      const response = await execute<SovereignCheckoutResponse>(randomUUID(), {
+      const response = await execute<VesperCheckoutResponse>(randomUUID(), {
         method: 'POST',
         url: `${API_URL}/api/v1/checkout/instore`,
         encodedHeaders: headers,

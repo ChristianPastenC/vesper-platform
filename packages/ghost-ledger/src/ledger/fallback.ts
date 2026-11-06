@@ -17,7 +17,7 @@ interface TelemetryRecord {
 }
 
 // Memory queue fallback implementation when running outside React Native (Node.js/Jest/SSR/Web)
-export class SovereignSecureClientFallback {
+export class GhostSecureClientFallback {
   private queue: LedgerBlockInternal[] = [];
   private idToIndex = new Map<string, number>();
   private isLocked = false;
@@ -27,7 +27,7 @@ export class SovereignSecureClientFallback {
 
   public executeTransaction(id: string, serializedRequest: ArrayBuffer, ttl: number): boolean {
     if (this.isLocked || this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger compromised or locked. Execution blocked.');
+      throw new Error('[GhostLedger] Ledger compromised or locked. Execution blocked.');
     }
     const idx = this.idToIndex.get(id);
     if (idx !== undefined) this.zeroize(id);
@@ -65,7 +65,7 @@ export class SovereignSecureClientFallback {
 
   public dequeueTransaction(id: string): void {
     if (this.isLocked || this.isIntegrityCompromised) {
-      throw new Error('[SovereignCore] Ledger compromised or locked. Execution blocked.');
+      throw new Error('[GhostLedger] Ledger compromised or locked. Execution blocked.');
     }
     const idx = this.idToIndex.get(id);
     if (idx === undefined) return;

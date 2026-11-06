@@ -1,9 +1,9 @@
 import type {
-  ISovereignNetworkAdapter,
-  SovereignAdapterRequest,
-  SovereignAdapterResponse,
+  IGhostNetworkAdapter,
+  GhostAdapterRequest,
+  GhostAdapterResponse,
 } from '../../contracts/index.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 import { GraphQLRequestError } from './error.js';
 import type { GraphQLAdapterOptions, GraphQLErrorShape } from './types.js';
 import { decodeBody, decodeHeaders } from '../../binary.js';
@@ -11,11 +11,11 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
 /**
  * GraphQLAdapter
  *
- * Concrete implementation of ISovereignNetworkAdapter that sends GraphQL
+ * Concrete implementation of IGhostNetworkAdapter that sends GraphQL
  * operations as HTTP POST requests to a fixed endpoint.
  *
  * Body contract:
- *   The `body` field of SovereignAdapterRequest MUST be a `Uint8Array`
+ *   The `body` field of GhostAdapterRequest MUST be a `Uint8Array`
  *   containing the UTF-8-encoded JSON of the GraphQL request descriptor:
  *     encodeJsonBody({ query, variables?, operationName? })
  *
@@ -27,7 +27,7 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
  *     immediately before dispatch. The legacy `headers` Record is supported for
  *     backward compatibility but is not zeroizable.
  */
-export class GraphQLAdapter implements ISovereignNetworkAdapter {
+export class GraphQLAdapter implements IGhostNetworkAdapter {
   private readonly url: string;
   private readonly fetchImpl: typeof fetch | undefined;
 
@@ -37,13 +37,13 @@ export class GraphQLAdapter implements ISovereignNetworkAdapter {
   }
 
   public async request<T = unknown>(
-    config: SovereignAdapterRequest,
-  ): Promise<SovereignAdapterResponse<T>> {
+    config: GhostAdapterRequest,
+  ): Promise<GhostAdapterResponse<T>> {
     const fetchFn = this.fetchImpl ?? globalThis.fetch;
 
     if (typeof fetchFn !== 'function') {
       throw new TypeError(
-        '[SovereignCore] GraphQLAdapter: no fetch implementation available. ' +
+        '[GhostLedger] GraphQLAdapter: no fetch implementation available. ' +
           'Pass a fetchImpl option for environments without a global fetch.',
       );
     }
@@ -72,7 +72,7 @@ export class GraphQLAdapter implements ISovereignNetworkAdapter {
     });
 
     if (!response.ok) {
-      throw new SovereignHttpError(
+      throw new GhostHttpError(
         response.status,
         `HTTP ${response.status} ${response.statusText}`,
       );

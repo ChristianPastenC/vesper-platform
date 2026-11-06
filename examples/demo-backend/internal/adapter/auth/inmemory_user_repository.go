@@ -19,12 +19,12 @@ func NewInMemoryUserRepository() *InMemoryUserRepository {
 		"admin": {
 			ID:       "usr_admin_99",
 			Username: "admin",
-			Email:    "admin@sovereign.core",
+			Email:    "admin@vesper.core",
 		},
 		"operator": {
 			ID:       "usr_op_77",
 			Username: "operator",
-			Email:    "operator@sovereign.core",
+			Email:    "operator@vesper.core",
 		},
 	}
 

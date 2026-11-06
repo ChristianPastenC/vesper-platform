@@ -68,11 +68,11 @@ func applyXOR(buf []byte, sessionKey, iv []byte, startIndex uint64) {
 // @Tags Telemetry
 // @Accept octet-stream
 // @Produce plain
-// @Param X-Sovereign-API-Key header string true "API Key"
+// @Param X-Vesper-API-Key header string true "API Key"
 // @Param X-Bundle-ID header string true "Bundle ID of the mobile app"
-// @Param X-Sovereign-Session-Key header string false "Hex-encoded 32-byte session key (required when sending raw XOR-encrypted mmap bytes)"
-// @Param X-Sovereign-IV header string false "Hex-encoded 32-byte IV from the mmap header (required together with X-Sovereign-Session-Key)"
-// @Param X-Sovereign-Start-Index header integer false "Start index for XOR keystream (default 0)"
+// @Param X-Vesper-Session-Key header string false "Hex-encoded 32-byte session key (required when sending raw XOR-encrypted mmap bytes)"
+// @Param X-Vesper-IV header string false "Hex-encoded 32-byte IV from the mmap header (required together with X-Vesper-Session-Key)"
+// @Param X-Vesper-Start-Index header integer false "Start index for XOR keystream (default 0)"
 // @Param payload body []byte true "Binary telemetry payload"
 // @Success 202 {string} string "Accepted"
 // @Failure 400 {string} string "Invalid payload format"
@@ -109,21 +109,21 @@ func (h *TelemetryHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	// so we can apply the exact same keystream and recover the plaintext.
 	//
 	// Header protocol (both must be present to trigger decryption):
-	//   X-Sovereign-Session-Key: <64 hex chars = 32 bytes>
-	//   X-Sovereign-IV:          <64 hex chars = 32 bytes>
+	//   X-Vesper-Session-Key: <64 hex chars = 32 bytes>
+	//   X-Vesper-IV:          <64 hex chars = 32 bytes>
 	//
 	// The key and IV are short-lived, per-session values — they are NOT the
 	// tenant master secret. The backend never stores them.
-	sessionKeyHex := r.Header.Get("X-Sovereign-Session-Key")
-	ivHex := r.Header.Get("X-Sovereign-IV")
-	startIndexStr := r.Header.Get("X-Sovereign-Start-Index")
+	sessionKeyHex := r.Header.Get("X-Vesper-Session-Key")
+	ivHex := r.Header.Get("X-Vesper-IV")
+	startIndexStr := r.Header.Get("X-Vesper-Start-Index")
 
 	if sessionKeyHex != "" && ivHex != "" {
 		sessionKey, errK := hex.DecodeString(sessionKeyHex)
 		iv, errIV := hex.DecodeString(ivHex)
 		if errK != nil || errIV != nil || len(sessionKey) != 32 || len(iv) != 32 {
 			h.logger.Warn("Invalid XOR session headers", "tenant", tenantID)
-			http.Error(w, "Invalid X-Sovereign-Session-Key or X-Sovereign-IV header", http.StatusBadRequest)
+			http.Error(w, "Invalid X-Vesper-Session-Key or X-Vesper-IV header", http.StatusBadRequest)
 			return
 		}
 

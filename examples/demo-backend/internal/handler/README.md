@@ -38,7 +38,7 @@ Contains the Zero-Trust security interceptors.
 | :--- | :--- |
 | **`cors.go`** | Global CORS configuration allowing specific security headers. |
 | **`dpop_auth.go`** | Validates ECDSA DPoP signatures to prevent token theft. |
-| **`hash_validator.go`** | Validates the `X-Sovereign-Hash` header using HMAC-SHA256 to ensure payload integrity. |
+| **`hash_validator.go`** | Validates the `X-Vesper-Hash` header using HMAC-SHA256 to ensure payload integrity. |
 | **`idempotency.go`** | Prevents replay attacks and duplicate processing by caching recent transaction states. |
 | **`jwt_auth.go`** | Validates JWT structure, claims, and expiration. |
 | **`rate_limiter.go`** | Enforces strict traffic and burst limits on public and protected routes to prevent DDoS attacks. |

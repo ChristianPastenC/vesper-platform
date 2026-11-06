@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useTheme } from '../../../../core/theme/useTheme';
 import { SearchBar } from '../../../../components/SearchBar/SearchBar';
-import { useSovereignCatalog } from '../../../catalog/hooks/useSovereignCatalog';
+import { useVesperCatalog } from '../../../catalog/hooks/useVesperCatalog';
 import { Product } from '../../../catalog/domain/product.entity';
 import { stylesFactory } from './SearchModal.styles';
 
@@ -33,7 +33,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isVisible, onClose }) 
   const [searchQuery, setSearchQuery] = useState('');
 
   // Use the catalog hook without category to fetch all products
-  const { products, loading } = useSovereignCatalog(undefined, 50);
+  const { products, loading } = useVesperCatalog(undefined, 50);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return []; // don't show all products by default, wait for typing

@@ -1,5 +1,5 @@
 import { FetchAdapter } from '../../adapters/fetch/adapter.js';
-import { SovereignHttpError } from '../../types.js';
+import { GhostHttpError } from '../../types.js';
 
 describe('FetchAdapter', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -27,7 +27,7 @@ describe('FetchAdapter', () => {
     expect(response.data).toEqual({ success: true });
   });
 
-  it('should throw SovereignHttpError on non-2xx', async () => {
+  it('should throw GhostHttpError on non-2xx', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 401,
@@ -38,6 +38,6 @@ describe('FetchAdapter', () => {
 
     const adapter = new FetchAdapter();
 
-    await expect(adapter.request({ method: 'GET', url: 'https://test.com' })).rejects.toThrow(SovereignHttpError);
+    await expect(adapter.request({ method: 'GET', url: 'https://test.com' })).rejects.toThrow(GhostHttpError);
   });
 });

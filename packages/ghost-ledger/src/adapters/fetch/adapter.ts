@@ -1,7 +1,7 @@
 import type {
-  ISovereignNetworkAdapter,
-  SovereignAdapterRequest,
-  SovereignAdapterResponse,
+  IGhostNetworkAdapter,
+  GhostAdapterRequest,
+  GhostAdapterResponse,
 } from '../../contracts/index.js';
 import type { FetchAdapterOptions } from './types.js';
 import { fetchWithTrapping } from './functional.js';
@@ -10,7 +10,7 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
 /**
  * FetchAdapter
  *
- * Concrete implementation of ISovereignNetworkAdapter backed by the Fetch API.
+ * Concrete implementation of IGhostNetworkAdapter backed by the Fetch API.
  * Suitable for use in all platforms that provide a global `fetch` or accept
  * a polyfill via `fetchImpl`.
  *
@@ -21,7 +21,7 @@ import { decodeBody, decodeHeaders } from '../../binary.js';
  *     immediately before calling fetch().  The legacy `headers` Record is
  *     supported for backward compatibility but is not zeroizable.
  */
-export class FetchAdapter implements ISovereignNetworkAdapter {
+export class FetchAdapter implements IGhostNetworkAdapter {
   private readonly fetchImpl: typeof fetch | undefined;
 
   constructor(options: FetchAdapterOptions = {}) {
@@ -29,8 +29,8 @@ export class FetchAdapter implements ISovereignNetworkAdapter {
   }
 
   public async request<T = unknown>(
-    config: SovereignAdapterRequest,
-  ): Promise<SovereignAdapterResponse<T>> {
+    config: GhostAdapterRequest,
+  ): Promise<GhostAdapterResponse<T>> {
     // Decode headers only at dispatch time — never store the decoded Record
     // in any long-lived variable.
     const resolvedHeaders: Record<string, string> =

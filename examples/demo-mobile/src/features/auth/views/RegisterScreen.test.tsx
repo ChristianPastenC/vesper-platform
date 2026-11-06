@@ -1,11 +1,11 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { RegisterScreen } from './RegisterScreen';
-import { useSovereignRegister } from '../hooks/useSovereignRegister';
+import { useVesperRegister } from '../hooks/useVesperRegister';
 import { useTheme } from '../../../core/theme/useTheme';
 
-jest.mock('../hooks/useSovereignRegister', () => ({
-  useSovereignRegister: jest.fn(),
+jest.mock('../hooks/useVesperRegister', () => ({
+  useVesperRegister: jest.fn(),
 }));
 
 jest.mock('../../../core/theme/useTheme', () => ({
@@ -35,7 +35,7 @@ describe('RegisterScreen View', () => {
   });
 
   it('renders form correctly', () => {
-    (useSovereignRegister as jest.Mock).mockReturnValue({
+    (useVesperRegister as jest.Mock).mockReturnValue({
       username: '',
       setUsername: jest.fn(),
       email: '',

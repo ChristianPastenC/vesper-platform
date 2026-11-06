@@ -81,9 +81,9 @@ import assert from 'node:assert/strict';
 
 // 1. Verify root entrypoint exports
 const rootMod = await import('@vesper-core/ghost-ledger');
-assert.equal(typeof rootMod.SovereignMemoryQueue, 'function', 'SovereignMemoryQueue should be exported');
-assert.equal(typeof rootMod.SovereignClientCore, 'function', 'SovereignClientCore should be exported');
-assert.equal(typeof rootMod.SovereignHttpError, 'function', 'SovereignHttpError should be exported');
+assert.equal(typeof rootMod.GhostMemoryQueue, 'function', 'GhostMemoryQueue should be exported');
+assert.equal(typeof rootMod.GhostClientCore, 'function', 'GhostClientCore should be exported');
+assert.equal(typeof rootMod.GhostHttpError, 'function', 'GhostHttpError should be exported');
 assert.equal(typeof rootMod.IntegrityBreachError, 'function', 'IntegrityBreachError should be exported');
 assert.equal(typeof rootMod.encodeJsonBody, 'function', 'encodeJsonBody should be exported');
 assert.equal(typeof rootMod.decodeBody, 'function', 'decodeBody should be exported');
@@ -105,7 +105,7 @@ const payload = rootMod.encodeJsonBody({ transactionId: 'tx-stability-01', amoun
 const serialized = rootMod.serializeAdapterRequest({
   method: 'POST',
   url: 'https://api.vesper.internal/v1/ledger',
-  headers: { 'x-sovereign-test': 'true' },
+  headers: { 'x-vesper-test': 'true' },
   body: payload,
   timeoutMs: 3000,
 });
@@ -117,8 +117,8 @@ assert.equal(deserialized.timeoutMs, 3000);
 const decodedBody = JSON.parse(rootMod.decodeBody(deserialized.body));
 assert.equal(decodedBody.transactionId, 'tx-stability-01');
 
-// 4. Functional check: SovereignMemoryQueue fallback lifecycle
-const queue = rootMod.SovereignMemoryQueue.getInstance();
+// 4. Functional check: GhostMemoryQueue fallback lifecycle
+const queue = rootMod.GhostMemoryQueue.getInstance();
 queue.clearAll();
 queue.toggleNetworkSim(false);
 try {

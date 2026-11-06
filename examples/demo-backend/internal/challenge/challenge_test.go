@@ -8,7 +8,7 @@ import (
 )
 
 func TestIssueAndVerify(t *testing.T) {
-	secret := []byte("test-secret-sovereign-core-32bytes!")
+	secret := []byte("test-secret-vesper-core-32bytes!")
 	iss := challenge.NewIssuer(secret, 5*time.Minute)
 
 	tok, err := iss.Issue()
@@ -32,7 +32,7 @@ func TestIssueAndVerify(t *testing.T) {
 }
 
 func TestVerifyExpired(t *testing.T) {
-	secret := []byte("test-secret-sovereign-core-32bytes!")
+	secret := []byte("test-secret-vesper-core-32bytes!")
 	// ExpiresAt is stored as Unix seconds, so the minimum observable TTL is 1 second.
 	iss := challenge.NewIssuer(secret, 1*time.Second)
 
@@ -51,7 +51,7 @@ func TestVerifyExpired(t *testing.T) {
 }
 
 func TestVerifyTamperedSignature(t *testing.T) {
-	secret := []byte("test-secret-sovereign-core-32bytes!")
+	secret := []byte("test-secret-vesper-core-32bytes!")
 	iss := challenge.NewIssuer(secret, 5*time.Minute)
 
 	tok, _ := iss.Issue()
@@ -64,7 +64,7 @@ func TestVerifyTamperedSignature(t *testing.T) {
 }
 
 func TestEncodeAndParse(t *testing.T) {
-	secret := []byte("test-secret-sovereign-core-32bytes!")
+	secret := []byte("test-secret-vesper-core-32bytes!")
 	iss := challenge.NewIssuer(secret, 5*time.Minute)
 
 	tok, _ := iss.Issue()
@@ -104,7 +104,7 @@ func TestParseMalformed(t *testing.T) {
 }
 
 func TestRemainingTTL(t *testing.T) {
-	secret := []byte("test-secret-sovereign-core-32bytes!")
+	secret := []byte("test-secret-vesper-core-32bytes!")
 	iss := challenge.NewIssuer(secret, 5*time.Minute)
 
 	tok, _ := iss.Issue()

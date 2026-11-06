@@ -38,7 +38,7 @@
 // no longer gets eliminated -- see the CMakeLists comment for why this
 // target is compiled at -O3, matching the shipped library.
 
-namespace sovereign::secure::test {
+namespace vesper::ghost::test {
 
 namespace {
 constexpr uint8_t kSentinel = 0xAB;
@@ -202,4 +202,4 @@ TEST(MemoryForensicsTest, DequeueScrubsThePayloadFromRealHeapMemory) {
     EXPECT_FALSE(leaked) << "The real dequeue() path left the transaction payload recoverable";
 }
 
-}  // namespace sovereign::secure::test
+}  // namespace vesper::ghost::test

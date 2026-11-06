@@ -32,8 +32,8 @@ sequenceDiagram
 
 | Directory | Description |
 | :--- | :--- |
-| **`src/features/`** | Contains domain-specific modules such as `auth`, `catalog`, and `payment`. Each module houses its own React components and custom hooks (e.g., `useSovereignCheckout.ts`). |
-| **`src/providers/`** | Global context providers. This includes the `SovereignClientContext.tsx` which initializes and exposes the `SovereignClientCore` singleton globally to the app. |
+| **`src/features/`** | Contains domain-specific modules such as `auth`, `catalog`, and `payment`. Each module houses its own React components and custom hooks (e.g., `useGhostCheckout.ts`). |
+| **`src/providers/`** | Global context providers. This includes the `GhostClientContext.tsx` which initializes and exposes the `GhostClientCore` singleton globally to the app. |
 | **`android/` & `ios/`** | The native projects configured to link the C++ static ledger engine seamlessly during the build process. |
 | **`scripts/`** | Contains utilities like `frida_dast_test.py` used by the CI/CD pipeline to simulate memory tampering attacks. |
 

@@ -8,6 +8,8 @@ description = "Vesper test keys, synthetic local secrets, and mock fixtures"
 paths = [
   '''apps/vesper-ingestion/internal/adapter/db/sqlite\.go''',
   '''examples/demo-backend/\.env\.example''',
+  '''examples/demo-backend/.*_test\.go''',
+  '''examples/demo-mobile/.*\.test\.tsx?''',
   '''bruno/.*''',
   '''docs/.*''',
   '''Makefile''',
@@ -16,9 +18,13 @@ paths = [
 ]
 regexes = [
   '''sk_test_demo123''',
+  '''sk_live_demo_9876543210''',
+  '''sk_live_new''',
   '''demo@vesper\.local''',
   '''demo123''',
   '''test-challenge-key''',
+  '''test-secret-key''',
+  '''test-secret-vesper-core-32bytes!''',
   '''vesper-payload-secret-hmac-key-min-32-chars-2026''',
   '''generateValue:\s*true'''
 ]

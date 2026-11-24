@@ -31,7 +31,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.26.3'
           cache-dependency-path: apps/vesper-ingestion/go.sum
 
       - name: Run Go Vet
@@ -50,7 +50,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.26.3'
           cache-dependency-path: apps/vesper-ingestion/go.sum
 
       - name: Build Binary (Render Parity)
@@ -69,7 +69,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.26.3'
           cache-dependency-path: apps/vesper-ingestion/go.sum
 
       - name: Run Unit Tests with Race Detector

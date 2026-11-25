@@ -4,7 +4,7 @@
 **Author:** ChristianPastenC  
 **Status:** Controlled Environment Verification (CI/CD & Local Suites)  
 **Classification:** DevSecOps / FinTech Systems Engineering  
-**Cross-References:** [Problem Diagnosis & Operational Baseline](./problem_statement_diagnosis.md) | [Industry Solutions Benchmark](./benchmarking_solutions.md) | [Postgraduate Architecture Audit](../compliance/postgraduate_architecture_audit.md) | [DORA Operational Resilience](../compliance/dora_operational_resilience.md) | [Secure Memory Policy](../compliance/secure_memory_policy.md) | [LaTeX Deliverable Source (U8 A1)](./U8_A1_Anticipacion_Resultados_Conclusiones.tex)
+**Cross-References:** [Problem Diagnosis & Operational Baseline](./problem_statement_diagnosis.md) | [Industry Solutions Benchmark](./benchmarking_solutions.md) | [Postgraduate Architecture Audit](../compliance/postgraduate_architecture_audit.md) | [DORA Operational Resilience](../compliance/dora_operational_resilience.md) | [Secure Memory Policy](../compliance/secure_memory_policy.md) | [Emerging Trends & 3–5 Year Roadmap (U8 A3)](./emerging_trends_roadmap.md)
 
 ---
 

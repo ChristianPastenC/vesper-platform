@@ -359,6 +359,7 @@ Comprehensive technical specifications, threat models, and operational resilienc
 | [**Theoretical Foundations**](./docs/research/theoretical_foundations.md) | Contextual, referential, conceptual, and legal pillars governing low-level cryptography and zeroization runtimes. | NIST SP 800-88, DORA, RFC 9449 |
 | [**State of the Art & Research**](./docs/research/state_of_the_art.md) | Scientific foundations on compiler DSE neutralization, TEE vs. JSI boundary latency, and cellular hash-chaining. | IEEE / ACM / USENIX Literature |
 | [**Industry Solutions Benchmark**](./docs/research/benchmarking_solutions.md) | Comparative architectural and security benchmark of Square, Clover, Stripe Terminal, mobile offline engines, and RASP systems. | PCI-DSS v4.0 Req 3, EMVCo, ISO/IEC 7816 |
+| [**Results Anticipation & Conclusions**](./docs/research/results_anticipation_conclusions.md) | Empirical CI/CD verification matrix, Frida DAST methodological caveats, and action-plan congruence (`U8 A1`). | PCI-DSS v4.0, DORA, NIST SP 800-88 |
 
 ---
 

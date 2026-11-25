@@ -1,7 +1,7 @@
 # Industry Solutions Benchmarking: Architectural, Cryptographic, and Operational Analysis of Offline-First & Payment Platforms
 
 ## Technical Research Memorandum (U6 A3)
-**Author:** Vesper Platform Architecture & Security Research Group  
+**Author:** ChristianPastenC  
 **Status:** Canonical Industry Benchmark  
 **Classification:** DevSecOps / FinTech Systems Engineering  
 **Cross-References:** [State of the Art & Research (docs/research/state_of_the_art.md)](./state_of_the_art.md) | [Business Impact Analysis (docs/business_context_bia.md)](../business_context_bia.md) | [DORA Compliance (docs/compliance/dora_operational_resilience.md)](../compliance/dora_operational_resilience.md) | [NIST CSF Alignment (docs/compliance/gap_analysis_nist_csf.md)](../compliance/gap_analysis_nist_csf.md) | [STRIDE Threat Model (docs/compliance/stride_threat_model.md)](../compliance/stride_threat_model.md) | [Secure Memory Policy (docs/compliance/secure_memory_policy.md)](../compliance/secure_memory_policy.md)

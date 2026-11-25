@@ -1,7 +1,7 @@
 # Operational Resilience: Incident Communication Strategy & Escalation Protocols
 
 ## Standard Operating Procedure (U6 A2)
-**Author:** Vesper SecOps & Incident Response Team  
+**Author:** ChristianPastenC  
 **Status:** Active  
 **Classification:** DevSecOps / Operational Resilience  
 **Cross-References:** [BCP & DRP Runbook (docs/operational_resilience/bcp_drp_runbook.md)](./bcp_drp_runbook.md) | [Business Impact Analysis (docs/business_context_bia.md)](../business_context_bia.md) | [DORA Compliance (docs/compliance/dora_operational_resilience.md)](../compliance/dora_operational_resilience.md)
